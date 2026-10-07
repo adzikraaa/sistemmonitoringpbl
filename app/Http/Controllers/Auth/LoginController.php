@@ -15,24 +15,26 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
-            'role' => ['required', 'in:mahasiswa,dosen,koordinator'],
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+    $request->validate([
+        'role' => 'required|in:mahasiswa,dosen,koordinator',
+        'identifier' => 'required|string',
+        'password' => 'required',
+    ]);
 
-        $role = $request->input('role');
-        $credentials = $request->only('email', 'password');
+    $role = $request->role;
+    $field = $role === 'mahasiswa' ? 'nim' : 'nidn';
 
-        if (Auth::guard($role)->attempt($credentials)) {
-            $request->session()->regenerate();
+    if (Auth::guard($role)->attempt([
+        $field => $request->identifier,
+        'password' => $request->password,
+    ])) {
+        $request->session()->regenerate();
+        return redirect()->route("{$role}.dashboard");
+    }
 
-            return redirect()->intended(route("{$role}.dashboard"));
-        }
-
-        return back()->withErrors([
-            'email' => 'Email atau password salah.',
-        ])->onlyInput('email', 'role');
+    return back()
+        ->withInput($request->only('identifier', 'role'))
+        ->withErrors(['identifier' => ucfirst($field) . ' atau password salah.']);
     }
 
     public function logout(Request $request)

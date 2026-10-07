@@ -47,9 +47,12 @@
                 <input type="hidden" name="role" :value="role">
 
                 <div class="mb-4">
-                    <label for="email" class="block text-sm font-medium text-blue-900 mb-1">Email</label>
-                    <input type="email" name="email" id="email" value="{{ old('email') }}" required autofocus
-                        placeholder="ketikkan email di sini"
+                    <label class="block text-sm font-medium text-blue-900 mb-1" x-text="role === 'mahasiswa' ? 'NIM' : 'NIDN'"></label>
+                        <input
+                        type="text"
+                        name="identifier"
+                        value="{{ old('identifier') }}"
+                        :placeholder="role === 'mahasiswa' ? 'ketikkan NIM di sini' : 'ketikkan NIDN di sini'"
                         class="w-full px-5 py-3 rounded-full bg-[#F5F0E0] border-0 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900">
                 </div>
 

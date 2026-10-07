@@ -9,8 +9,8 @@ class Koordinator extends Authenticatable
 {
     protected $table = 'koordinator';
 
-    protected $fillable = ['nama', 'email', 'password', 'nip'];
-
+    protected $fillable = ['nama', 'email', 'password', 'nip', 'nidn'];
+    
     protected $hidden = ['password'];
 
     protected function casts(): array
