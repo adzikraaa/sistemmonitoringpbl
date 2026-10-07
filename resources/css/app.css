@@ -3,7 +3,1021 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+/* ============================================================
+   SIM-PBL DESIGN SYSTEM
+   Color palette: dark brown, warm brown, cream, off-white,
+   muted gold, muted green, soft yellow
+   Typography: DM Serif Display (headings) + Inter (body/UI)
+   ============================================================ */
+
+:root {
+    /* Brand colors */
+    --sim-brown-dark:   #2C1A0E;
+    --sim-brown:        #3D2314;
+    --sim-brown-medium: #5C3317;
+    --sim-brown-warm:   #7A4520;
+    --sim-brown-light:  #A0622A;
+    --sim-cream:        #F5EFE6;
+    --sim-cream-dark:   #EDE4D8;
+    --sim-off-white:    #FAF7F3;
+    --sim-white:        #FFFFFF;
+    --sim-gold:         #B8934A;
+    --sim-gold-light:   #D4A85A;
+    --sim-green:        #4A7C59;
+    --sim-green-light:  #6BA07A;
+    --sim-green-muted:  #D6EAD9;
+    --sim-green-bg:     #EBF4EC;
+    --sim-yellow-soft:  #FFF9E6;
+    --sim-yellow-border:#F0E0A0;
+    --sim-yellow-text:  #8A6A00;
+
+    /* UI neutrals */
+    --sim-border:       #E8DDD0;
+    --sim-border-light: #F0E8DC;
+    --sim-text-dark:    #1C1008;
+    --sim-text-body:    #4A3728;
+    --sim-text-muted:   #8C7A6A;
+    --sim-text-light:   #B0A090;
+    --sim-bg:           #F7F3EE;
+
+    /* Sidebar */
+    --sim-sidebar-bg:   #231208;
+    --sim-sidebar-w:    208px;
+
+    /* Header */
+    --sim-header-h:     56px;
+}
+
+/* ============================================================
+   RESET / BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body.sim-body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--sim-text-dark);
+    background: var(--sim-bg);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sim-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sim-sidebar-w);
+    height: 100vh;
+    background: var(--sim-sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    z-index: 200;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+}
+
+.sim-sidebar__logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.sim-sidebar__logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--sim-brown-warm);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--sim-cream);
+    flex-shrink: 0;
+}
+
+.sim-sidebar__logo-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--sim-cream);
+    letter-spacing: 0.01em;
+}
+
+.sim-sidebar__nav {
+    flex: 1;
+    padding: 20px 12px;
+}
+
+.sim-sidebar__nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.3);
+    margin: 0 8px 10px;
+    text-transform: uppercase;
+}
+
+.sim-sidebar__menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sim-sidebar__menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    position: relative;
+}
+
+.sim-sidebar__menu-item:hover {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.8);
+}
+
+.sim-sidebar__menu-item--active {
+    background: rgba(255,255,255,0.1);
+    color: var(--sim-cream) !important;
+}
+
+.sim-sidebar__menu-dot {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--sim-gold-light);
+    border-radius: 50%;
+}
+
+.sim-sidebar__footer {
+    padding: 16px 12px 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.sim-sidebar__logout {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.4);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+.sim-sidebar__logout:hover {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.7);
+}
+
+/* ============================================================
+   MAIN AREA
+   ============================================================ */
+.sim-main {
+    margin-left: var(--sim-sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-width: 0;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.sim-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: var(--sim-header-h);
+    background: var(--sim-white);
+    border-bottom: 1px solid var(--sim-border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 12px;
+}
+
+.sim-header__hamburger {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+    color: var(--sim-text-body);
+    flex-shrink: 0;
+}
+
+.sim-header__hamburger:hover { background: var(--sim-cream); }
+
+.sim-header__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+.sim-header__breadcrumb-root {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sim-text-muted);
+}
+
+.sim-header__breadcrumb-sep {
+    color: var(--sim-text-light);
+    flex-shrink: 0;
+}
+
+.sim-header__breadcrumb-current {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sim-text-dark);
+}
+
+.sim-header__user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.sim-header__notif {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--sim-text-muted);
+    transition: background 0.15s;
+}
+
+.sim-header__notif:hover { background: var(--sim-cream); }
+
+.sim-header__user-avatar {
+    width: 34px;
+    height: 34px;
+    background: var(--sim-brown-warm);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sim-cream);
+    flex-shrink: 0;
+}
+
+.sim-header__user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.sim-header__user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sim-text-dark);
+    line-height: 1.2;
+}
+
+.sim-header__user-role {
+    font-size: 11px;
+    color: var(--sim-text-muted);
+    line-height: 1.2;
+}
+
+/* ============================================================
+   PAGE CONTENT
+   ============================================================ */
+.sim-content {
+    flex: 1;
+    padding: 0;
+}
+
+/* ============================================================
+   GROUP BAR
+   ============================================================ */
+.sim-group-bar {
+    background: var(--sim-white);
+    border-bottom: 1px solid var(--sim-border-light);
+    padding: 10px 32px;
+}
+
+.sim-group-bar__left {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.sim-group-bar__name {
+    font-weight: 700;
+    color: var(--sim-text-dark);
+    font-size: 14px;
+}
+
+.sim-group-bar__sep {
+    color: var(--sim-text-light);
+    font-size: 10px;
+}
+
+.sim-group-bar__members,
+.sim-group-bar__jadwal {
+    color: var(--sim-text-muted);
+    font-size: 12.5px;
+}
+
+.sim-group-bar__dosen {
+    color: var(--sim-text-body);
+    font-size: 12.5px;
+}
+
+.sim-group-bar__dosen strong {
+    font-weight: 600;
+    color: var(--sim-text-dark);
+}
+
+.sim-group-bar__members-list {
+    margin-top: 3px;
+    font-size: 11.5px;
+    color: var(--sim-text-muted);
+}
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+.sim-page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px 32px 20px;
+}
+
+.sim-page-header__eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sim-text-muted);
+    margin: 0 0 6px;
+}
+
+.sim-page-header__title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--sim-text-dark);
+    margin: 0 0 8px;
+}
+
+.sim-page-header__desc {
+    font-size: 13.5px;
+    color: var(--sim-text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.sim-page-header__right {
+    flex-shrink: 0;
+    padding-bottom: 4px;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.sim-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: var(--sim-brown-dark);
+    color: var(--sim-cream);
+    border: none;
+    border-radius: 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+}
+
+.sim-btn-primary:hover {
+    background: var(--sim-brown);
+}
+
+.sim-btn-primary:active {
+    transform: scale(0.98);
+}
+
+.sim-btn-primary__plus {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1;
+}
+
+.sim-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    background: transparent;
+    color: var(--sim-text-body);
+    border: none;
+    border-radius: 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.sim-btn-secondary:hover {
+    background: var(--sim-cream);
+}
+
+/* ============================================================
+   PROPOSAL GRID LAYOUT
+   ============================================================ */
+.sim-proposal-grid {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 20px;
+    padding: 0 32px 40px;
+    align-items: start;
+}
+
+/* ============================================================
+   PROPOSAL CARD
+   ============================================================ */
+.sim-proposal-card {
+    background: var(--sim-white);
+    border: 1px solid var(--sim-border);
+    border-radius: 16px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sim-proposal-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.sim-proposal-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sim-proposal-card__version {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--sim-text-muted);
+    text-transform: uppercase;
+}
+
+.sim-proposal-card__date {
+    font-size: 12.5px;
+    color: var(--sim-text-muted);
+}
+
+/* Badge */
+.sim-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.sim-badge--approved {
+    background: var(--sim-green-bg);
+    color: var(--sim-green);
+    border: 1px solid var(--sim-green-muted);
+}
+
+.sim-proposal-card__title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--sim-text-dark);
+    line-height: 1.25;
+    margin: 0;
+}
+
+.sim-proposal-card__desc {
+    font-size: 13.5px;
+    color: var(--sim-text-muted);
+    line-height: 1.6;
+    margin: -8px 0 0;
+}
+
+/* ============================================================
+   DETAIL COLUMNS
+   ============================================================ */
+.sim-proposal-detail {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding-top: 4px;
+    border-top: 1px solid var(--sim-border-light);
+}
+
+.sim-proposal-detail__label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sim-text-muted);
+    margin: 0 0 6px;
+}
+
+.sim-proposal-detail__text {
+    font-size: 12.5px;
+    color: var(--sim-text-body);
+    line-height: 1.6;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ============================================================
+   ATTACHMENT
+   ============================================================ */
+.sim-proposal-attachment {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--sim-cream);
+    border: 1px solid var(--sim-border);
+    border-radius: 10px;
+}
+
+.sim-proposal-attachment__icon {
+    color: var(--sim-text-muted);
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.sim-proposal-attachment__name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sim-text-dark);
+}
+
+.sim-proposal-attachment__type {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sim-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* ============================================================
+   CATATAN PEMBIMBING
+   ============================================================ */
+.sim-catatan {
+    background: var(--sim-yellow-soft);
+    border: 1px solid var(--sim-yellow-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.sim-catatan__label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sim-yellow-text);
+    margin: 0 0 6px;
+}
+
+.sim-catatan__text {
+    font-size: 13px;
+    color: var(--sim-text-body);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ============================================================
+   TIMELINE CARD
+   ============================================================ */
+.sim-timeline-card {
+    background: var(--sim-green-bg);
+    border: 1px solid var(--sim-green-muted);
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.sim-timeline-card__title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sim-green);
+    margin: 0 0 16px;
+}
+
+.sim-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.sim-timeline__item {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.sim-timeline__item--last {
+    padding-bottom: 0;
+}
+
+/* Vertical line between dots */
+.sim-timeline__item:not(.sim-timeline__item--last)::after {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 26px;
+    bottom: 0;
+    width: 1.5px;
+    background: rgba(74, 124, 89, 0.3);
+}
+
+.sim-timeline__dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    position: relative;
+    z-index: 1;
+}
+
+.sim-timeline__dot--done {
+    background: var(--sim-green);
+    color: var(--sim-white);
+}
+
+.sim-timeline__dot--current {
+    background: var(--sim-green);
+    color: var(--sim-white);
+}
+
+.sim-timeline__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.sim-timeline__event {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sim-text-dark);
+    margin: 0 0 2px;
+    line-height: 1.3;
+}
+
+.sim-timeline__date {
+    font-size: 12px;
+    color: var(--sim-text-muted);
+    margin: 0;
+}
+
+.sim-timeline__date--active {
+    color: var(--sim-green);
+    font-weight: 500;
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.sim-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 16, 8, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.sim-modal-overlay--visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.sim-modal {
+    background: var(--sim-white);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 60px rgba(28,16,8,0.25);
+    transform: translateY(8px);
+    transition: transform 0.2s ease;
+}
+
+.sim-modal-overlay--visible .sim-modal {
+    transform: translateY(0);
+}
+
+.sim-modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 24px 24px 0;
+    gap: 16px;
+}
+
+.sim-modal__eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sim-text-muted);
+    margin: 0 0 4px;
+}
+
+.sim-modal__title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--sim-text-dark);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.sim-modal__close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--sim-cream);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sim-text-muted);
+    flex-shrink: 0;
+    transition: background 0.15s;
+    margin-top: 2px;
+}
+
+.sim-modal__close:hover {
+    background: var(--sim-cream-dark);
+    color: var(--sim-text-dark);
+}
+
+.sim-modal__form {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sim-modal__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 8px;
+}
+
+/* ============================================================
+   FORM ELEMENTS
+   ============================================================ */
+.sim-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sim-form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sim-text-dark);
+}
+
+.sim-form-input,
+.sim-form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--sim-border);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--sim-text-dark);
+    background: var(--sim-white);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+}
+
+.sim-form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.sim-form-input::placeholder,
+.sim-form-textarea::placeholder {
+    color: var(--sim-text-light);
+}
+
+.sim-form-input:focus,
+.sim-form-textarea:focus {
+    border-color: var(--sim-brown-warm);
+    box-shadow: 0 0 0 3px rgba(122, 69, 32, 0.1);
+}
+
+.sim-form-input--error,
+.sim-form-textarea--error {
+    border-color: #C0392B !important;
+    box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1) !important;
+}
+
+.sim-form-error {
+    font-size: 12px;
+    color: #C0392B;
+    margin: 0;
+    display: none;
+    min-height: 16px;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.sim-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 600;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+    max-width: 360px;
+    box-shadow: 0 8px 24px rgba(28,16,8,0.15);
+    transform: translateY(16px);
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+}
+
+.sim-toast--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.sim-toast--success {
+    background: var(--sim-green);
+    color: var(--sim-white);
+}
+
+.sim-toast--error {
+    background: #C0392B;
+    color: var(--sim-white);
+}
+
+/* ============================================================
+   MOBILE OVERLAY (sidebar)
+   ============================================================ */
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28,16,8,0.4);
+    z-index: 190;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.sidebar-overlay--visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+    .sim-proposal-grid {
+        grid-template-columns: 1fr 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Sidebar goes off-screen on mobile */
+    .sim-sidebar {
+        transform: translateX(-100%);
+    }
+    .sim-sidebar--open {
+        transform: translateX(0);
+    }
+    .sim-main {
+        margin-left: 0;
+    }
+    .sim-header__hamburger {
+        display: flex;
+    }
+    /* Stack group bar */
+    .sim-group-bar__left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+    .sim-group-bar__sep { display: none; }
+    /* Page header stack */
+    .sim-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 20px 20px 16px;
+    }
+    .sim-page-header__title { font-size: 32px; }
+    /* Proposal grid stack */
+    .sim-proposal-grid {
+        grid-template-columns: 1fr;
+        padding: 0 20px 40px;
+        gap: 16px;
+    }
+    /* Detail columns stack */
+    .sim-proposal-detail {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    .sim-group-bar { padding: 10px 20px; }
+    .sim-modal {
+        max-height: 95vh;
+        border-radius: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sim-header { padding: 0 16px; }
+    .sim-header__user-info { display: none; }
+    .sim-page-header { padding: 16px 16px 12px; }
+    .sim-page-header__title { font-size: 28px; }
+    .sim-proposal-grid { padding: 0 16px 32px; }
+    .sim-proposal-card { padding: 20px; }
+    .sim-group-bar { padding: 10px 16px; }
 }
