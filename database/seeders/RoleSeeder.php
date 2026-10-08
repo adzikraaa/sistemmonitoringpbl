@@ -16,6 +16,7 @@ class RoleSeeder extends Seeder
             'email' => 'koordinator@test.com',
             'password' => 'password',
             'nip' => '199000001',
+            'nidn' => '0099000001',
         ]);
 
         Dosen::create([
@@ -23,6 +24,7 @@ class RoleSeeder extends Seeder
             'email' => 'dosen@test.com',
             'password' => 'password',
             'nip' => '199000002',
+            'nidn' => '0099000002',
         ]);
 
         Mahasiswa::create([
