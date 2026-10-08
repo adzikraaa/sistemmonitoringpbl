@@ -3,6 +3,12 @@
 @section('title', 'Proposal')
 @section('meta_description', 'Halaman Proposal Mahasiswa SIM-PBL')
 
+@php
+    $proposalData = $proposal ?? [];
+    $proposalStatus = $proposalData['status'] ?? 'Diproses';
+    $proposalStatusClass = $proposalStatus === 'Disetujui' ? 'sim-badge--approved' : ($proposalStatus === 'Ditolak' ? 'sim-badge--danger' : 'sim-badge--warning');
+@endphp
+
 @section('content')
 {{-- Page Header --}}
 <div class="sim-page-header">
@@ -29,13 +35,21 @@
             <div class="sim-proposal-card__header">
                 <div class="sim-proposal-card__meta">
                     <span class="sim-proposal-card__version">VERSI 02</span>
-                    <span class="sim-badge sim-badge--approved">&#9679; Disetujui</span>
+                    <span class="sim-badge {{ $proposalStatusClass }}">&#9679; {{ $proposalStatus }}</span>
                 </div>
-                <span class="sim-proposal-card__date">26 September 2026</span>
+                <span class="sim-proposal-card__date">{{ $proposalData['tanggal'] ?? '26 September 2026' }}</span>
+            </div>
+
+            <div class="sim-status-box" style="margin-top: 1rem; margin-bottom: 1rem;">
+                <p class="sim-status-box__label" style="margin: 0 0 0.5rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; color: #64748b;">Status Proposal</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+                    <span class="sim-badge {{ $proposalStatusClass }}">{{ $proposalStatus }}</span>
+                    <span style="font-size: 0.82rem; color: #64748b;">{{ $proposalData['tanggal'] ?? '26 September 2026' }}</span>
+                </div>
             </div>
 
             {{-- Card title & desc --}}
-            <h2 class="sim-proposal-card__title">Pengembangan Sistem Monitoring PBL</h2>
+            <h2 class="sim-proposal-card__title">{{ $proposalData['judul'] ?? 'Pengembangan Sistem Monitoring PBL' }}</h2>
             <p class="sim-proposal-card__desc">Platform web untuk membantu mahasiswa, dosen, dan koordinator memantau progres Project Based Learning secara terstruktur.</p>
 
             {{-- Three-column detail --}}
@@ -63,10 +77,10 @@
                 <span class="sim-proposal-attachment__type">PDF</span>
             </div>
 
-            {{-- Catatan Pembimbing --}}
+            {{-- Feedback Pembimbing --}}
             <div class="sim-catatan">
-                <p class="sim-catatan__label">CATATAN PEMBIMBING</p>
-                <p class="sim-catatan__text">Struktur proposal sudah baik. Lanjutkan ke implementasi modul logbook.</p>
+                <p class="sim-catatan__label">Feedback Pembimbing</p>
+                <p class="sim-catatan__text">{{ $proposalData['feedback'] ?? 'Struktur proposal sudah baik. Lanjutkan ke implementasi modul logbook.' }}</p>
             </div>
         </div>
     </div>
@@ -76,42 +90,21 @@
         <div class="sim-timeline-card">
             <p class="sim-timeline-card__title">PERJALANAN PROPOSAL</p>
             <ul class="sim-timeline">
-                <li class="sim-timeline__item sim-timeline__item--done">
-                    <div class="sim-timeline__dot sim-timeline__dot--done">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                    <div class="sim-timeline__content">
-                        <p class="sim-timeline__event">Draf disusun</p>
-                        <p class="sim-timeline__date">02 Mei 2024</p>
-                    </div>
-                </li>
-                <li class="sim-timeline__item sim-timeline__item--done">
-                    <div class="sim-timeline__dot sim-timeline__dot--done">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                    <div class="sim-timeline__content">
-                        <p class="sim-timeline__event">Dikirim untuk ditinjau</p>
-                        <p class="sim-timeline__date">02 Mei 2024</p>
-                    </div>
-                </li>
-                <li class="sim-timeline__item sim-timeline__item--done">
-                    <div class="sim-timeline__dot sim-timeline__dot--done">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                    <div class="sim-timeline__content">
-                        <p class="sim-timeline__event">Disetujui pembimbing</p>
-                        <p class="sim-timeline__date">06 Mei 2024</p>
-                    </div>
-                </li>
-                <li class="sim-timeline__item sim-timeline__item--current sim-timeline__item--last">
-                    <div class="sim-timeline__dot sim-timeline__dot--current">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                    <div class="sim-timeline__content">
-                        <p class="sim-timeline__event">Mulai pengerjaan</p>
-                        <p class="sim-timeline__date sim-timeline__date--active">Berjalan</p>
-                    </div>
-                </li>
+                @foreach($proposalData['timeline'] ?? [] as $step)
+                    @php
+                        $isDone = ($step['state'] ?? '') === 'done';
+                        $isCurrent = ($step['state'] ?? '') === 'current';
+                    @endphp
+                    <li class="sim-timeline__item {{ $isDone ? 'sim-timeline__item--done' : ($isCurrent ? 'sim-timeline__item--current sim-timeline__item--last' : '') }}">
+                        <div class="sim-timeline__dot {{ $isDone ? 'sim-timeline__dot--done' : ($isCurrent ? 'sim-timeline__dot--current' : '') }}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div class="sim-timeline__content">
+                            <p class="sim-timeline__event">{{ $step['event'] }}</p>
+                            <p class="sim-timeline__date {{ $isCurrent ? 'sim-timeline__date--active' : '' }}">{{ $step['date'] }}</p>
+                        </div>
+                    </li>
+                @endforeach
             </ul>
         </div>
     </div>

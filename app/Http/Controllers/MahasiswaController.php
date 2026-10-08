@@ -30,7 +30,36 @@ class MahasiswaController extends Controller
 
     public function proposal()
     {
-        return view('mahasiswa.proposal', $this->sharedViewData());
+        $proposal = [
+            'judul' => 'Pengembangan Sistem Monitoring PBL',
+            'status' => 'Disetujui',
+            'tanggal' => '26 September 2026',
+            'feedback' => 'Struktur proposal sudah baik. Lanjutkan ke implementasi modul logbook.',
+            'timeline' => [
+                [
+                    'event' => 'Draf disusun',
+                    'date' => '02 Mei 2024',
+                    'state' => 'done',
+                ],
+                [
+                    'event' => 'Dikirim untuk ditinjau',
+                    'date' => '02 Mei 2024',
+                    'state' => 'done',
+                ],
+                [
+                    'event' => 'Disetujui pembimbing',
+                    'date' => '06 Mei 2024',
+                    'state' => 'done',
+                ],
+                [
+                    'event' => 'Mulai pengerjaan',
+                    'date' => 'Berjalan',
+                    'state' => 'current',
+                ],
+            ],
+        ];
+
+        return view('mahasiswa.proposal', array_merge($this->sharedViewData(), ['proposal' => $proposal]));
     }
 
     public function logbook()
