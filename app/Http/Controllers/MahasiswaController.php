@@ -14,8 +14,15 @@ class MahasiswaController extends Controller
     {
         return [
             'userName'  => 'Mochammad Tanggaq',
+            'userNim'   => '244107060105',
+            'userKelas' => 'SIB 3B',
             'userProdi' => 'Teknologi Informasi',
         ];
+    }
+
+    public function pilihSemester()
+    {
+        return view('mahasiswa.pilih-semester', $this->sharedViewData());
     }
 
     public function dashboard()

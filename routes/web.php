@@ -15,6 +15,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Ruang Mahasiswa routes
 Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
+    Route::get('/pilih-semester', [MahasiswaController::class, 'pilihSemester'])->name('pilih-semester');
     Route::get('/dashboard', [MahasiswaController::class, 'dashboard'])->name('dashboard');
     Route::get('/kelompok', [MahasiswaController::class, 'kelompok'])->name('kelompok');
     Route::get('/proposal', [MahasiswaController::class, 'proposal'])->name('proposal');

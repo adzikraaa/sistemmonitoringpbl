@@ -29,6 +29,10 @@ class LoginController extends Controller
         'password' => $request->password,
     ])) {
         $request->session()->regenerate();
+        // Mahasiswa diarahkan ke halaman pilih semester terlebih dahulu
+        if ($role === 'mahasiswa') {
+            return redirect()->route('mahasiswa.pilih-semester');
+        }
         return redirect()->route("{$role}.dashboard");
     }
 
