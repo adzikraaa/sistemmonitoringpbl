@@ -1021,3 +1021,577 @@ body.sim-body {
     .sim-proposal-card { padding: 20px; }
     .sim-group-bar { padding: 10px 16px; }
 }
+
+/* ============================================================
+   HEADER NOTIF DOT
+   ============================================================ */
+.sim-header__notif {
+    position: relative;
+}
+
+.sim-header__notif-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 7px;
+    height: 7px;
+    background: var(--sim-gold);
+    border-radius: 50%;
+    border: 1.5px solid var(--sim-white);
+}
+
+/* ============================================================
+   PILIH SEMESTER PAGE
+   ============================================================ */
+.sim-ps-main-content {
+    padding: 0;
+}
+
+/* Eyebrow bar */
+.sim-ps-eyebrow-bar {
+    padding: 20px 32px 0;
+}
+
+.sim-ps-eyebrow-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    background: var(--sim-cream);
+    border: 1px solid var(--sim-border);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    color: var(--sim-text-muted);
+    text-transform: uppercase;
+}
+
+/* Header */
+.sim-ps-header {
+    padding: 16px 32px 20px;
+}
+
+.sim-ps-header__title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    font-weight: 400;
+    color: var(--sim-text-dark);
+    margin: 0 0 10px;
+    line-height: 1.1;
+}
+
+.sim-ps-header__desc {
+    font-size: 13.5px;
+    color: var(--sim-text-muted);
+    margin: 0;
+    line-height: 1.6;
+    max-width: 640px;
+}
+
+/* Filter bar */
+.sim-ps-filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 32px 16px;
+    flex-wrap: wrap;
+}
+
+.sim-ps-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--sim-white);
+    border: 1px solid var(--sim-border);
+    border-radius: 10px;
+    padding: 4px;
+}
+
+.sim-ps-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--sim-text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.sim-ps-tab:hover {
+    background: var(--sim-cream);
+    color: var(--sim-text-dark);
+}
+
+.sim-ps-tab--active {
+    background: var(--sim-brown-dark);
+    color: var(--sim-cream) !important;
+}
+
+.sim-ps-tab--active:hover {
+    background: var(--sim-brown);
+}
+
+.sim-ps-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: var(--sim-brown-warm);
+    color: var(--sim-cream);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.sim-ps-tab-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: var(--sim-cream-dark);
+    color: var(--sim-text-muted);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.sim-ps-tab--active .sim-ps-tab-count {
+    background: rgba(255,255,255,0.2);
+    color: var(--sim-cream);
+}
+
+.sim-ps-result-count {
+    font-size: 12.5px;
+    color: var(--sim-text-muted);
+    margin: 0;
+}
+
+/* Grid */
+.sim-ps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding: 0 32px 24px;
+}
+
+/* Card */
+.sim-ps-card {
+    background: var(--sim-white);
+    border: 1px solid var(--sim-border);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.sim-ps-card:hover {
+    box-shadow: 0 8px 28px rgba(44, 26, 14, 0.1);
+    transform: translateY(-2px);
+}
+
+.sim-ps-card--active {
+    border: 2px solid var(--sim-brown-dark);
+    background: var(--sim-brown-dark);
+}
+
+.sim-ps-card--active .sim-ps-card__body {
+    background: var(--sim-brown-dark);
+}
+
+.sim-ps-card--active .sim-ps-card__kelas {
+    color: rgba(245, 239, 230, 0.6);
+}
+
+.sim-ps-card--active .sim-ps-card__project {
+    color: var(--sim-cream);
+}
+
+.sim-ps-card--active .sim-ps-card__meta-label {
+    color: rgba(245, 239, 230, 0.55);
+}
+
+.sim-ps-card--active .sim-ps-card__meta-val {
+    color: rgba(245, 239, 230, 0.9);
+}
+
+.sim-ps-card--active .sim-ps-card__phase {
+    color: rgba(245, 239, 230, 0.6);
+}
+
+.sim-ps-card--active .sim-ps-card__pct {
+    color: var(--sim-gold-light);
+    font-weight: 600;
+}
+
+.sim-ps-card__head {
+    padding: 16px 20px 12px;
+}
+
+.sim-ps-card--active .sim-ps-card__head {
+    background: var(--sim-brown-dark);
+}
+
+.sim-ps-card__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.sim-ps-card__label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sim-text-dark);
+}
+
+.sim-ps-card--active .sim-ps-card__label {
+    color: var(--sim-cream);
+}
+
+.sim-ps-card__body {
+    padding: 0 20px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sim-ps-card__kelas {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--sim-text-muted);
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.sim-ps-card__project {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--sim-text-dark);
+    line-height: 1.3;
+    margin: 0;
+}
+
+.sim-ps-card__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.sim-ps-card__meta-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 12.5px;
+}
+
+.sim-ps-card__meta-label {
+    color: var(--sim-text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.sim-ps-card__meta-val {
+    color: var(--sim-text-dark);
+    font-weight: 500;
+}
+
+/* Progress */
+.sim-ps-card__progress-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sim-ps-card__progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sim-ps-card__phase {
+    font-size: 12px;
+    color: var(--sim-text-muted);
+}
+
+.sim-ps-card__pct {
+    font-size: 12.5px;
+    color: var(--sim-text-dark);
+    font-weight: 600;
+}
+
+.sim-ps-card__progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.sim-ps-card--active .sim-ps-card__progress-bar {
+    background: rgba(255,255,255,0.15);
+}
+
+.sim-ps-card:not(.sim-ps-card--active) .sim-ps-card__progress-bar {
+    background: var(--sim-cream-dark);
+}
+
+.sim-ps-card__progress-fill {
+    height: 100%;
+    background: var(--sim-gold-light);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+/* Hasil row */
+.sim-ps-card__hasil-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    border-top: 1px solid var(--sim-border-light);
+    margin-top: auto;
+}
+
+.sim-ps-card__hasil-label {
+    font-size: 12px;
+    color: var(--sim-text-muted);
+}
+
+/* Card footer */
+.sim-ps-card__foot {
+    padding: 0 20px 20px;
+}
+
+.sim-ps-card__cta {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: var(--sim-text-dark);
+    color: var(--sim-cream);
+    text-align: center;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.sim-ps-card--active .sim-ps-card__cta {
+    background: var(--sim-cream);
+    color: var(--sim-brown-dark);
+}
+
+.sim-ps-card--active .sim-ps-card__cta:hover {
+    background: var(--sim-off-white);
+}
+
+.sim-ps-card__cta:hover {
+    background: var(--sim-brown-medium);
+    transform: translateY(-1px);
+}
+
+.sim-ps-card__cta:active {
+    transform: scale(0.98);
+}
+
+.sim-ps-card__cta-outline {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: var(--sim-text-muted);
+    text-align: center;
+    border-radius: 10px;
+    border: 1px solid var(--sim-border);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.sim-ps-card__cta-outline:hover {
+    background: var(--sim-cream);
+    color: var(--sim-text-dark);
+    border-color: var(--sim-cream-dark);
+}
+
+/* Badges */
+.sim-ps-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.sim-ps-badge--active {
+    background: rgba(74, 124, 89, 0.15);
+    color: var(--sim-green);
+    border: 1px solid rgba(74, 124, 89, 0.25);
+}
+
+.sim-ps-badge__dot {
+    width: 6px;
+    height: 6px;
+    background: var(--sim-green);
+    border-radius: 50%;
+    animation: ps-pulse 2s infinite;
+}
+
+@keyframes ps-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.sim-ps-badge--done {
+    background: var(--sim-cream-dark);
+    color: var(--sim-text-muted);
+    border: 1px solid var(--sim-border);
+}
+
+.sim-ps-badge--nilai {
+    background: var(--sim-green-bg);
+    color: var(--sim-green);
+    border: 1px solid var(--sim-green-muted);
+    font-size: 12px;
+    padding: 4px 10px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+/* Catatan */
+.sim-ps-catatan {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin: 8px 32px 32px;
+    padding: 18px 24px;
+    background: var(--sim-yellow-soft);
+    border: 1px solid var(--sim-yellow-border);
+    border-radius: 14px;
+}
+
+.sim-ps-catatan__icon {
+    color: var(--sim-gold);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.sim-ps-catatan__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.sim-ps-catatan__title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sim-text-dark);
+    margin: 0 0 4px;
+}
+
+.sim-ps-catatan__text {
+    font-size: 12.5px;
+    color: var(--sim-text-body);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.sim-ps-catatan__btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 18px;
+    background: var(--sim-brown-dark);
+    color: var(--sim-cream);
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.sim-ps-catatan__btn:hover {
+    background: var(--sim-brown);
+}
+
+/* Footer */
+.sim-ps-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 32px;
+    border-top: 1px solid var(--sim-border-light);
+    font-size: 12px;
+    color: var(--sim-text-muted);
+    flex-wrap: wrap;
+}
+
+.sim-ps-footer__links {
+    display: flex;
+    gap: 20px;
+}
+
+.sim-ps-footer__links a {
+    color: var(--sim-text-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.sim-ps-footer__links a:hover {
+    color: var(--sim-text-dark);
+}
+
+/* Responsive Pilih Semester */
+@media (max-width: 1024px) {
+    .sim-ps-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .sim-ps-eyebrow-bar,
+    .sim-ps-header,
+    .sim-ps-filter-bar {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .sim-ps-grid {
+        grid-template-columns: 1fr;
+        padding: 0 20px 24px;
+    }
+    .sim-ps-header__title { font-size: 32px; }
+    .sim-ps-catatan {
+        flex-direction: column;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+    .sim-ps-footer {
+        padding: 16px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sim-ps-header__title { font-size: 26px; }
+    .sim-ps-filter-bar { flex-direction: column; align-items: flex-start; }
+}
+
