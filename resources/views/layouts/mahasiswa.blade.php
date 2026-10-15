@@ -58,10 +58,13 @@
             </ul>
         </nav>
         <div class="sim-sidebar__footer">
-            <a href="#" class="sim-sidebar__logout">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                Keluar
-            </a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="sim-sidebar__logout" style="width:100%;background:none;border:none;cursor:pointer;text-align:left;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Keluar
+                </button>
+            </form>
         </div>
     </aside>
     <div class="sim-main">
@@ -75,9 +78,9 @@
                 <span class="sim-header__breadcrumb-current">Ruang mahasiswa</span>
             </div>
             <div class="sim-header__user">
-                <div class="sim-header__notif">
+                <a href="{{ route('mahasiswa.notifikasi') }}" class="sim-header__notif" title="Notifikasi">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                </div>
+                </a>
                 <div class="sim-header__user-avatar">{{ strtoupper(substr($userName ?? 'MT', 0, 2)) }}</div>
                 <div class="sim-header__user-info">
                     <span class="sim-header__user-name">{{ $userName ?? 'Mahasiswa' }}</span>
