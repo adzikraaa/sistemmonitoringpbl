@@ -71,7 +71,64 @@ class MahasiswaController extends Controller
 
     public function logbook()
     {
-        return view('mahasiswa.logbook', $this->sharedViewData());
+        $logbooks = [
+            [
+                'id'       => 'lb1',
+                'tanggal'  => '2026-04-28',
+                'judul'    => 'Analisis kebutuhan',
+                'deskripsi'=> 'Wawancara singkat dengan mahasiswa dan dosen pembimbing.',
+                'progress' => 0,
+                'hasil'    => 'Daftar kebutuhan prioritas dan alur utama terdokumentasi.',
+                'rencana'  => 'Validasi hasil analisis dan susun backlog sprint.',
+                'kendala'  => 'Jadwal wawancara dengan koordinator berubah.',
+                'status'   => 'Disetujui',
+                'feedback' => null,
+            ],
+            [
+                'id'       => 'lb2',
+                'tanggal'  => '2026-05-05',
+                'judul'    => 'Perancangan database',
+                'deskripsi'=> 'Menyusun relasi kelompok, proposal, logbook, milestone, dan penilaian.',
+                'progress' => 0,
+                'hasil'    => 'ERD dan struktur tabel awal selesai.',
+                'rencana'  => 'Finalisasi schema dan mulai implementasi API.',
+                'kendala'  => 'Beberapa istilah perlu disepakati dengan koordinator.',
+                'status'   => 'Revisi',
+                'feedback' => 'Tambahkan relasi histori aktivitas dan status publikasi nilai.',
+            ],
+            [
+                'id'       => 'lb3',
+                'tanggal'  => '2026-05-12',
+                'judul'    => 'Implementasi autentikasi',
+                'deskripsi'=> 'Menyelesaikan alur login dan pembagian akses berdasarkan role pengguna.',
+                'progress' => 0,
+                'hasil'    => 'Alur login mahasiswa dan dosen sudah dapat diuji.',
+                'rencana'  => 'Merapikan validasi form dan melanjutkan modul proposal.',
+                'kendala'  => 'Penyesuaian middleware untuk role coordinator.',
+                'status'   => 'Disetujui',
+                'feedback' => 'Dokumentasi cukup lengkap. Pastikan pesan error mudah dipahami pengguna.',
+            ],
+        ];
+
+        // Hitung nomor minggu berdasarkan tanggal paling awal
+        $earliest = null;
+        foreach ($logbooks as $lb) {
+            $ts = strtotime($lb['tanggal']);
+            if ($earliest === null || $ts < $earliest) {
+                $earliest = $ts;
+            }
+        }
+        foreach ($logbooks as $i => $lb) {
+            $diffDays = ($earliest !== null)
+                ? (strtotime($lb['tanggal']) - $earliest) / 86400
+                : 0;
+            $logbooks[$i]['minggu'] = (int) floor($diffDays / 7) + 1;
+        }
+
+        return view('mahasiswa.logbook', array_merge($this->sharedViewData(), [
+            'logbooks'        => $logbooks,
+            'earliestTimestamp' => $earliest ?? time(),
+        ]));
     }
 
     public function milestone()
@@ -257,6 +314,36 @@ class MahasiswaController extends Controller
             'success' => true,
             'message' => 'Proposal berhasil diajukan.',
             'status'  => 'diajukan',
+        ]);
+    }
+
+    /**
+     * Store Logbook Entry (backend stub).
+     *
+     * Menerima data dari form modal tambah logbook.
+     * Mengembalikan JSON sukses untuk diproses oleh JS.
+     * Implementasi penyimpanan ke DB dapat ditambahkan
+     * setelah tabel logbook tersedia.
+     */
+    public function storeLogbook(Request $request)
+    {
+        $validated = $request->validate([
+            'tanggal'  => 'required|date',
+            'judul'    => 'required|string|max:255',
+            'deskripsi'=> 'nullable|string',
+            'progress' => 'required|integer|min:0|max:100',
+            'hasil'    => 'nullable|string',
+            'kendala'  => 'nullable|string',
+            'rencana'  => 'nullable|string',
+        ]);
+
+        // TODO: simpan ke database setelah tabel logbook_milestone tersedia
+        // LogbookMilestone::create([...$validated, 'mahasiswa_id' => auth('mahasiswa')->id()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Catatan logbook berhasil ditambahkan.',
+            'data'    => $validated,
         ]);
     }
 }

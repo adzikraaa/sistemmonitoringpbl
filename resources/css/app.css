@@ -1595,3 +1595,430 @@ body.sim-body {
     .sim-ps-filter-bar { flex-direction: column; align-items: flex-start; }
 }
 
+/* ============================================================
+   BADGE VARIANTS (LOGBOOK & SHARED)
+   ============================================================ */
+.sim-badge--danger {
+    background: #FEE2E2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+}
+
+.sim-badge--warning {
+    background: var(--sim-yellow-soft);
+    color: var(--sim-yellow-text);
+    border: 1px solid var(--sim-yellow-border);
+}
+
+.sim-badge--pending {
+    background: #FFF7ED;
+    color: #C2410C;
+    border: 1px solid #FED7AA;
+}
+
+/* ============================================================
+   LOGBOOK PAGE
+   ============================================================ */
+.sim-lb-wrap {
+    padding: 0 32px 56px;
+}
+
+/* Info bar */
+.sim-lb-info-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    background: var(--sim-cream);
+    border: 1px solid var(--sim-border);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--sim-text-body);
+    line-height: 1.5;
+}
+
+.sim-lb-info-bar strong {
+    font-weight: 600;
+    color: var(--sim-text-dark);
+    margin-right: 4px;
+}
+
+.sim-lb-info-bar__icon {
+    color: var(--sim-text-muted);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* Two-column layout */
+.sim-lb-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.sim-lb-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sim-lb-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    position: sticky;
+    top: calc(var(--sim-header-h) + 16px);
+}
+
+/* Logbook card */
+.sim-lb-card {
+    background: var(--sim-white);
+    border: 1px solid var(--sim-border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: box-shadow 0.2s;
+}
+
+.sim-lb-card:hover {
+    box-shadow: 0 4px 20px rgba(44, 26, 14, 0.07);
+}
+
+.sim-lb-card__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sim-lb-card__week {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sim-text-muted);
+}
+
+.sim-lb-card__date {
+    margin-left: auto;
+    font-size: 12.5px;
+    color: var(--sim-text-muted);
+}
+
+.sim-lb-card__actions {
+    display: flex;
+    gap: 12px;
+    margin-left: 6px;
+}
+
+.sim-lb-card__action {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--sim-text-muted);
+    text-decoration: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    transition: color 0.15s;
+}
+
+.sim-lb-card__action:hover {
+    color: var(--sim-text-dark);
+}
+
+.sim-lb-card__action--danger:hover {
+    color: #B91C1C;
+}
+
+.sim-lb-card__title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--sim-text-dark);
+    margin: 0;
+    line-height: 1.25;
+}
+
+.sim-lb-card__desc {
+    font-size: 13px;
+    color: var(--sim-text-muted);
+    margin: -6px 0 0;
+    line-height: 1.6;
+}
+
+/* Progress */
+.sim-lb-card__progress-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sim-lb-card__progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sim-lb-card__progress-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sim-text-muted);
+}
+
+.sim-lb-card__progress-pct {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--sim-text-dark);
+}
+
+.sim-lb-card__progress-bar {
+    height: 5px;
+    background: var(--sim-cream-dark);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.sim-lb-card__progress-fill {
+    height: 100%;
+    background: var(--sim-brown-warm);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+/* Detail grid */
+.sim-lb-card__detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--sim-border-light);
+}
+
+.sim-lb-card__detail-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sim-text-muted);
+    margin: 0 0 5px;
+}
+
+.sim-lb-card__detail-text {
+    font-size: 12.5px;
+    color: var(--sim-text-body);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Kendala */
+.sim-lb-card__kendala {
+    font-size: 13px;
+    color: var(--sim-text-body);
+    line-height: 1.6;
+}
+
+.sim-lb-card__kendala strong {
+    font-weight: 600;
+    color: var(--sim-text-dark);
+}
+
+/* Respons Pembimbing */
+.sim-lb-card__response {
+    display: flex;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--sim-green-bg);
+    border: 1px solid var(--sim-green-muted);
+    border-radius: 10px;
+}
+
+.sim-lb-card__response-icon {
+    color: var(--sim-green);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.sim-lb-card__response-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sim-green);
+    margin: 0 0 3px;
+}
+
+.sim-lb-card__response-text {
+    font-size: 12.5px;
+    color: var(--sim-green);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Sidebar ritme mingguan */
+.sim-lb-sidebar-card {
+    background: var(--sim-white);
+    border: 1px solid var(--sim-border);
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.sim-lb-sidebar-card__top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.sim-lb-sidebar-card__icon {
+    width: 36px;
+    height: 36px;
+    background: var(--sim-cream);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sim-brown-warm);
+    flex-shrink: 0;
+}
+
+.sim-lb-sidebar-card__heading {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sim-text-dark);
+    margin: 0 0 2px;
+    line-height: 1.3;
+}
+
+.sim-lb-sidebar-card__sub {
+    font-size: 12px;
+    color: var(--sim-text-muted);
+    margin: 0;
+}
+
+.sim-lb-sidebar-tips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sim-lb-sidebar-tip {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.sim-lb-sidebar-tip__num {
+    width: 20px;
+    height: 20px;
+    background: var(--sim-cream);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--sim-text-muted);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.sim-lb-sidebar-tip__text {
+    font-size: 12.5px;
+    color: var(--sim-text-body);
+    line-height: 1.5;
+}
+
+/* Empty state */
+.sim-lb-empty {
+    background: var(--sim-white);
+    border: 1.5px dashed var(--sim-border);
+    border-radius: 16px;
+    padding: 52px 32px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sim-lb-empty__icon {
+    width: 48px;
+    height: 48px;
+    background: var(--sim-cream);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sim-text-muted);
+    margin: 0 auto 14px;
+}
+
+.sim-lb-empty__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--sim-text-dark);
+    margin: 0 0 6px;
+}
+
+.sim-lb-empty__desc {
+    font-size: 13px;
+    color: var(--sim-text-muted);
+    margin: 0 0 20px;
+    line-height: 1.6;
+}
+
+/* Responsive logbook */
+@media (max-width: 960px) {
+    .sim-lb-layout {
+        flex-direction: column;
+    }
+    .sim-lb-sidebar {
+        width: 100%;
+        position: static;
+    }
+    .sim-lb-sidebar-tips {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sim-lb-wrap {
+        padding: 0 20px 40px;
+    }
+    .sim-lb-card__detail-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    .sim-lb-card__date {
+        margin-left: 0;
+    }
+    .sim-lb-sidebar-tips {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .sim-lb-wrap {
+        padding: 0 16px 32px;
+    }
+    .sim-lb-card {
+        padding: 18px;
+    }
+    .sim-lb-card__header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
