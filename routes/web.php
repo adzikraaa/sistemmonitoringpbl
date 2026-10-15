@@ -21,6 +21,7 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
     Route::get('/proposal', [MahasiswaController::class, 'proposal'])->name('proposal');
     Route::get('/logbook', [MahasiswaController::class, 'logbook'])->name('logbook');
     Route::get('/milestone', [MahasiswaController::class, 'milestone'])->name('milestone');
+    Route::get('/notifikasi', [MahasiswaController::class, 'notifikasi'])->name('notifikasi');
 
     // Proposal submission
     Route::post('/proposal', [MahasiswaController::class, 'storeProposal'])->name('proposal.store');

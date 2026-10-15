@@ -135,6 +135,14 @@ class MahasiswaController extends Controller
     }
 
     /**
+      * Notifikasi.
+      */
+    public function notifikasi()
+    {
+        return view('mahasiswa.notifikasi', $this->sharedViewData());
+    }
+
+    /**
      * Store Proposal (backend stub).
      *
      * Endpoint ini siap menerima data dari form modal.
