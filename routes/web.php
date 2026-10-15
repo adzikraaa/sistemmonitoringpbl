@@ -23,7 +23,10 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('auth:mahasiswa')->gr
     Route::get('/kelompok', [MahasiswaController::class, 'kelompok'])->name('kelompok');
     Route::get('/proposal', [MahasiswaController::class, 'proposal'])->name('proposal');
     Route::get('/logbook', [MahasiswaController::class, 'logbook'])->name('logbook');
+
     Route::get('/milestone', [MahasiswaController::class, 'milestone'])->name('milestone');
+    Route::post('/milestone/{id}/upload', [MahasiswaController::class, 'storeMilestoneUpload'])->name('milestone.upload');
+
     Route::post('/proposal', [MahasiswaController::class, 'storeProposal'])->name('proposal.store');
 });
 

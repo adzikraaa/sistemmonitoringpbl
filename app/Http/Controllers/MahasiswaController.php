@@ -59,9 +59,18 @@ class MahasiswaController extends Controller
                 'progress'    => 100,
                 'catatan'     => 'Proposal dan rumusan masalah disetujui dosen. Lanjutkan ke pemodelan UML dan wireframe.',
                 'deliverables' => [
-                    ['nama' => 'Draf Proposal Proyek', 'status' => 'Disetujui'],
-                    ['nama' => 'Struktur WBS & Timeline Proyek', 'status' => 'Disetujui'],
-                    ['nama' => 'Pembagian Peran Anggota Tim', 'status' => 'Disetujui'],
+                    [
+                        'id' => 'd1', 'nama' => 'Draf Proposal Proyek', 'status' => 'Disetujui',
+                        'file_name' => 'Draft_Proposal_PBL_v2.pdf', 'file_url' => '#', 'catatan' => 'Format dan isi sudah sesuai.'
+                    ],
+                    [
+                        'id' => 'd2', 'nama' => 'Struktur WBS & Timeline Proyek', 'status' => 'Disetujui',
+                        'file_name' => 'WBS_Timeline_Kelompok01.pdf', 'file_url' => '#', 'catatan' => 'Timeline realistis.'
+                    ],
+                    [
+                        'id' => 'd3', 'nama' => 'Pembagian Peran Anggota Tim', 'status' => 'Disetujui',
+                        'file_name' => 'Pembagian_Peran_Tim.pdf', 'file_url' => '#', 'catatan' => ''
+                    ],
                 ]
             ],
             [
@@ -72,13 +81,25 @@ class MahasiswaController extends Controller
                 'badge'       => 'sim-badge--pending',
                 'tenggat'     => '30 Mei 2026',
                 'deskripsi'   => 'Perencanaan UI/UX Figma, skema relasi database (ERD), Use Case, dan inisiasi modul backend.',
-                'progress'    => 75,
+                'progress'    => 50,
                 'catatan'     => 'Modul dashboard dan skema ERD sudah terarah baik. Perbaiki kardinalitas relasi pada tabel evaluasi.',
                 'deliverables' => [
-                    ['nama' => 'Prototype High-Fidelity UI/UX Figma', 'status' => 'Disetujui'],
-                    ['nama' => 'Diagram Use Case & Flowchart Sistem', 'status' => 'Disetujui'],
-                    ['nama' => 'ERD & Kamus Data Fisik (PostgreSQL)', 'status' => 'Perlu Revisi'],
-                    ['nama' => 'Dokumen Spesifikasi Kebutuhan (SRS)', 'status' => 'Progres 60%'],
+                    [
+                        'id' => 'd4', 'nama' => 'Prototype High-Fidelity UI/UX Figma', 'status' => 'Disetujui',
+                        'file_name' => 'Figma_Link_Export_v1.pdf', 'file_url' => '#', 'catatan' => 'Desain rapi dan konsisten.'
+                    ],
+                    [
+                        'id' => 'd5', 'nama' => 'Diagram Use Case & Flowchart Sistem', 'status' => 'Disetujui',
+                        'file_name' => 'Diagram_UseCase_Flowchart.pdf', 'file_url' => '#', 'catatan' => 'Aktor dan alur sesuai.'
+                    ],
+                    [
+                        'id' => 'd6', 'nama' => 'ERD & Kamus Data Fisik (PostgreSQL)', 'status' => 'Perlu Revisi',
+                        'file_name' => 'ERD_Physical_Model_v1.pdf', 'file_url' => '#', 'catatan' => 'Kardinalitas relasi antara tabel mahasiswa dan evaluasi perlu diperbaiki.'
+                    ],
+                    [
+                        'id' => 'd7', 'nama' => 'Dokumen Spesifikasi Kebutuhan (SRS)', 'status' => 'Belum Dimulai',
+                        'file_name' => '', 'file_url' => '', 'catatan' => 'Silakan unggah draf dokumen SRS awal.'
+                    ],
                 ]
             ],
             [
@@ -92,9 +113,9 @@ class MahasiswaController extends Controller
                 'progress'    => 0,
                 'catatan'     => '',
                 'deliverables' => [
-                    ['nama' => 'Modul Ruang Mahasiswa (Proposal & Milestone)', 'status' => 'Belum dimulai'],
-                    ['nama' => 'Modul Ruang Dosen (Review & Assessment)', 'status' => 'Belum dimulai'],
-                    ['nama' => 'Autentikasi & Middleware Multi-Role', 'status' => 'Belum dimulai'],
+                    ['id' => 'd8', 'nama' => 'Modul Ruang Mahasiswa (Proposal & Milestone)', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
+                    ['id' => 'd9', 'nama' => 'Modul Ruang Dosen (Review & Assessment)', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
+                    ['id' => 'd10', 'nama' => 'Autentikasi & Middleware Multi-Role', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
                 ]
             ],
             [
@@ -108,8 +129,8 @@ class MahasiswaController extends Controller
                 'progress'    => 0,
                 'catatan'     => '',
                 'deliverables' => [
-                    ['nama' => 'Dokumen Test Case & Test Plan (PMPL)', 'status' => 'Belum dimulai'],
-                    ['nama' => 'Laporan Eksekusi Pengujian & Bug Fixing', 'status' => 'Belum dimulai']
+                    ['id' => 'd11', 'nama' => 'Dokumen Test Case & Test Plan (PMPL)', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
+                    ['id' => 'd12', 'nama' => 'Laporan Eksekusi Pengujian & Bug Fixing', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => '']
                 ]
             ],
             [
@@ -123,15 +144,55 @@ class MahasiswaController extends Controller
                 'progress'    => 0,
                 'catatan'     => '',
                 'deliverables' => [
-                    ['nama' => 'Laporan Akhir Proyek PBL (PDF)', 'status' => 'Belum dimulai'],
-                    ['nama' => 'Video Demo & Poster Produk', 'status' => 'Belum dimulai'],
-                    ['nama' => 'Peer Assessment & Kelayakan Sidang', 'status' => 'Belum dimulai'],
+                    ['id' => 'd13', 'nama' => 'Laporan Akhir Proyek PBL (PDF)', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
+                    ['id' => 'd14', 'nama' => 'Video Demo & Poster Produk', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
+                    ['id' => 'd15', 'nama' => 'Peer Assessment & Kelayakan Sidang', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
                 ]
             ],
         ];
         return view('mahasiswa.milestone', array_merge($this->sharedViewData(), [
             'milestones' => $milestones
         ]));
+    }
+
+    //method untuk menampilkan detail milestone pengumpulan bukti kerja
+    public function milestoneDetail($id)
+    {
+        // Ambil data milestone (stub dummy)
+        $milestones = [
+            'm1' => [
+                'id' => 'm1', 'kode' => 'M1', 'judul' => 'Inisiasi Proyek & Proposal',
+                'status' => 'Selesai', 'badge' => 'sim-badge--approved', 'tenggat' => '25 Apr 2026',
+                'deskripsi' => 'Pengajuan proposal, pemodelan lingkup masalah, dan persetujuan dosen pembimbing.',
+                'catatan' => 'Proposal dan rumusan masalah disetujui dosen. Lanjutkan ke pemodelan UML dan wireframe.'
+            ],
+            'm2' => [
+                'id' => 'm2', 'kode' => 'M2', 'judul' => 'Implementasi',
+                'status' => 'Berjalan', 'badge' => 'sim-badge--pending', 'tenggat' => '30 Mei 2026',
+                'deskripsi' => 'Pembangunan modul inti aplikasi.',
+                'catatan' => 'Modul dashboard dan proposal sedang diselesaikan.'
+            ],
+        ];
+
+        $milestone = $milestones[$id] ?? $milestones['m2'];
+
+        return view('mahasiswa.milestone-detail', array_merge($this->sharedViewData(), [
+            'milestone' => $milestone
+        ]));
+    }
+
+   // Method Simpan Upload Berkas Deliverable
+    public function storeMilestoneUpload(Request $request, $id)
+    {
+        $request->validate([
+            'berkas' => 'required|file|mimes:pdf,zip|max:20480', // Maks 20MB
+            'item_id' => 'required|string',
+        ]);
+
+        // TODO: Simpan ke DB / Storage berdasarkan item_id
+        // $path = $request->file('berkas')->store('deliverables');
+
+        return redirect()->route('mahasiswa.milestone')->with('success', 'Berkas deliverable berhasil dikirim!');
     }
 
     /**
