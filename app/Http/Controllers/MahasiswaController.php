@@ -45,6 +45,11 @@ class MahasiswaController extends Controller
         return view('mahasiswa.logbook', $this->sharedViewData());
     }
 
+    public function notifikasi()
+    {
+        return view('mahasiswa.notifikasi', $this->sharedViewData());
+    }
+
     public function milestone()
     {
         $milestones = [
@@ -129,6 +134,7 @@ class MahasiswaController extends Controller
                 ]
             ],
         ];
+
         return view('mahasiswa.milestone', array_merge($this->sharedViewData(), [
             'milestones' => $milestones
         ]));
