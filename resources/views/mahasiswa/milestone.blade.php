@@ -4,75 +4,103 @@
 @section('meta_description', 'Halaman Peta Perjalanan Milestone Mahasiswa SIM-PBL')
 
 @section('content')
-<div style="max-width: 920px; margin: 0 auto;">
 
-    {{-- Header Halaman --}}
-    <div class="sim-page-header" style="margin-bottom: 1.25rem;">
-        <div class="sim-page-header__left">
-            <p class="sim-page-header__eyebrow">PETA PERJALANAN PROYEK</p>
-            <h1 class="sim-page-header__title">Milestone</h1>
-        </div>
+{{-- Header Halaman --}}
+<div class="sim-page-header">
+    <div class="sim-page-header__left">
+        <p class="sim-page-header__eyebrow">PETA PERJALANAN PROYEK</p>
+        <h1 class="sim-page-header__title">Milestone</h1>
+        <p class="sim-page-header__desc">
+            Kelompok 01 &ndash; SIB 3B &middot; Pemantauan capaian target dan pengumpulan berkas milestone proyek.
+        </p>
     </div>
+</div>
 
-    {{-- Context Banner Ringkas --}}
-    <div class="sim-proposal-card" style="margin-bottom: 1rem; margin-left: 3.0rem; padding: 0.75rem 1rem;">
-        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; justify-content: space-between; font-size: 0.85rem; color: #555;">
-            <div>
-                <strong style="color: #222; font-weight: 600;">Kelompok 01 &bull; SIB 3B</strong>
-            </div>
+{{-- Content Wrap --}}
+<div class="sim-lb-wrap">
+
+    {{-- Context Banner Transparan (Info Bar) --}}
+    <div class="sim-lb-info-bar" style="margin-bottom: 1.25rem;">
+        <span class="sim-lb-info-bar__icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+        </span>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; justify-content: space-between; width: 100%;">
+            <span>
+                <strong>Kelompok 01 &bull; SIB 3B</strong>
+                Progres dihitung otomatis dari persentase deliverables yang telah disetujui pembimbing.
+            </span>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span class="sim-badge sim-badge--approved" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Status: On-Track</span>
-                <button onclick="toggleRumusInfo()" class="sim-btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+                <button onclick="toggleRumusInfo()" class="sim-btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #ffffff;">
                     &#128712; Formula Progres
                 </button>
             </div>
         </div>
-
-        {{-- Collapsible Box Info Rumus --}}
-        <div id="box-rumus-info" style="display: none; margin-top: 0.6rem; padding: 0.6rem; background-color: #f4f6f8; border-radius: 6px; border-left: 3px solid #4a3b32; font-size: 0.8rem; color: #444;">
-            <p style="margin: 0; font-weight: 600; color: #222;">Transparansi Perhitungan Progres:</p>
-            <p style="margin: 0.2rem 0 0 0;">
-                Progres tiap milestone dihitung berdasarkan proporsi: 
-                <strong>(Deliverables Terverifikasi / Total Deliverables) &times; 100%</strong>. Validasi dilakukan oleh Dosen Pembimbing.
-            </p>
-        </div>
     </div>
 
-    {{-- List Timeline Milestone --}}
-    <div style="display: flex; flex-direction: column; gap: 1rem; position: relative;">
+    {{-- Collapsible Box Info Rumus --}}
+    <div id="box-rumus-info" style="display: none; margin-top: -0.75rem; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background-color: #fdfbf7; border-radius: 8px; border-left: 3px solid #4a3b32; font-size: 0.82rem; color: #444;">
+        <p style="margin: 0; font-weight: 600; color: #222;">Transparansi Perhitungan Progres:</p>
+        <p style="margin: 0.2rem 0 0 0;">
+            Progres tiap milestone dihitung berdasarkan proporsi: 
+            <strong>(Deliverables Terverifikasi / Total Deliverables) &times; 100%</strong>. Validasi dilakukan oleh Dosen Pembimbing.
+        </p>
+    </div>
+
+    {{-- List Timeline Milestone sesuai Figma --}}
+    <div style="display: flex; flex-direction: column; gap: 1.5rem; position: relative;">
         
+        {{-- Garis Vertikal Timeline di Sebelah Kiri --}}
+        <div style="
+            position: absolute;
+            top: 20px;
+            bottom: 20px;
+            left: 17px;
+            width: 2px;
+            background-color: #e0e0e0;
+            z-index: 1;
+        "></div>
+
         @foreach($milestones as $m)
-        <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+        {{-- Wrapper Item (Flex Horizontal) --}}
+        <div style="display: flex; gap: 1.25rem; align-items: flex-start; position: relative; z-index: 2;">
             
-            {{-- Indicator Circle --}}
-            <div style="
-                flex-shrink: 0;
-                width: 34px;
-                height: 34px;
+            {{-- Lingkaran M1, M2, dst (Di Luar Card) --}}
+            <span style="
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
                 border-radius: 50%;
                 background-color: {{ $m['status'] == 'Berjalan' ? '#d97706' : ($m['status'] == 'Selesai' ? '#2e7d32' : '#888888') }};
                 color: #ffffff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 600;
+                font-weight: 700;
                 font-size: 0.8rem;
-                margin-top: 0.25rem;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-                z-index: 2;
+                flex-shrink: 0;
+                margin-top: 0.2rem;
+                box-shadow: 0 0 0 4px #fbf9f5;
             ">
                 {{ $m['kode'] }}
-            </div>
+            </span>
 
-            {{-- Card Item Milestone --}}
-            <div class="sim-proposal-card" style="flex: 1; padding: 1rem 1.25rem; border-left: 4px solid {{ $m['status'] == 'Berjalan' ? '#d97706' : ($m['status'] == 'Selesai' ? '#2e7d32' : '#cccccc') }};">
+            {{-- Card Utama (Di Sebelah Kanan Lingkaran) --}}
+            <div class="sim-proposal-card" style="flex: 1; padding: 1.25rem; border-left: none;">
                 
                 {{-- Header Card --}}
-                <div class="sim-proposal-card__header" style="margin-bottom: 0.4rem;">
-                    <div class="sim-proposal-card__meta" style="align-items: center; gap: 0.5rem;">
-                        <h2 class="sim-proposal-card__title" style="margin-bottom: 0; font-size: 1.15rem;">{{ $m['judul'] }}</h2>
-                        <span class="sim-badge {{ $m['badge'] }}" style="padding: 0.15rem 0.45rem; font-size: 0.7rem;">&#9679; {{ $m['status'] }}</span>
+                <div class="sim-proposal-card__header" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="sim-proposal-card__meta" style="display: flex; align-items: center; gap: 0.6rem;">
+                        <h2 class="sim-proposal-card__title" style="margin: 0; font-size: 1.15rem; color: #1a1a1a;">
+                            {{ $m['judul'] }}
+                        </h2>
+                        <span class="sim-badge {{ $m['badge'] }}" style="padding: 0.15rem 0.45rem; font-size: 0.7rem;">
+                            &#9679; {{ $m['status'] }}
+                        </span>
                     </div>
+
                     <div style="text-align: right;">
                         <span style="display: block; font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em;">TENGGAT</span>
                         <span class="sim-proposal-card__date" style="font-weight: 600; color: #333; font-size: 0.85rem;">{{ $m['tenggat'] }}</span>
@@ -80,11 +108,11 @@
                 </div>
 
                 {{-- Deskripsi --}}
-                <p class="sim-proposal-card__desc" style="margin-bottom: 0.75rem; font-size: 0.85rem; color: #666;">{{ $m['deskripsi'] }}</p>
+                <p class="sim-proposal-card__desc" style="margin-bottom: 0.85rem; font-size: 0.88rem; color: #666;">{{ $m['deskripsi'] }}</p>
 
                 {{-- Progress Bar --}}
-                <div style="margin-bottom: 0.75rem;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #555; margin-bottom: 0.2rem; font-weight: 600;">
+                <div style="margin-bottom: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #555; margin-bottom: 0.25rem; font-weight: 600;">
                         <span>Progres Capaian</span>
                         <span>{{ $m['progress'] }}%</span>
                     </div>
@@ -101,20 +129,20 @@
 
                 {{-- Catatan Dosen Umum --}}
                 @if(!empty($m['catatan']))
-                <div class="sim-catatan" style="margin-bottom: 0.75rem; padding: 0.5rem 0.75rem; background-color: rgba(0,0,0,0.02); border-radius: 6px; border-left: 2px solid #888;">
+                <div class="sim-catatan" style="margin-bottom: 0.85rem; padding: 0.6rem 0.85rem; background-color: rgba(0,0,0,0.02); border-radius: 6px; border-left: 2px solid #888;">
                     <p class="sim-catatan__label" style="font-size: 0.65rem; margin-bottom: 0.15rem;">CATATAN PEMBIMBING</p>
-                    <p class="sim-catatan__text" style="font-style: italic; font-size: 0.8rem; margin: 0; color: #444;">
+                    <p class="sim-catatan__text" style="font-style: italic; font-size: 0.82rem; margin: 0; color: #444;">
                         "{{ $m['catatan'] }}"
                     </p>
                 </div>
                 @endif
 
-                {{-- List Grid Deliverables (Klik Kartu Langsung Buka Modal) --}}
+                {{-- List Grid Deliverables --}}
                 @if(!empty($m['deliverables']))
-                <div style="margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px dashed #e0e0e0;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.6rem;">
+                <div style="margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px dashed #e0e0e0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.65rem;">
                         @foreach($m['deliverables'] as $item)
-                        {{-- Card Deliverable Bersih & Interaktif --}}
+                        {{-- Card Deliverable Interaktif --}}
                         <div onclick="openDeliverableModal({{ json_encode($item) }}, '{{ $m['kode'] }}')" 
                              style="
                                 background-color: #ffffff; 
@@ -132,6 +160,7 @@
                              onmouseout="this.style.borderColor='#e2e2e2'; this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 2px rgba(0,0,0,0.02)';"
                         >
                             <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; padding-right: 0.5rem;">
+                                <span style="color: #8c7355; font-size: 0.9rem;"></span>
                                 <span style="color: #222; font-weight: 500; font-size: 0.83rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                                     {{ $item['nama'] }}
                                 </span>
@@ -206,7 +235,7 @@
         <div id="modal-file-lama-container" style="display: none; margin-bottom: 1.25rem; padding: 0.6rem 0.8rem; background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px;">
             <p style="margin: 0 0 0.2rem 0; font-size: 0.72rem; color: #6c757d; font-weight: 600;">BERKAS TERAKHIR DILAMPIRKAN:</p>
             <a id="modal-item-file-link" href="#" target="_blank" style="font-size: 0.82rem; color: #2b6cb0; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
-                📄 <span id="modal-item-file-name"></span> 
+                <span id="modal-item-file-name"></span> 
             </a>
         </div>
 
@@ -388,14 +417,12 @@ function handleModalFileSelect(input) {
     const submitBtn = document.getElementById('modal-btn-submit');
 
     if (file) {
-        // Cek Ukuran Maks 20MB
         if (file.size > 20 * 1024 * 1024) {
             alert('Ukuran berkas melebihi batas maksimal 20 MB!');
             resetModalDropzone();
             return;
         }
 
-        // Tampilkan State Terpilih Langsung di Kotak Dropzone
         emptyState.style.display = 'none';
         selectedState.style.display = 'block';
         fileName.textContent = file.name;
