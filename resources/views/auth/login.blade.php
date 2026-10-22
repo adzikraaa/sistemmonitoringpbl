@@ -90,7 +90,7 @@
                         <input type="checkbox" name="remember" value="1" class="rounded border-gray-300">
                         Ingat Perangkat Ini
                     </label>
-                    <a href="{{ route('password.request') }}" class="text-blue-900 hover:underline">Lupa kata sandi?</a>
+                    <a href="https://siakad.polinema.ac.id/recovery_password" target="_blank" rel="noopener noreferrer" class="text-blue-900 hover:underline">Lupa kata sandi?</a>
                 </div>
 
                 <button type="submit"
