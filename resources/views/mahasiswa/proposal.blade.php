@@ -123,7 +123,10 @@
             </button>
         </div>
 
-        <form id="proposal-form" class="sim-modal__form" onsubmit="submitProposal(event)" novalidate>
+        <form id="proposal-form" class="sim-modal__form" method="POST"
+              action="{{ route('mahasiswa.proposal.store') }}"
+              enctype="multipart/form-data" novalidate>
+            @csrf
             <div class="sim-form-group">
                 <label class="sim-form-label" for="field-judul">Judul proyek</label>
                 <input
@@ -133,6 +136,7 @@
                     class="sim-form-input"
                     placeholder="Masukkan judul proyek"
                     autocomplete="off"
+                    value="{{ old('judul') }}"
                 >
                 <p class="sim-form-error" id="err-judul" role="alert"></p>
             </div>
@@ -145,7 +149,7 @@
                     class="sim-form-textarea"
                     placeholder="Apa yang ingin kelompokmu kerjakan?"
                     rows="3"
-                ></textarea>
+                >{{ old('deskripsi') }}</textarea>
                 <p class="sim-form-error" id="err-deskripsi" role="alert"></p>
             </div>
 
@@ -157,7 +161,7 @@
                     class="sim-form-textarea"
                     placeholder="Mengapa masalah ini penting?"
                     rows="3"
-                ></textarea>
+                >{{ old('latar_belakang') }}</textarea>
                 <p class="sim-form-error" id="err-latar" role="alert"></p>
             </div>
 
@@ -169,7 +173,7 @@
                     class="sim-form-textarea"
                     placeholder="Perubahan apa yang ingin dicapai?"
                     rows="3"
-                ></textarea>
+                >{{ old('tujuan') }}</textarea>
                 <p class="sim-form-error" id="err-tujuan" role="alert"></p>
             </div>
 
@@ -181,8 +185,23 @@
                     class="sim-form-textarea"
                     placeholder="Bagaimana kelompokmu akan mengerjakannya?"
                     rows="3"
-                ></textarea>
+                >{{ old('metode') }}</textarea>
                 <p class="sim-form-error" id="err-metode" role="alert"></p>
+            </div>
+
+            <div class="sim-form-group">
+                <label class="sim-form-label" for="field-file-proposal">
+                    File Proposal <span style="font-weight:400;color:#888;">(PDF, maks 10 MB — opsional)</span>
+                </label>
+                <input
+                    type="file"
+                    id="field-file-proposal"
+                    name="file_proposal"
+                    class="sim-form-input"
+                    accept=".pdf"
+                    style="padding: 0.5rem 1rem;"
+                >
+                <p class="sim-form-error" id="err-file" role="alert"></p>
             </div>
 
             <div class="sim-modal__footer">
@@ -206,7 +225,6 @@ function openProposalModal() {
     const overlay = document.getElementById('proposal-modal-overlay');
     overlay.classList.add('sim-modal-overlay--visible');
     document.body.style.overflow = 'hidden';
-    // Reset form
     document.getElementById('proposal-form').reset();
     clearAllErrors();
 }
@@ -223,16 +241,15 @@ function handleOverlayClick(event) {
     }
 }
 
-// Close on ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeProposalModal();
 });
 
 // ============================================================
-// VALIDATION
+// CLIENT-SIDE VALIDATION (before submit)
 // ============================================================
 function clearAllErrors() {
-    ['judul', 'deskripsi', 'latar', 'tujuan', 'metode'].forEach(function(key) {
+    ['judul', 'deskripsi', 'latar', 'tujuan', 'metode', 'file'].forEach(function(key) {
         const errEl = document.getElementById('err-' + key);
         if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
         const inputEl = document.getElementById('field-' + key);
@@ -251,72 +268,30 @@ function showError(fieldKey, message) {
     }
 }
 
-function validateForm(data) {
-    let valid = true;
+// Validasi sebelum form submit ke server
+document.getElementById('proposal-form').addEventListener('submit', function(e) {
     clearAllErrors();
+    let valid = true;
 
-    if (!data.judul.trim()) {
-        showError('judul', 'Judul proyek wajib diisi.');
-        valid = false;
+    const judul    = document.getElementById('field-judul').value.trim();
+    const deskripsi= document.getElementById('field-deskripsi').value.trim();
+    const latar    = document.getElementById('field-latar').value.trim();
+    const tujuan   = document.getElementById('field-tujuan').value.trim();
+    const metode   = document.getElementById('field-metode').value.trim();
+    const fileEl   = document.getElementById('field-file-proposal');
+    const file     = fileEl && fileEl.files[0];
+
+    if (!judul)     { showError('judul',     'Judul proyek wajib diisi.');      valid = false; }
+    if (!deskripsi) { showError('deskripsi', 'Deskripsi singkat wajib diisi.'); valid = false; }
+    if (!latar)     { showError('latar',     'Latar belakang wajib diisi.');    valid = false; }
+    if (!tujuan)    { showError('tujuan',    'Tujuan wajib diisi.');            valid = false; }
+    if (!metode)    { showError('metode',    'Metode kerja wajib diisi.');      valid = false; }
+    if (file && file.size > 10 * 1024 * 1024) {
+        showError('file', 'Ukuran file tidak boleh lebih dari 10 MB.'); valid = false;
     }
-    if (!data.deskripsi.trim()) {
-        showError('deskripsi', 'Deskripsi singkat wajib diisi.');
-        valid = false;
-    }
-    if (!data.latar.trim()) {
-        showError('latar', 'Latar belakang wajib diisi.');
-        valid = false;
-    }
-    if (!data.tujuan.trim()) {
-        showError('tujuan', 'Tujuan wajib diisi.');
-        valid = false;
-    }
-    if (!data.metode.trim()) {
-        showError('metode', 'Metode kerja wajib diisi.');
-        valid = false;
-    }
-    return valid;
-}
 
-// ============================================================
-// SUBMIT
-// ============================================================
-function submitProposal(event) {
-    event.preventDefault();
-
-    const data = {
-        judul: document.getElementById('field-judul').value,
-        deskripsi: document.getElementById('field-deskripsi').value,
-        latar: document.getElementById('field-latar').value,
-        tujuan: document.getElementById('field-tujuan').value,
-        metode: document.getElementById('field-metode').value,
-    };
-
-    if (!validateForm(data)) return;
-
-    const btn = document.getElementById('btn-submit-proposal');
-    btn.disabled = true;
-    btn.textContent = 'Mengirim...';
-
-    // Simulate submit (backend belum tersedia — local state)
-    setTimeout(function() {
-        btn.disabled = false;
-        btn.textContent = 'Kirim proposal';
-        closeProposalModal();
-        showToast('Proposal berhasil diajukan! Status: Diajukan.', 'success');
-    }, 800);
-}
-
-// ============================================================
-// TOAST
-// ============================================================
-function showToast(message, type) {
-    const toast = document.getElementById('sim-toast');
-    toast.textContent = message;
-    toast.className = 'sim-toast sim-toast--' + type + ' sim-toast--visible';
-    setTimeout(function() {
-        toast.classList.remove('sim-toast--visible');
-    }, 4000);
-}
+    if (!valid) e.preventDefault();
+});
 </script>
 @endpush
+

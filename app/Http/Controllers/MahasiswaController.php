@@ -305,16 +305,26 @@ class MahasiswaController extends Controller
             'latar_belakang' => 'required|string',
             'tujuan'         => 'required|string',
             'metode'         => 'required|string',
+            'file_proposal'  => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
-        // TODO: simpan ke database setelah tabel proposals tersedia
-        // Proposal::create([...$validated, 'kelompok_id' => ..., 'status' => 'diajukan']);
+        // file_proposal disimpan ke storage jika ada
+        $filePath = null;
+        if ($request->hasFile('file_proposal')) {
+            $filePath = $request->file('file_proposal')->store('proposals', 'public');
+        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Proposal berhasil diajukan.',
-            'status'  => 'diajukan',
-        ]);
+        // TODO: simpan ke database setelah kelompok_id tersedia dari session
+        // Proposal::create([
+        //     ...$validated,
+        //     'file_proposal'    => $filePath,
+        //     'status'           => 'diajukan',
+        //     'tanggal_pengajuan'=> now()->toDateString(),
+        //     'kelompok_id'      => auth('mahasiswa')->user()->kelompok?->id,
+        // ]);
+
+        return redirect()->route('mahasiswa.proposal')
+            ->with('success', 'Proposal berhasil diajukan!');
     }
 
     /**
@@ -328,17 +338,23 @@ class MahasiswaController extends Controller
     public function storeLogbook(Request $request)
     {
         $validated = $request->validate([
-            'tanggal'  => 'required|date',
-            'judul'    => 'required|string|max:255',
-            'deskripsi'=> 'nullable|string',
-            'progress' => 'required|integer|min:0|max:100',
-            'hasil'    => 'nullable|string',
-            'kendala'  => 'nullable|string',
-            'rencana'  => 'nullable|string',
+            'tanggal'    => 'required|date',
+            'kegiatan'   => 'required|string',
+            'kendala'    => 'nullable|string',
+            'link_bukti' => 'nullable|url|max:255',
+        ], [
+            'kegiatan.required' => 'Deskripsi kegiatan wajib diisi.',
+            'link_bukti.url'    => 'Link bukti harus berupa URL yang valid.',
         ]);
 
-        // TODO: simpan ke database setelah tabel logbook_milestone tersedia
-        // LogbookMilestone::create([...$validated, 'mahasiswa_id' => auth('mahasiswa')->id()]);
+        // TODO: simpan ke database
+        // LogbookMilestone::create([
+        //     ...$validated,
+        //     'mahasiswa_id' => auth('mahasiswa')->id(),
+        //     'kelompok_id'  => auth('mahasiswa')->user()->anggotaKelompok?->kelompok_id,
+        //     'milestone_id' => ..., // dari kelompok aktif
+        //     'status'       => 'diajukan',
+        // ]);
 
         return response()->json([
             'success' => true,

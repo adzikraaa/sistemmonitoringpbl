@@ -263,55 +263,19 @@
                 <p class="sim-form-error" id="lb-err-tanggal" role="alert"></p>
             </div>
 
-            {{-- 2. Judul kegiatan --}}
+            {{-- 2. Kegiatan (deskripsi kegiatan) --}}
             <div class="sim-form-group">
-                <label class="sim-form-label" for="lb-judul">Judul kegiatan</label>
-                <input type="text"
-                       id="lb-judul"
-                       name="judul"
-                       class="sim-form-input"
-                       placeholder="Ringkasan singkat kegiatan"
-                       autocomplete="off"
-                       required>
-                <p class="sim-form-error" id="lb-err-judul" role="alert"></p>
-            </div>
-
-            {{-- 3. Deskripsi --}}
-            <div class="sim-form-group">
-                <label class="sim-form-label" for="lb-deskripsi">Deskripsi</label>
-                <textarea id="lb-deskripsi"
-                          name="deskripsi"
+                <label class="sim-form-label" for="lb-kegiatan">Deskripsi Kegiatan</label>
+                <textarea id="lb-kegiatan"
+                          name="kegiatan"
                           class="sim-form-textarea"
                           placeholder="Ceritakan apa yang dikerjakan"
-                          rows="3"></textarea>
+                          rows="4"
+                          required></textarea>
+                <p class="sim-form-error" id="lb-err-kegiatan" role="alert"></p>
             </div>
 
-            {{-- 4. Progress --}}
-            <div class="sim-form-group">
-                <label class="sim-form-label" for="lb-progress">Progress (%)</label>
-                <input type="number"
-                       id="lb-progress"
-                       name="progress"
-                       class="sim-form-input"
-                       min="0"
-                       max="100"
-                       value="0"
-                       placeholder="0 – 100"
-                       required>
-                <p class="sim-form-error" id="lb-err-progress" role="alert"></p>
-            </div>
-
-            {{-- 5. Hasil / pembelajaran --}}
-            <div class="sim-form-group">
-                <label class="sim-form-label" for="lb-hasil">Hasil / pembelajaran</label>
-                <textarea id="lb-hasil"
-                          name="hasil"
-                          class="sim-form-textarea"
-                          placeholder="Apa yang berhasil diselesaikan atau dipelajari?"
-                          rows="3"></textarea>
-            </div>
-
-            {{-- 6. Kendala --}}
+            {{-- 3. Kendala --}}
             <div class="sim-form-group">
                 <label class="sim-form-label" for="lb-kendala">Kendala</label>
                 <textarea id="lb-kendala"
@@ -321,14 +285,16 @@
                           rows="3"></textarea>
             </div>
 
-            {{-- 7. Rencana berikutnya --}}
+            {{-- 4. Link Bukti --}}
             <div class="sim-form-group">
-                <label class="sim-form-label" for="lb-rencana">Rencana berikutnya</label>
-                <textarea id="lb-rencana"
-                          name="rencana"
-                          class="sim-form-textarea"
-                          placeholder="Langkah lanjutan setelah kegiatan ini"
-                          rows="3"></textarea>
+                <label class="sim-form-label" for="lb-link-bukti">Link Bukti <span style="font-weight:400;color:#888;">(opsional)</span></label>
+                <input type="url"
+                       id="lb-link-bukti"
+                       name="link_bukti"
+                       class="sim-form-input"
+                       placeholder="https://drive.google.com/..."
+                       autocomplete="off">
+                <p class="sim-form-error" id="lb-err-link-bukti" role="alert"></p>
             </div>
 
             {{-- Footer: Batal & Simpan --}}
@@ -410,13 +376,10 @@ document.addEventListener('keydown', function (e) {
 // TOMBOL BATAL – cek apakah form sudah diisi
 // ================================================================
 function lbFormHasContent() {
-    var judul    = (document.getElementById('lb-judul').value || '').trim();
-    var deskripsi= (document.getElementById('lb-deskripsi').value || '').trim();
-    var hasil    = (document.getElementById('lb-hasil').value || '').trim();
-    var kendala  = (document.getElementById('lb-kendala').value || '').trim();
-    var rencana  = (document.getElementById('lb-rencana').value || '').trim();
-    var progress = document.getElementById('lb-progress').value;
-    return judul || deskripsi || hasil || kendala || rencana || progress !== '0';
+    var kegiatan  = (document.getElementById('lb-kegiatan').value || '').trim();
+    var kendala   = (document.getElementById('lb-kendala').value || '').trim();
+    var linkBukti = (document.getElementById('lb-link-bukti').value || '').trim();
+    return kegiatan || kendala || linkBukti;
 }
 
 function handleLbBatal() {
@@ -431,7 +394,7 @@ function handleLbBatal() {
 // ================================================================
 // VALIDATION
 // ================================================================
-var LB_FIELDS = ['tanggal', 'judul', 'progress'];
+var LB_FIELDS = ['tanggal', 'kegiatan', 'link-bukti'];
 
 function lbClearAllErrors() {
     LB_FIELDS.forEach(function (key) {
@@ -461,13 +424,12 @@ function lbValidate(data) {
         lbShowError('tanggal', 'Tanggal wajib diisi.');
         valid = false;
     }
-    if (!data.judul.trim()) {
-        lbShowError('judul', 'Judul kegiatan wajib diisi.');
+    if (!data.kegiatan.trim()) {
+        lbShowError('kegiatan', 'Deskripsi kegiatan wajib diisi.');
         valid = false;
     }
-    var prog = parseInt(data.progress, 10);
-    if (isNaN(prog) || prog < 0 || prog > 100) {
-        lbShowError('progress', 'Progress harus berupa angka antara 0 sampai 100.');
+    if (data.link_bukti && !/^https?:\/\//i.test(data.link_bukti.trim())) {
+        lbShowError('link-bukti', 'Link bukti harus diawali dengan http:// atau https://');
         valid = false;
     }
     return valid;
@@ -480,13 +442,10 @@ function submitLogbook(event) {
     event.preventDefault();
 
     var data = {
-        tanggal  : document.getElementById('lb-tanggal').value,
-        judul    : document.getElementById('lb-judul').value,
-        deskripsi: document.getElementById('lb-deskripsi').value,
-        progress : document.getElementById('lb-progress').value,
-        hasil    : document.getElementById('lb-hasil').value,
-        kendala  : document.getElementById('lb-kendala').value,
-        rencana  : document.getElementById('lb-rencana').value,
+        tanggal   : document.getElementById('lb-tanggal').value,
+        kegiatan  : document.getElementById('lb-kegiatan').value,
+        kendala   : document.getElementById('lb-kendala').value,
+        link_bukti: document.getElementById('lb-link-bukti').value,
     };
 
     if (!lbValidate(data)) return;
@@ -495,30 +454,19 @@ function submitLogbook(event) {
     btn.disabled    = true;
     btn.textContent = 'Menyimpan…';
 
-    // Baca CSRF token dari meta tag
     var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
     fetch('{{ route("mahasiswa.logbook.store") }}', {
         method : 'POST',
         headers: {
-            'Content-Type'    : 'application/json',
-            'X-CSRF-TOKEN'    : csrfToken,
-            'Accept'          : 'application/json',
+            'Content-Type' : 'application/json',
+            'X-CSRF-TOKEN' : csrfToken,
+            'Accept'       : 'application/json',
         },
-        body: JSON.stringify({
-            tanggal  : data.tanggal,
-            judul    : data.judul,
-            deskripsi: data.deskripsi,
-            progress : parseInt(data.progress, 10),
-            hasil    : data.hasil,
-            kendala  : data.kendala,
-            rencana  : data.rencana,
-        }),
+        body: JSON.stringify(data),
     })
     .then(function (res) {
-        if (!res.ok) {
-            return res.json().then(function (err) { throw err; });
-        }
+        if (!res.ok) { return res.json().then(function (err) { throw err; }); }
         return res.json();
     })
     .then(function (json) {
@@ -575,42 +523,20 @@ function lbMingguLabel(n) {
 }
 
 function lbAddCardToDOM(data) {
-    // Sembunyikan empty state jika ada
     var emptyEl = document.getElementById('lb-empty-state');
     if (emptyEl) emptyEl.style.display = 'none';
 
     var minggu    = lbCalcMinggu(data.tanggal);
     var mingguLbl = lbMingguLabel(minggu);
     var dateFmt   = lbFormatDate(data.tanggal);
-    var progress  = parseInt(data.progress, 10) || 0;
     var id        = 'lb-new-' + Date.now();
-
-    var hasilRencanaHtml = '';
-    if (data.hasil || data.rencana) {
-        hasilRencanaHtml = '<div class="sim-lb-card__detail-grid">';
-        if (data.hasil) {
-            hasilRencanaHtml +=
-                '<div>' +
-                '<p class="sim-lb-card__detail-label">Hasil / Pembelajaran</p>' +
-                '<p class="sim-lb-card__detail-text">' + lbEscape(data.hasil) + '</p>' +
-                '</div>';
-        }
-        if (data.rencana) {
-            hasilRencanaHtml +=
-                '<div>' +
-                '<p class="sim-lb-card__detail-label">Langkah Berikutnya</p>' +
-                '<p class="sim-lb-card__detail-text">' + lbEscape(data.rencana) + '</p>' +
-                '</div>';
-        }
-        hasilRencanaHtml += '</div>';
-    }
 
     var kendalaHtml = data.kendala
         ? '<p class="sim-lb-card__kendala"><strong>Kendala:</strong> ' + lbEscape(data.kendala) + '</p>'
         : '';
 
-    var deskripsiHtml = data.deskripsi
-        ? '<p class="sim-lb-card__desc">' + lbEscape(data.deskripsi) + '</p>'
+    var linkHtml = data.link_bukti
+        ? '<p style="margin-top:0.5rem;font-size:0.8rem;"><a href="' + lbEscape(data.link_bukti) + '" target="_blank" rel="noopener noreferrer" style="color:#2b6cb0;">&#128279; Lihat Bukti</a></p>'
         : '';
 
     var cardHtml =
@@ -622,24 +548,12 @@ function lbAddCardToDOM(data) {
         '<span class="sim-badge sim-badge--warning">&#9679; Menunggu Review</span>' +
         '<span class="sim-lb-card__date">' + dateFmt + '</span>' +
         '<div class="sim-lb-card__actions">' +
-        '<button class="sim-lb-card__action" onclick="editLogbook(\'' + id + '\')" title="Edit catatan">Edit</button>' +
         '<button class="sim-lb-card__action sim-lb-card__action--danger" onclick="hapusLogbook(\'' + id + '\')" title="Hapus catatan">Hapus</button>' +
         '</div></div>' +
 
-        '<h2 class="sim-lb-card__title">' + lbEscape(data.judul) + '</h2>' +
-        deskripsiHtml +
-
-        '<div class="sim-lb-card__progress-section">' +
-        '<div class="sim-lb-card__progress-row">' +
-        '<span class="sim-lb-card__progress-label">Progress</span>' +
-        '<span class="sim-lb-card__progress-pct">' + progress + ' %</span>' +
-        '</div>' +
-        '<div class="sim-lb-card__progress-bar">' +
-        '<div class="sim-lb-card__progress-fill" style="width:' + progress + '%"></div>' +
-        '</div></div>' +
-
-        hasilRencanaHtml +
+        '<p class="sim-lb-card__desc">' + lbEscape(data.kegiatan) + '</p>' +
         kendalaHtml +
+        linkHtml +
         '</div>';
 
     var listEl = document.getElementById('logbook-list');
