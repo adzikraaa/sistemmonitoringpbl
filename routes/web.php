@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordRecoveryController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -11,6 +12,8 @@ Route::get('/', function () {
 // ─── Auth routes (hanya untuk yang belum login) ───────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
+    Route::get('/lupa-password', [PasswordRecoveryController::class, 'show'])->name('password.request');
+    Route::post('/lupa-password', [PasswordRecoveryController::class, 'submit'])->name('password.request.submit');
 });
 
 Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');

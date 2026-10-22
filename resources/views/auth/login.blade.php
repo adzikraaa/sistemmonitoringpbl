@@ -43,6 +43,12 @@
                     class="flex-1 py-2 text-sm font-medium rounded-full transition">Koordinator</button>
             </div>
 
+            @if (session('status'))
+                <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
+                    <p>{{ session('status') }}</p>
+                </div>
+            @endif
+
             @if ($errors->any())
                 <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
                     @foreach ($errors->all() as $error)
@@ -61,6 +67,7 @@
                         type="text"
                         name="identifier"
                         value="{{ old('identifier') }}"
+                        autocomplete="off"
                         :placeholder="role === 'mahasiswa' ? 'ketikkan NIM di sini' : 'ketikkan NIDN di sini'"
                         class="w-full px-5 py-3 rounded-full bg-[#F5F0E0] border-0 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900">
                 </div>
@@ -69,6 +76,7 @@
                     <label for="password" class="block text-sm font-medium text-blue-900 mb-1">Kata Sandi</label>
                     <div class="relative">
                         <input :type="showPassword ? 'text' : 'password'" name="password" id="password" required
+                            autocomplete="new-password"
                             placeholder="ketikkan sandi di sini"
                             class="w-full px-5 py-3 rounded-full bg-[#F5F0E0] border-0 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 pr-16">
                         <button type="button" @click="showPassword = !showPassword"
@@ -82,7 +90,7 @@
                         <input type="checkbox" name="remember" value="1" class="rounded border-gray-300">
                         Ingat Perangkat Ini
                     </label>
-                    <a href="#" class="text-blue-900 hover:underline">Lupa kata sandi?</a>
+                    <a href="{{ route('password.request') }}" class="text-blue-900 hover:underline">Lupa kata sandi?</a>
                 </div>
 
                 <button type="submit"
