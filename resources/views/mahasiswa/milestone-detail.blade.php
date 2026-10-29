@@ -49,7 +49,7 @@
         <label for="deliverable-item" style="display: block; font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 0.4rem;">
             Pilih Item Deliverable yang Diajukan / Diperbaiki:
         </label>
-        <select name="deliverable_item" id="deliverable-item" style="
+        <select name="deliverable_item" id="deliverable-item" required style="
             width: 100%;
             padding: 0.6rem 0.8rem;
             font-size: 0.85rem;
@@ -60,9 +60,10 @@
             outline: none;
             cursor: pointer;
         ">
-            <option value="all">Semua Item (Bundel Milestone {{ $milestone['kode'] }})</option>
-            <option value="erd">ERD & Kamus Data Fisik (Perlu Revisi)</option>
-            <option value="srs">Dokumen Spesifikasi Kebutuhan / SRS (Progres 60%)</option>
+            <option value="">Pilih deliverable</option>
+            @foreach($milestone['deliverables'] as $deliverable)
+                <option value="{{ $deliverable->id }}">{{ $deliverable->nama }}</option>
+            @endforeach
         </select>
     </div>
             

@@ -23,7 +23,7 @@ class Milestone extends Model
     {
         return [
             'deadline' => 'date',
-            'urutan'   => 'integer',
+            'urutan' => 'integer',
         ];
     }
 

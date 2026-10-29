@@ -30,7 +30,7 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100 text-xs">
             <div>
                 <span class="text-gray-400 block mb-1">Dosen Pengampu</span>
-                <span class="font-bold text-gray-800">{{ auth()->user()->name ?? 'Dian Subhi, S.Kom., M.Kom.' }}</span>
+                <span class="font-bold text-gray-800">{{ auth('dosen')->user()->nama ?? 'Dosen Pengampu' }}</span>
             </div>
             <div>
                 <span class="text-gray-400 block mb-1">Anggota kelompok</span>

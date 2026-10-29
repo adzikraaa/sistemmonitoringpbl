@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 class LoginController extends Controller
 {
@@ -20,12 +18,12 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'role'       => 'required|in:mahasiswa,dosen,koordinator',
+            'role' => 'required|in:mahasiswa,dosen,koordinator',
             'identifier' => 'required|string',
-            'password'   => 'required',
+            'password' => 'required',
         ]);
 
-        $role     = $request->role;
+        $role = $request->role;
         $remember = $request->boolean('remember');
 
         // ─── Login Mahasiswa via SIAKAD ────────────────────────────────────────
@@ -37,10 +35,11 @@ class LoginController extends Controller
         $field = 'nidn';
 
         if (Auth::guard($role)->attempt([
-            $field     => $request->identifier,
+            $field => $request->identifier,
             'password' => $request->password,
         ], $remember)) {
             $request->session()->regenerate();
+
             return redirect()->route("{$role}.dashboard");
         }
 
@@ -56,9 +55,9 @@ class LoginController extends Controller
      */
     private function loginViaSiakad(Request $request, bool $remember = false)
     {
-        $nim      = $request->identifier;
+        $nim = $request->identifier;
         $password = $request->password;
-        $baseUrl  = 'https://siakad.polinema.ac.id';
+        $baseUrl = 'https://siakad.polinema.ac.id';
 
         try {
             // Step 1: GET halaman login untuk mendapatkan session cookie & CSRF token
@@ -66,13 +65,13 @@ class LoginController extends Controller
                 ->timeout(10)
                 ->withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 ])
                 ->get("{$baseUrl}/login");
 
             // Ambil cookie dari response GET (session cookie SIAKAD)
             $cookies = $getResponse->cookies()->toArray();
-            $cookieStr = collect($cookies)->map(fn($c) => "{$c['Name']}={$c['Value']}")->implode('; ');
+            $cookieStr = collect($cookies)->map(fn ($c) => "{$c['Name']}={$c['Value']}")->implode('; ');
 
             // Coba ekstrak CSRF token dari HTML (jika ada)
             $csrfToken = null;
@@ -96,10 +95,10 @@ class LoginController extends Controller
                 ->timeout(10)
                 ->withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Referer'    => "{$baseUrl}/login",
-                    'Cookie'     => $cookieStr,
-                    'Accept'     => 'application/json, text/plain, */*',
-                    'Origin'     => $baseUrl,
+                    'Referer' => "{$baseUrl}/login",
+                    'Cookie' => $cookieStr,
+                    'Accept' => 'application/json, text/plain, */*',
+                    'Origin' => $baseUrl,
                     'X-Requested-With' => 'XMLHttpRequest',
                 ])
                 ->post("{$baseUrl}/login", $postData);
@@ -109,22 +108,24 @@ class LoginController extends Controller
             // Log untuk debug (hapus di production)
             \Log::info('SIAKAD Login Response', [
                 'status' => $response->status(),
-                'body'   => $response->body(),
-                'data'   => $data,
+                'body' => $response->body(),
+                'data' => $data,
             ]);
 
             // SIAKAD mengembalikan {"output":"ok"} jika login berhasil
-            if (!$response->successful() || ($data['output'] ?? '') !== 'ok') {
+            if (! $response->successful() || ($data['output'] ?? '') !== 'ok') {
                 $siakadMsg = $data['output'] ?? 'Login gagal';
+
                 return back()
                     ->withInput($request->only('identifier', 'role'))
-                    ->withErrors(['identifier' => 'SIAKAD: ' . $siakadMsg]);
+                    ->withErrors(['identifier' => 'SIAKAD: '.$siakadMsg]);
             }
         } catch (\Exception $e) {
             \Log::error('SIAKAD Login Error', ['message' => $e->getMessage()]);
+
             return back()
                 ->withInput($request->only('identifier', 'role'))
-                ->withErrors(['identifier' => 'Tidak dapat terhubung ke SIAKAD: ' . $e->getMessage()]);
+                ->withErrors(['identifier' => 'Tidak dapat terhubung ke SIAKAD: '.$e->getMessage()]);
         }
 
         // Cari mahasiswa di database lokal berdasarkan NIM
@@ -132,8 +133,8 @@ class LoginController extends Controller
         $mahasiswa = Mahasiswa::firstOrCreate(
             ['nim' => $nim],
             [
-                'nama'     => 'Mahasiswa ' . $nim, // sementara, bisa diupdate nanti
-                'email'    => $nim . '@student.polinema.ac.id',
+                'nama' => 'Mahasiswa '.$nim, // sementara, bisa diupdate nanti
+                'email' => $nim.'@student.polinema.ac.id',
                 'password' => bcrypt(\Str::random(32)), // password random (login via SIAKAD)
                 'kelas_id' => null,
             ]

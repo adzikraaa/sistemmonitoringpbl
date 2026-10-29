@@ -18,8 +18,8 @@ class Dosen extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password'      => 'hashed',
-            'is_aktif'      => 'boolean',
+            'password' => 'hashed',
+            'is_aktif' => 'boolean',
             'last_login_at' => 'datetime',
         ];
     }

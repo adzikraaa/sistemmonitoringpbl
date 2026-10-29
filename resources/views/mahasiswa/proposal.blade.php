@@ -4,9 +4,28 @@
 @section('meta_description', 'Halaman Proposal Mahasiswa SIM-PBL')
 
 @php
-    $proposalData = $proposal ?? [];
-    $proposalStatus = $proposalData['status'] ?? 'Diproses';
+    $proposalModel = $proposal ?? null;
+    $proposalJudul = is_array($proposalModel) ? ($proposalModel['judul'] ?? null) : ($proposalModel?->judul ?? 'Pengembangan Sistem Monitoring PBL');
+    $rawStatus = is_array($proposalModel) ? ($proposalModel['status'] ?? 'diajukan') : ($proposalModel?->status ?? 'disetujui');
+    $proposalStatus = match (strtolower($rawStatus)) {
+        'disetujui' => 'Disetujui',
+        'ditolak' => 'Ditolak',
+        'revisi' => 'Revisi',
+        default => 'Diajukan',
+    };
     $proposalStatusClass = $proposalStatus === 'Disetujui' ? 'sim-badge--approved' : ($proposalStatus === 'Ditolak' ? 'sim-badge--danger' : 'sim-badge--warning');
+    $proposalTanggal = is_array($proposalModel) ? ($proposalModel['tanggal'] ?? '26 September 2026') : ($proposalModel?->tanggal_pengajuan?->format('d F Y') ?? '26 September 2026');
+    $proposalFeedback = is_array($proposalModel) ? ($proposalModel['feedback'] ?? null) : ($proposalModel?->catatan_revisi ?? 'Struktur proposal sudah baik. Lanjutkan ke implementasi modul logbook.');
+    $proposalDeskripsi = is_array($proposalModel) ? ($proposalModel['deskripsi'] ?? null) : ($proposalModel?->deskripsi ?? 'Platform web untuk membantu mahasiswa, dosen, dan koordinator memantau progres Project Based Learning secara terstruktur.');
+    $proposalLatar = is_array($proposalModel) ? ($proposalModel['latar_belakang'] ?? null) : ($proposalModel?->latar_belakang ?? 'Proses monitoring saat ini masih tersebar di berbagai kanal sehingga histori dan progres sulit dipantau secara utuh.');
+    $proposalTujuan = is_array($proposalModel) ? ($proposalModel['tujuan'] ?? null) : ($proposalModel?->tujuan ?? 'Membangun satu sistem terpusat untuk proposal, logbook, milestone, dan monitoring progres project.');
+    $proposalMetode = is_array($proposalModel) ? ($proposalModel['metode'] ?? null) : ($proposalModel?->metode ?? 'Agile dengan iterasi sprint dua mingguan dan validasi bersama dosen pembimbing.');
+    $steps = !empty($proposalTimeline) ? $proposalTimeline : ($proposal['timeline'] ?? [
+        ['event' => 'Draf disusun', 'date' => '02 Mei 2024', 'state' => 'done'],
+        ['event' => 'Dikirim untuk ditinjau', 'date' => '02 Mei 2024', 'state' => 'done'],
+        ['event' => 'Disetujui pembimbing', 'date' => '06 Mei 2024', 'state' => 'done'],
+        ['event' => 'Mulai pengerjaan', 'date' => 'Berjalan', 'state' => 'current'],
+    ]);
 @endphp
 
 @section('content')
@@ -34,37 +53,37 @@
             {{-- Card header --}}
             <div class="sim-proposal-card__header">
                 <div class="sim-proposal-card__meta">
-                    <span class="sim-proposal-card__version">VERSI 02</span>
+                    <span class="sim-proposal-card__version">VERSI TERAKHIR</span>
                     <span class="sim-badge {{ $proposalStatusClass }}">&#9679; {{ $proposalStatus }}</span>
                 </div>
-                <span class="sim-proposal-card__date">{{ $proposalData['tanggal'] ?? '26 September 2026' }}</span>
+                <span class="sim-proposal-card__date">{{ $proposalTanggal }}</span>
             </div>
 
             <div class="sim-status-box" style="margin-top: 1rem; margin-bottom: 1rem;">
                 <p class="sim-status-box__label" style="margin: 0 0 0.5rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; color: #64748b;">Status Proposal</p>
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
                     <span class="sim-badge {{ $proposalStatusClass }}">{{ $proposalStatus }}</span>
-                    <span style="font-size: 0.82rem; color: #64748b;">{{ $proposalData['tanggal'] ?? '26 September 2026' }}</span>
+                    <span style="font-size: 0.82rem; color: #64748b;">{{ $proposalTanggal }}</span>
                 </div>
             </div>
 
             {{-- Card title & desc --}}
-            <h2 class="sim-proposal-card__title">{{ $proposalData['judul'] ?? 'Pengembangan Sistem Monitoring PBL' }}</h2>
-            <p class="sim-proposal-card__desc">Platform web untuk membantu mahasiswa, dosen, dan koordinator memantau progres Project Based Learning secara terstruktur.</p>
+            <h2 class="sim-proposal-card__title">{{ $proposalJudul }}</h2>
+            <p class="sim-proposal-card__desc">{{ $proposalDeskripsi }}</p>
 
             {{-- Three-column detail --}}
             <div class="sim-proposal-detail">
                 <div class="sim-proposal-detail__col">
                     <p class="sim-proposal-detail__label">LATAR BELAKANG</p>
-                    <p class="sim-proposal-detail__text">Proses monitoring saat ini masih tersebar di berbagai kanal sehingga histori dan progres sulit dipantau secara utuh.</p>
+                    <p class="sim-proposal-detail__text">{{ $proposalLatar }}</p>
                 </div>
                 <div class="sim-proposal-detail__col">
                     <p class="sim-proposal-detail__label">TUJUAN</p>
-                    <p class="sim-proposal-detail__text">Membangun satu sistem terpusat untuk proposal, logbook, milestone, dan monitoring progres project.</p>
+                    <p class="sim-proposal-detail__text">{{ $proposalTujuan }}</p>
                 </div>
                 <div class="sim-proposal-detail__col">
                     <p class="sim-proposal-detail__label">METODE</p>
-                    <p class="sim-proposal-detail__text">Agile dengan iterasi sprint dua mingguan dan validasi bersama dosen pembimbing.</p>
+                    <p class="sim-proposal-detail__text">{{ $proposalMetode }}</p>
                 </div>
             </div>
 
@@ -73,14 +92,14 @@
                 <div class="sim-proposal-attachment__icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 </div>
-                <span class="sim-proposal-attachment__name">proposal-kelompok-01.pdf</span>
+                <span class="sim-proposal-attachment__name">{{ $proposalModel?->file_proposal ?? 'proposal-kelompok.pdf' }}</span>
                 <span class="sim-proposal-attachment__type">PDF</span>
             </div>
 
             {{-- Feedback Pembimbing --}}
             <div class="sim-catatan">
                 <p class="sim-catatan__label">Feedback Pembimbing</p>
-                <p class="sim-catatan__text">{{ $proposalData['feedback'] ?? 'Struktur proposal sudah baik. Lanjutkan ke implementasi modul logbook.' }}</p>
+                <p class="sim-catatan__text">{{ $proposalFeedback }}</p>
             </div>
         </div>
     </div>
@@ -90,7 +109,7 @@
         <div class="sim-timeline-card">
             <p class="sim-timeline-card__title">PERJALANAN PROPOSAL</p>
             <ul class="sim-timeline">
-                @foreach($proposalData['timeline'] ?? [] as $step)
+                @foreach($steps as $step)
                     @php
                         $isDone = ($step['state'] ?? '') === 'done';
                         $isCurrent = ($step['state'] ?? '') === 'current';
@@ -298,13 +317,42 @@ function submitProposal(event) {
     btn.disabled = true;
     btn.textContent = 'Mengirim...';
 
-    // Simulate submit (backend belum tersedia — local state)
-    setTimeout(function() {
-        btn.disabled = false;
-        btn.textContent = 'Kirim proposal';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    fetch('{{ route("mahasiswa.proposal.store") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            judul: data.judul,
+            deskripsi: data.deskripsi,
+            latar_belakang: data.latar,
+            tujuan: data.tujuan,
+            metode: data.metode
+        })
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(err => { throw err; });
+        }
+        return res.json();
+    })
+    .then(result => {
         closeProposalModal();
         showToast('Proposal berhasil diajukan! Status: Diajukan.', 'success');
-    }, 800);
+        setTimeout(() => window.location.reload(), 1000);
+    })
+    .catch(err => {
+        const message = err?.message || 'Gagal mengajukan proposal. Pastikan akun terdaftar di kelompok.';
+        showToast(message, 'danger');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = 'Kirim proposal';
+    });
 }
 
 // ============================================================

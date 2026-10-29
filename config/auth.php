@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Dosen;
+use App\Models\Koordinator;
+use App\Models\Mahasiswa;
 use App\Models\User;
 
 return [
@@ -81,17 +84,17 @@ return [
 
         'mahasiswa' => [
             'driver' => 'eloquent',
-            'model' => \App\Models\Mahasiswa::class,
+            'model' => Mahasiswa::class,
         ],
 
         'dosen' => [
             'driver' => 'eloquent',
-            'model' => \App\Models\Dosen::class,
+            'model' => Dosen::class,
         ],
 
         'koordinator' => [
             'driver' => 'eloquent',
-            'model' => \App\Models\Koordinator::class,
+            'model' => Koordinator::class,
         ],
     ],
 

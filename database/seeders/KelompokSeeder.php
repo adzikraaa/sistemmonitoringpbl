@@ -16,21 +16,21 @@ class KelompokSeeder extends Seeder
 {
     public function run(): void
     {
-        $periode  = Periode::where('is_aktif', true)->firstOrFail();
-        $kelas    = Kelas::where('nama_kelas', 'SIB 3B')->firstOrFail();
-        $dosen    = Dosen::where('nidn', '0099000002')->firstOrFail();
+        $periode = Periode::where('is_aktif', true)->firstOrFail();
+        $kelas = Kelas::where('nama_kelas', 'SIB 3B')->firstOrFail();
+        $dosen = Dosen::where('nidn', '0099000002')->firstOrFail();
         $mahasiswa = Mahasiswa::where('nim', '2024001')->firstOrFail();
-        $matkul   = MataKuliah::where('nama_matkul', 'Pemrograman Web Lanjut')->firstOrFail();
+        $matkul = MataKuliah::where('nama_matkul', 'Pemrograman Web Lanjut')->firstOrFail();
 
         // 1 kelompok contoh
         $kelompok = Kelompok::updateOrCreate(
             [
                 'nama_kelompok' => 'Kelompok Contoh',
-                'kelas_id'      => $kelas->id,
-                'periode_id'    => $periode->id,
+                'kelas_id' => $kelas->id,
+                'periode_id' => $periode->id,
             ],
             [
-                'dosen_id'      => $dosen->id,
+                'dosen_id' => $dosen->id,
                 'jadwal_bimbingan' => 'Jumat, 13.00–15.00',
                 'tanggal_dibuat' => now()->toDateString(),
             ]
@@ -45,9 +45,9 @@ class KelompokSeeder extends Seeder
         // Dosen pengampu
         DosenPengampu::updateOrCreate(
             [
-                'dosen_id'      => $dosen->id,
+                'dosen_id' => $dosen->id,
                 'mata_kuliah_id' => $matkul->id,
-                'kelas_id'      => $kelas->id,
+                'kelas_id' => $kelas->id,
             ]
         );
     }

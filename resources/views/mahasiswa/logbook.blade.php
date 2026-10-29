@@ -79,14 +79,6 @@
                     <span class="sim-lb-card__week">{{ $weekLabel }}</span>
                     <span class="sim-badge {{ $badge }}">&#9679; {{ $lb['status'] }}</span>
                     <span class="sim-lb-card__date">{{ $tanggalFmt }}</span>
-                    <div class="sim-lb-card__actions">
-                        <button class="sim-lb-card__action"
-                                onclick="editLogbook('{{ $lb['id'] }}')"
-                                title="Edit catatan">Edit</button>
-                        <button class="sim-lb-card__action sim-lb-card__action--danger"
-                                onclick="hapusLogbook('{{ $lb['id'] }}')"
-                                title="Hapus catatan">Hapus</button>
-                    </div>
                 </div>
 
                 {{-- Title --}}
@@ -621,10 +613,7 @@ function lbAddCardToDOM(data) {
         '<span class="sim-lb-card__week">' + mingguLbl + '</span>' +
         '<span class="sim-badge sim-badge--warning">&#9679; Menunggu Review</span>' +
         '<span class="sim-lb-card__date">' + dateFmt + '</span>' +
-        '<div class="sim-lb-card__actions">' +
-        '<button class="sim-lb-card__action" onclick="editLogbook(\'' + id + '\')" title="Edit catatan">Edit</button>' +
-        '<button class="sim-lb-card__action sim-lb-card__action--danger" onclick="hapusLogbook(\'' + id + '\')" title="Hapus catatan">Hapus</button>' +
-        '</div></div>' +
+        '</div>' +
 
         '<h2 class="sim-lb-card__title">' + lbEscape(data.judul) + '</h2>' +
         deskripsiHtml +

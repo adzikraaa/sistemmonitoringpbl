@@ -143,7 +143,7 @@
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.65rem;">
                         @foreach($m['deliverables'] as $item)
                         {{-- Card Deliverable Interaktif --}}
-                        <div onclick="openDeliverableModal({{ json_encode($item) }}, '{{ $m['kode'] }}')" 
+                        <div onclick="openDeliverableModal({{ json_encode($item) }}, '{{ $m['kode'] }}', {{ $m['id'] }})"
                              style="
                                 background-color: #ffffff; 
                                 border: 1px solid #e2e2e2; 
@@ -241,7 +241,7 @@
 
         {{-- Form Upload Berkas --}}
         <div id="modal-upload-form-container">
-            <form action="{{ route('mahasiswa.milestone.upload', 'item') }}" method="POST" enctype="multipart/form-data">
+            <form id="modal-upload-form" action="{{ route('mahasiswa.milestone.upload', 1) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="item_id" id="modal-input-item-id">
 
@@ -334,10 +334,16 @@ function toggleRumusInfo() {
     box.style.display = box.style.display === 'none' ? 'block' : 'none';
 }
 
-function openDeliverableModal(item, milestoneKode) {
+function openDeliverableModal(item, milestoneKode, milestoneId) {
     document.getElementById('modal-milestone-tag').textContent = 'MILESTONE ' + milestoneKode;
     document.getElementById('modal-item-title').textContent = item.nama;
     document.getElementById('modal-input-item-id').value = item.id || 'item_id';
+
+    const uploadFormAction = '{{ route("mahasiswa.milestone.upload", ":id") }}'.replace(':id', milestoneId || item.milestone_id || 1);
+    const formElement = document.getElementById('modal-upload-form');
+    if (formElement) {
+        formElement.action = uploadFormAction;
+    }
 
     const badge = document.getElementById('modal-item-badge');
     badge.textContent = '● ' + item.status;

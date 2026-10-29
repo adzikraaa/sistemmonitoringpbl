@@ -93,7 +93,7 @@
 
                 {{-- Kelas --}}
                 <li>
-                    <a href="#"
+                    <a href="javascript:void(0)"
                        class="sim-sidebar__menu-item {{ request()->routeIs('dosen.kelas*') ? 'sim-sidebar__menu-item--active' : '' }}">
 
                         <svg width="18" height="18" viewBox="0 0 24 24"
@@ -148,7 +148,7 @@
 
                 {{-- Notifikasi --}}
                 <li>
-                    <a href="#"
+                    <a href="javascript:void(0)"
                        class="sim-sidebar__menu-item {{ request()->routeIs('dosen.notifikasi*') ? 'sim-sidebar__menu-item--active' : '' }}"
                        style="display: flex; justify-content: space-between; align-items: center;">
 

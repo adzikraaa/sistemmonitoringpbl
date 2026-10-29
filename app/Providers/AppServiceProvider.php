@@ -24,8 +24,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Relation::enforceMorphMap([
-            'mahasiswa'  => Mahasiswa::class,
-            'dosen'      => Dosen::class,
+            'mahasiswa' => Mahasiswa::class,
+            'dosen' => Dosen::class,
             'koordinator' => Koordinator::class,
         ]);
     }

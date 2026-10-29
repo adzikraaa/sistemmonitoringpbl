@@ -14,8 +14,13 @@ class LogbookMilestone extends Model
         'kelompok_id',
         'mahasiswa_id',
         'tanggal',
+        'judul',
+        'deskripsi',
         'kegiatan',
+        'progress',
+        'hasil',
         'kendala',
+        'rencana',
         'link_bukti',
         'file_bukti',
         'status',
@@ -26,6 +31,7 @@ class LogbookMilestone extends Model
     {
         return [
             'tanggal' => 'date',
+            'progress' => 'integer',
         ];
     }
 
