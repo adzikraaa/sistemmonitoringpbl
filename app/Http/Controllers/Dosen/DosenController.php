@@ -122,7 +122,8 @@ class DosenController extends Controller
 
     /**
      * Dashboard Dosen Pengampu.
-     * Membaca konteks semester dari session.
+     * Membaca konteks semester dari session (dosen.semester_id)
+     * dan kelas aktif dari session (dosen_active_class_id) milik DashboardController.
      */
     public function dashboard()
     {
@@ -138,27 +139,35 @@ class DosenController extends Controller
         $semester = collect($this->semesterData())
             ->firstWhere('id', $semesterId);
 
-        // Jika semester tidak ditemukan (misal ID tidak valid), reset dan redirect
+        // Jika semester tidak ditemukan (ID tidak valid), reset dan redirect
         if (!$semester) {
-            $request->session()->forget('dosen.semester_id');
+            session()->forget('dosen.semester_id');
             return redirect()->route('dosen.pilih-semester')
                 ->with('error', 'Semester tidak ditemukan. Silakan pilih ulang.');
         }
 
-        // [MOCKUP] Data kelompok/kelas untuk prototype
-        // Ganti dengan query DB (kelompok milik dosen ini pada semester terpilih)
-        // setelah relasi dosen ↔ kelas ↔ kelompok ↔ semester tersedia.
-        $kelompokList = [
-            ['id' => 'k1', 'nama' => 'Kelompok 1', 'kelas' => 'SIB 3B', 'proyek' => 'Sistem Monitoring PBL', 'progress' => 60, 'status' => 'Berjalan'],
-            ['id' => 'k2', 'nama' => 'Kelompok 2', 'kelas' => 'SIB 3B', 'proyek' => 'Aplikasi Inventaris Lab', 'progress' => 45, 'status' => 'Berjalan'],
-            ['id' => 'k3', 'nama' => 'Kelompok 3', 'kelas' => 'SIB 3A', 'proyek' => 'Platform E-Learning', 'progress' => 72, 'status' => 'Berjalan'],
+        // Baca kelas aktif menggunakan session key yang sama dengan DashboardController::selectKelas()
+        // Session key: 'dosen_active_class_id' (integer), disimpan saat dosen memilih kelas di /dosen/pilih-kelas
+        $activeClassId = session('dosen_active_class_id');
+
+        // Lookup data kelas dari daftar yang sama dengan DashboardController::kelasList()
+        // [MOCKUP] — akan diganti query DB saat tabel kelas + relasi dosen tersedia
+        $kelasList = [
+            ['id' => 1, 'nama' => 'SIB 3A', 'prodi' => 'Sistem Informasi Bisnis', 'semester' => 'Semester 5', 'jumlah_kelompok' => 6, 'progress' => 72, 'menunggu_review' => 3, 'periode' => 'Periode Ganjil Berjalan'],
+            ['id' => 2, 'nama' => 'SIB 3B', 'prodi' => 'Sistem Informasi Bisnis', 'semester' => 'Semester 5', 'jumlah_kelompok' => 7, 'progress' => 68, 'menunggu_review' => 4, 'periode' => 'Periode Ganjil Berjalan'],
+            ['id' => 3, 'nama' => 'SIB 3C', 'prodi' => 'Sistem Informasi Bisnis', 'semester' => 'Semester 5', 'jumlah_kelompok' => 5, 'progress' => 80, 'menunggu_review' => 2, 'periode' => 'Periode Ganjil Berjalan'],
+            ['id' => 4, 'nama' => 'SIB 3D', 'prodi' => 'Sistem Informasi Bisnis', 'semester' => 'Semester 5', 'jumlah_kelompok' => 6, 'progress' => 61, 'menunggu_review' => 5, 'periode' => 'Periode Ganjil Berjalan'],
         ];
+
+        $kelas = $activeClassId
+            ? collect($kelasList)->firstWhere('id', $activeClassId)
+            : null;
 
         return view('dosen.dashboard', array_merge(
             $this->sharedViewData(),
             [
-                'semester'     => $semester,
-                'kelompokList' => $kelompokList,
+                'semester' => $semester,
+                'kelas'    => $kelas,   // null jika belum pilih kelas → blade tampilkan @else
             ]
         ));
     }
