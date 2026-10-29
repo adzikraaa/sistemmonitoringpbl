@@ -58,10 +58,10 @@
                 <span class="sim-header__breadcrumb-current" style="color: var(--sim-brown-warm);">Pilih Semester</span>
             </div>
             <div class="sim-header__user">
-                <div class="sim-header__notif" title="Notifikasi">
+                <a href="{{ route('mahasiswa.notifikasi') }}" class="sim-header__notif" title="Notifikasi">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                     <span class="sim-header__notif-dot"></span>
-                </div>
+                </a>
                 <div class="sim-header__user-avatar">{{ strtoupper(substr($userName ?? 'MT', 0, 2)) }}</div>
                 <div class="sim-header__user-info">
                     <span class="sim-header__user-name">{{ $userName ?? 'Mahasiswa' }}</span>

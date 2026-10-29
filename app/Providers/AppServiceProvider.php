@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Dosen;
+use App\Models\Koordinator;
+use App\Models\Mahasiswa;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Relation::enforceMorphMap([
+            'mahasiswa'  => Mahasiswa::class,
+            'dosen'      => Dosen::class,
+            'koordinator' => Koordinator::class,
+        ]);
     }
 }

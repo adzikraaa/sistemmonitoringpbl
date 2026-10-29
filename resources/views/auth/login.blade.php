@@ -1,3 +1,12 @@
+@php
+    // Redirect jika sudah login
+    foreach (['mahasiswa', 'dosen', 'koordinator'] as $guard) {
+        if (auth()->guard($guard)->check()) {
+            header('Location: ' . route($guard . '.dashboard'));
+            exit;
+        }
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -70,7 +79,7 @@
 
                 <div class="flex items-center justify-between mb-8 text-sm">
                     <label class="flex items-center gap-2 text-blue-900">
-                        <input type="checkbox" class="rounded border-gray-300">
+                        <input type="checkbox" name="remember" value="1" class="rounded border-gray-300">
                         Ingat Perangkat Ini
                     </label>
                     <a href="#" class="text-blue-900 hover:underline">Lupa kata sandi?</a>
