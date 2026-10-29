@@ -1,5 +1,9 @@
 @extends('layouts.dosen')
 
+@section('breadcrumb')
+    Detail Kelompok
+@endsection
+
 @section('title', 'Detail Kelompok')
 
 @section('content')

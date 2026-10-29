@@ -2,6 +2,10 @@
 
 @section('title', 'Kelompok Bimbingan')
 
+@section('breadcrumb')
+    Kelompok
+@endsection
+
 @section('content')
 <div class="p-6">
     <!-- Header Page -->

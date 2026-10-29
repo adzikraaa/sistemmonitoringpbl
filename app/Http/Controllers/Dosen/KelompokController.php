@@ -25,7 +25,7 @@ class KelompokController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('nama_kelompok', 'like', "%{$search}%")
-                  ->orWhere('judul_proyek', 'like', "%{$search}%");
+                    ->orWhere('judul_proyek', 'like', "%{$search}%");
             });
         }
 
