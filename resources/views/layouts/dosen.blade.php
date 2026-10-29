@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'SIM-PBL') -- SIM-PBL</title>
+    <title>@yield('title', 'Ruang Dosen - SIM-PBL')</title>
     <meta name="description" content="@yield('meta_description', 'Sistem Informasi Monitoring Project Based Learning')">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -112,7 +112,7 @@
 
                 {{-- Kelompok --}}
                 <li>
-                    <a href="#"
+                    <a href="{{ route('dosen.kelompok.index') }}"
                        class="sim-sidebar__menu-item {{ request()->routeIs('dosen.kelompok*') ? 'sim-sidebar__menu-item--active' : '' }}">
 
                         <svg width="18" height="18" viewBox="0 0 24 24"
@@ -132,8 +132,7 @@
                 {{-- Laporan Aktivitas --}}
                 <li>
                     <a href="{{ route('dosen.laporan-aktivitas') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.laporan-aktivitas') ? 'sim-sidebar__menu-item--active' : '' }}">
-
+                         class="sim-sidebar__menu-item {{ request()->routeIs('dosen.laporan-aktivitas') ? 'sim-sidebar__menu-item--active' : '' }}">
                         <svg width="18" height="18" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor"
                              stroke-width="1.75" stroke-linecap="round"
