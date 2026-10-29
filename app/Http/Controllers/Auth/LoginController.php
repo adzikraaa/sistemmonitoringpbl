@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -41,6 +40,12 @@ class LoginController extends Controller
             'password' => $request->password,
         ], $remember)) {
             $request->session()->regenerate();
+
+            // Dosen Pengampu diarahkan ke halaman Pilih Semester
+            if ($role === 'dosen') {
+                return redirect()->route('dosen.pilih-semester');
+            }
+
             return redirect()->route("{$role}.dashboard");
         }
 
@@ -78,7 +83,7 @@ class LoginController extends Controller
             $csrfToken = null;
             if (preg_match('/name=["\']csrf_token["\'][^>]*value=["\'](.*?)["\']/i', $getResponse->body(), $m)) {
                 $csrfToken = $m[1];
-            } elseif (preg_match('/value=["\'](.*?)["\']\s+name=["\']csrf_token["\']/i', $getResponse->body(), $m)) {
+            } elseif (preg_match('/value=["\'](.*?)["\']\\s+name=["\']csrf_token["\']/i', $getResponse->body(), $m)) {
                 $csrfToken = $m[1];
             }
 
@@ -134,7 +139,7 @@ class LoginController extends Controller
             [
                 'nama'     => 'Mahasiswa ' . $nim, // sementara, bisa diupdate nanti
                 'email'    => $nim . '@student.polinema.ac.id',
-                'password' => bcrypt(\Str::random(32)), // password random (login via SIAKAD)
+                'password' => bcrypt(Str::random(32)), // password random (login via SIAKAD)
                 'kelas_id' => null,
             ]
         );

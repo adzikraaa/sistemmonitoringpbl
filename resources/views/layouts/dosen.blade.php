@@ -91,22 +91,22 @@
                     </a>
                 </li>
 
-                {{-- Kelas --}}
+                {{-- Pilih Semester --}}
                 <li>
-                    <a href="#"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.kelas*') ? 'sim-sidebar__menu-item--active' : '' }}">
+                    <a href="{{ route('dosen.pilih-semester') }}"
+                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.pilih-semester') ? 'sim-sidebar__menu-item--active' : '' }}">
 
                         <svg width="18" height="18" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor"
                              stroke-width="1.75" stroke-linecap="round"
                              stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2"/>
-                            <line x1="3" y1="9" x2="21" y2="9"/>
-                            <line x1="3" y1="15" x2="21" y2="15"/>
-                            <line x1="9" y1="9" x2="9" y2="21"/>
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
                         </svg>
 
-                        Kelas
+                        Pilih Semester
                     </a>
                 </li>
 
@@ -146,27 +146,6 @@
                     </a>
                 </li>
 
-                {{-- Notifikasi --}}
-                <li>
-                    <a href="#"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.notifikasi*') ? 'sim-sidebar__menu-item--active' : '' }}"
-                       style="display: flex; justify-content: space-between; align-items: center;">
-
-                        <span style="display: flex; align-items: center; gap: 10px;">
-                            <svg width="18" height="18" viewBox="0 0 24 24"
-                                 fill="none" stroke="currentColor"
-                                 stroke-width="1.75" stroke-linecap="round"
-                                 stroke-linejoin="round">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                            </svg>
-                            Notifikasi
-                        </span>
-
-                        <span style="background: #DC2626; color: #fff; font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 7px; min-width: 20px; text-align: center;">3</span>
-                    </a>
-                </li>
-
             </ul>
         </nav>
 
@@ -174,7 +153,8 @@
         <div class="sim-sidebar__footer">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="sim-sidebar__logout" style="background: none; border: none; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 0; font-size: inherit; font-family: inherit;">
+                <button type="submit" class="sim-sidebar__logout"
+                    style="background: none; border: none; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 0; font-size: inherit; font-family: inherit;">
 
                     <svg width="18" height="18" viewBox="0 0 24 24"
                          fill="none" stroke="currentColor"
@@ -261,15 +241,15 @@
                 </div>
 
                 <div class="sim-header__user-avatar">
-                    {{ strtoupper(substr(Auth::guard('dosen')->user()->nama ?? 'D', 0, 2)) }}
+                    {{ strtoupper(substr($userName ?? Auth::guard('dosen')->user()?->nama ?? 'D', 0, 2)) }}
                 </div>
 
                 <div class="sim-header__user-info">
                     <span class="sim-header__user-name">
-                        {{ Auth::guard('dosen')->user()->nama ?? 'Dosen' }}
+                        {{ $userName ?? Auth::guard('dosen')->user()?->nama ?? 'Dosen' }}
                     </span>
                     <span class="sim-header__user-role">
-                        Dosen Pembimbing
+                        {{ $userRole ?? 'Dosen Pengampu' }}
                     </span>
                 </div>
 
