@@ -7,6 +7,10 @@ use App\Http\Controllers\Dosen\KelompokController;
 
 Route::prefix('dosen')->name('dosen.')->group(function () {
     Route::middleware('auth:dosen')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/pilih-kelas', [DashboardController::class, 'pilihKelas'])->name('pilih-kelas');
+        Route::post('/pilih-kelas/select', [DashboardController::class, 'selectKelas'])->name('pilih-kelas.select');
+        Route::get('/kelompok', [DashboardController::class, 'kelompok'])->name('kelompok');
 
         // Pilih Semester — entry point setelah login (dari branch pilih-semester)
         Route::get('/pilih-semester', [DosenController::class, 'pilihSemester'])->name('pilih-semester');
