@@ -10,4 +10,9 @@ class DashboardController extends Controller
     {
         return view('dosen.dashboard');
     }
+
+    public function laporanAktivitas()
+    {
+        return view('dosen.aktifitas-laporan');
+    }
 }
