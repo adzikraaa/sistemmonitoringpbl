@@ -133,4 +133,9 @@ class DashboardController extends Controller
 
         return collect($this->kelasList())->firstWhere('id', $id);
     }
+
+    public function laporanAktivitas()
+    {
+        return view('dosen.aktifitas-laporan');
+    }
 }
