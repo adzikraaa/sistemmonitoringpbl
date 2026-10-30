@@ -12,15 +12,7 @@
             Pilih kelas aktif untuk menavigasi dashboard dosen dan melihat daftar kelompok bimbingan pada semester yang sedang berjalan.
         </p>
     </div>
-    <div class="sim-page-header__right">
-        <div class="sim-header__user" style="padding: 5px 10px; border: 1px solid var(--sim-border); border-radius: 999px; background: var(--sim-white);">
-            <div class="sim-header__user-avatar">DS</div>
-            <div class="sim-header__user-info">
-                <span class="sim-header__user-name">{{ auth('dosen')->user()->nama ?? 'Dian Hanifudin Subhi, S.Kom., M.Kom.' }}</span>
-                <span class="sim-header__user-role">Dosen Pengampu</span>
-            </div>
-        </div>
-    </div>
+    <div class="sim-page-header__right"></div>
 </div>
 
 @if (session('success') || session('warning') || session('error'))
@@ -41,9 +33,15 @@
     </div>
 @endif
 
-<div class="sim-dosen-banner">
-    <div>
-        <div class="sim-dosen-banner__title">Periode Ganjil Berjalan</div>
+<div class="sim-dosen-banner sim-dosen-banner--soft">
+    <div class="sim-dosen-banner__content">
+        <div class="sim-dosen-banner__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px;">
+                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                <path d="M16 2v4M8 2v4M3 10h18"></path>
+            </svg>
+            Periode Ganjil Berjalan
+        </div>
         <div class="sim-dosen-banner__meta">
             Total kelas yang ditugaskan: <strong>{{ count($kelasList) }} kelas</strong>
         </div>
@@ -80,7 +78,9 @@
                     <div class="sim-class-card__progress">
                         <div class="sim-class-card__progress-bar" style="width: {{ $kelas['progress'] }}%"></div>
                     </div>
-                    <div class="sim-class-card__review">{{ $kelas['menunggu_review'] }} Item Menunggu Review</div>
+                    <div class="sim-class-card__review">
+                        <span class="sim-class-card__pill">{{ $kelas['menunggu_review'] }} Item Menunggu Review</span>
+                    </div>
                 </div>
             </div>
 
@@ -98,13 +98,21 @@
 
 <div class="sim-class-confirm">
     <div class="sim-class-confirm__inner">
-        <p class="sim-class-confirm__text">
-            @if ($selectedKelas)
-                Anda akan masuk ke Dashboard Dosen dengan konteks: <strong>{{ $selectedKelas['semester'] }} / {{ $selectedKelas['nama'] }}</strong>
-            @else
-                Belum ada kelas yang dipilih. Pilih salah satu kelas terlebih dahulu.
-            @endif
-        </p>
+        <div class="sim-class-confirm__left">
+            <span class="sim-class-confirm__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2h6.5A2.5 2.5 0 0 1 21 9.5v7A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-9Z"></path>
+                    <path d="M8 12h8M8 15h5"></path>
+                </svg>
+            </span>
+            <p class="sim-class-confirm__text">
+                @if ($selectedKelas)
+                    Anda akan masuk ke Dashboard Dosen dengan konteks: <strong>{{ $selectedKelas['semester'] }} / {{ $selectedKelas['nama'] }}</strong>
+                @else
+                    Belum ada kelas yang dipilih. Pilih salah satu kelas terlebih dahulu.
+                @endif
+            </p>
+        </div>
 
         <a
             href="{{ $selectedKelas ? route('dosen.kelompok') . '?class_id=' . $selectedKelas['id'] : '#' }}"
@@ -121,7 +129,6 @@
     <input id="class_id_input" type="hidden" name="class_id" value="{{ $selectedKelas['id'] ?? '' }}">
 </form>
 
-@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('class-select-form');
@@ -149,5 +156,5 @@
         });
     });
 </script>
-@endpush
+
 @endsection

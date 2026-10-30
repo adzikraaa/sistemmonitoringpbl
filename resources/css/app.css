@@ -12,33 +12,34 @@
 
 :root {
     /* Brand colors */
-    --sim-brown-dark:   #2C1A0E;
-    --sim-brown:        #3D2314;
-    --sim-brown-medium: #5C3317;
-    --sim-brown-warm:   #7A4520;
-    --sim-brown-light:  #A0622A;
+    --sim-brown-dark:   #2B221D;
+    --sim-brown:        #3A2D29;
+    --sim-brown-medium: #5C4B43;
+    --sim-brown-warm:   #7A5C4A;
+    --sim-brown-light:  #A77E62;
     --sim-cream:        #F5EFE6;
-    --sim-cream-dark:   #EDE4D8;
-    --sim-off-white:    #FAF7F3;
+    --sim-cream-dark:   #E9E1D5;
+    --sim-off-white:    #F7F6F0;
     --sim-white:        #FFFFFF;
-    --sim-gold:         #B8934A;
-    --sim-gold-light:   #D4A85A;
-    --sim-green:        #4A7C59;
-    --sim-green-light:  #6BA07A;
-    --sim-green-muted:  #D6EAD9;
-    --sim-green-bg:     #EBF4EC;
-    --sim-yellow-soft:  #FFF9E6;
-    --sim-yellow-border:#F0E0A0;
-    --sim-yellow-text:  #8A6A00;
+    --sim-gold:         #D7B268;
+    --sim-gold-light:   #EED8A5;
+    --sim-green:        #2F5C4A;
+    --sim-green-light:  #4F8169;
+    --sim-green-soft:   #D8E6D8;
+    --sim-green-bg:     #EAF3EC;
+    --sim-green-deep:   #1B4D3B;
+    --sim-yellow-soft:  #F4EFE4;
+    --sim-yellow-border:#E4DED5;
+    --sim-yellow-text:  #7D746D;
 
     /* UI neutrals */
-    --sim-border:       #E8DDD0;
-    --sim-border-light: #F0E8DC;
-    --sim-text-dark:    #1C1008;
-    --sim-text-body:    #4A3728;
-    --sim-text-muted:   #8C7A6A;
-    --sim-text-light:   #B0A090;
-    --sim-bg:           #F7F3EE;
+    --sim-border:       #CFC7BC;
+    --sim-border-light: #E4DED5;
+    --sim-text-dark:    #1F1F1F;
+    --sim-text-body:    #62564C;
+    --sim-text-muted:   #7D746D;
+    --sim-text-light:   #9C9188;
+    --sim-bg:           #F6F4F1;
 
     /* Sidebar */
     --sim-sidebar-bg:   #231208;
@@ -474,7 +475,7 @@ body.sim-body {
    DOSEN CLASS PICKER
    ============================================================ */
 .sim-dosen-banner {
-    background: linear-gradient(135deg, var(--sim-brown-dark) 0%, var(--sim-brown) 100%);
+    background: linear-gradient(135deg, #2B221D 0%, #3A2D29 100%);
     border: 1px solid rgba(255,255,255,0.06);
     border-radius: 16px;
     padding: 20px 22px;
@@ -487,15 +488,28 @@ body.sim-body {
     box-shadow: 0 8px 18px rgba(44, 26, 14, 0.12);
 }
 
-.sim-dosen-banner__title {
+.sim-dosen-banner--soft {
+    background: #F7F6F0;
+    border-color: var(--sim-border);
+    box-shadow: 0 6px 14px rgba(39, 30, 24, 0.04);
+    color: var(--sim-text-dark);
+}
+
+.sim-dosen-banner__content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sim-dosen-banner__label {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    width: fit-content;
     padding: 6px 10px;
     border-radius: 999px;
-    background: rgba(106, 160, 122, 0.18);
-    border: 1px solid rgba(149, 196, 165, 0.25);
-    color: #D5F1DD;
+    background: rgba(47, 92, 74, 0.08);
+    color: var(--sim-green-deep);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -503,20 +517,20 @@ body.sim-body {
 }
 
 .sim-dosen-banner__meta {
-    margin-top: 8px;
+    margin-top: 0;
     font-size: 13px;
-    color: rgba(245, 239, 230, 0.8);
+    color: var(--sim-text-body);
 }
 
 .sim-dosen-banner__meta strong {
-    color: var(--sim-white);
+    color: var(--sim-text-dark);
     font-weight: 700;
 }
 
 .sim-dosen-banner__button {
-    border: 1px solid rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.06);
-    color: var(--sim-white);
+    border: 1px solid rgba(43, 34, 29, 0.12);
+    background: rgba(43, 34, 29, 0.04);
+    color: var(--sim-brown-dark);
     border-radius: 12px;
     padding: 10px 16px;
     font-size: 13px;
@@ -559,19 +573,19 @@ body.sim-body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 9px;
+    padding: 4px 10px;
     border-radius: 999px;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    background: var(--sim-cream);
-    color: var(--sim-text-body);
+    background: #EDF4EA;
+    color: #2F5C4A;
 }
 
 .sim-class-card__tag--active {
-    background: #EAF7EE;
-    color: var(--sim-green);
+    background: #2F5C4A;
+    color: #F3FBF5;
 }
 
 .sim-class-card__body {
@@ -601,8 +615,8 @@ body.sim-body {
 }
 
 .sim-class-card__stats {
-    background: var(--sim-off-white);
-    border: 1px solid var(--sim-border-light);
+    background: #EAF3EC;
+    border: 1px solid #D7E6DA;
     border-radius: 14px;
     padding: 14px 14px 12px;
 }
@@ -625,14 +639,14 @@ body.sim-body {
 .sim-class-card__progress {
     height: 8px;
     border-radius: 999px;
-    background: #EDE2D5;
+    background: #DCE8DF;
     overflow: hidden;
 }
 
 .sim-class-card__progress-bar {
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, var(--sim-brown-light) 0%, var(--sim-brown-dark) 100%);
+    background: linear-gradient(90deg, #2F5C4A 0%, #1F4338 100%);
 }
 
 .sim-class-card__review {
@@ -641,30 +655,44 @@ body.sim-body {
     color: var(--sim-text-muted);
 }
 
+.sim-class-card__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(47, 92, 74, 0.08);
+    color: var(--sim-green-deep);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
 .sim-class-card__button {
     margin-top: 16px;
     width: 100%;
     border: none;
     border-radius: 12px;
-    background: var(--sim-brown-dark);
-    color: var(--sim-cream);
+    background: #F0ECE1;
+    color: var(--sim-brown-dark);
     padding: 11px 14px;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .sim-class-card__button:hover {
-    background: var(--sim-brown);
+    background: #E7E1D2;
 }
 
 .sim-class-card__button--selected {
-    background: var(--sim-green);
+    background: var(--sim-brown-dark);
+    color: var(--sim-cream);
 }
 
 .sim-class-card__button--selected:hover {
-    background: var(--sim-green-light);
+    background: #1E1A17;
 }
 
 .sim-class-confirm {
@@ -674,7 +702,7 @@ body.sim-body {
     transform: none;
     width: min(1100px, calc(100% - 32px));
     margin: 0 auto 18px;
-    background: rgba(255, 255, 255, 0.96);
+    background: rgba(255, 255, 255, 0.97);
     border: 1px solid var(--sim-border);
     box-shadow: 0 16px 28px rgba(28, 16, 8, 0.12);
     backdrop-filter: blur(8px);
@@ -690,10 +718,36 @@ body.sim-body {
     gap: 14px;
 }
 
+.sim-class-confirm__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+
+.sim-class-confirm__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #F0ECE1;
+    color: var(--sim-brown-dark);
+    flex-shrink: 0;
+}
+
+.sim-class-confirm__icon svg {
+    width: 18px;
+    height: 18px;
+}
+
 .sim-class-confirm__text {
     margin: 0;
     font-size: 13px;
     color: var(--sim-text-body);
+    line-height: 1.5;
 }
 
 .sim-class-confirm__button {
