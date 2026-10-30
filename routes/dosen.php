@@ -25,5 +25,8 @@ Route::prefix('dosen')->name('dosen.')->group(function () {
 
         // Laporan Aktivitas (dari main)
         Route::get('/laporan-aktivitas', [DashboardController::class, 'laporanAktivitas'])->name('laporan-aktivitas');
+
+        // Notifikasi Dosen
+        Route::get('/notifikasi', [DosenController::class, 'notifikasi'])->name('notifikasi');
     });
 });
