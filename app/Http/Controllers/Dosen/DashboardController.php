@@ -55,8 +55,8 @@ class DashboardController extends Controller
 
     public function index()
     {
-        if (! session()->has('dosen_active_class_id')) {
-            return redirect()->route('dosen.pilih-kelas');
+        if (! session()->has('dosen.semester_id')) {
+            return redirect()->route('dosen.pilih-semester');
         }
 
         return view('dosen.dashboard', [
