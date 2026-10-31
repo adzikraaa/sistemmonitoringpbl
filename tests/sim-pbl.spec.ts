@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';n
+import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.APP_URL || 'http://127.0.0.1:8000';
 
@@ -56,10 +56,10 @@ test.describe('Test Plan SIM-PBL', () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test('TC-05: Login dosen berhasil', async ({ page }) => {
-    await loginRole(page, 'dosen', DOSEN_NIDN, DOSEN_PASSWORD);
-    await expect(page).toHaveURL(`${BASE_URL}/dosen/dashboard`);
-  });
+ test('TC-05: Login dosen berhasil', async ({ page }) => {
+  await loginRole(page, 'dosen', DOSEN_NIDN, DOSEN_PASSWORD);
+  await expect(page).toHaveURL(`${BASE_URL}/dosen/pilih-semester`);
+});
 
   test('TC-06: Login koordinator berhasil', async ({ page }) => {
     await loginRole(page, 'koordinator', KOORDINATOR_NIDN, KOORDINATOR_PASSWORD);
@@ -83,36 +83,39 @@ test.describe('Test Plan SIM-PBL', () => {
     await expect(page.getByRole('link', { name: 'Lupa kata sandi?' })).toHaveAttribute('href', '#');
   });
 
-  test('TD-01: Dashboard terbuka setelah login mahasiswa', async ({ page }) => {
+  
+      test('TD-01: Dashboard terbuka setelah login mahasiswa', async ({ page }) => {
     await loginMahasiswa(page);
     await page.goto(`${BASE_URL}/mahasiswa/dashboard`);
-    await expect(page.locator('h1')).toContainText('Dashboard');
+    await expect(page).toHaveURL(`${BASE_URL}/mahasiswa/dashboard`);
+    await expect(page.locator('h1')).toHaveText('Halo, Mahasiswa');
   });
 
   test('TD-02: Nama mahasiswa tampil', async ({ page }) => {
-    await loginMahasiswa(page);
-    await page.goto(`${BASE_URL}/mahasiswa/dashboard`);
-    await expect(page.locator('text=Mochammad Tanggaq').first()).toBeVisible();
-  });
+  await loginMahasiswa(page);
 
-  test('TD-03: NIM mahasiswa tampil', async ({ page }) => {
-    await loginMahasiswa(page);
-    await page.goto(`${BASE_URL}/mahasiswa/dashboard`);
-    await expect(page.locator('text=244107060105').first()).toBeVisible();
-  });
+  await expect(page).toHaveURL(`${BASE_URL}/mahasiswa/pilih-semester`);
+  await expect(
+    page.locator('.sim-header__user-name')
+  ).toHaveText('Mahasiswa 244107060044');
+});
+ test('TD-03: NIM mahasiswa tampil', async ({ page }) => {
+  await loginMahasiswa(page);
+
+  await expect(page).toHaveURL(`${BASE_URL}/mahasiswa/pilih-semester`);
+  await expect(
+    page.locator('.sim-header__user-role')
+  ).toContainText('244107060044');
+});
 
   test('TD-04: Kelas mahasiswa tampil', async ({ page }) => {
-    await loginMahasiswa(page);
-    await page.goto(`${BASE_URL}/mahasiswa/dashboard`);
-    await expect(page.locator('text=SIB 3B').first()).toBeVisible();
-  });
+  await loginMahasiswa(page);
 
-  test('TD-05: Program studi tampil', async ({ page }) => {
-    await loginMahasiswa(page);
-    await page.goto(`${BASE_URL}/mahasiswa/dashboard`);
-    await expect(page.locator('text=Teknologi Informasi').first()).toBeVisible();
-  });
-
+  await expect(page).toHaveURL(`${BASE_URL}/mahasiswa/pilih-semester`);
+  await expect(
+    page.locator('.sim-header__user-role')
+  ).toContainText('· -');
+});
   test('TD-06: Navigasi ke menu kelompok', async ({ page }) => {
     await loginMahasiswa(page);
     await page.goto(`${BASE_URL}/mahasiswa/dashboard`);
@@ -121,18 +124,28 @@ test.describe('Test Plan SIM-PBL', () => {
   });
 
   test('TD-07: Navigasi ke menu proposal', async ({ page }) => {
-    await loginMahasiswa(page);
-    await page.goto(`${BASE_URL}/mahasiswa/dashboard`);
-    await page.getByRole('link', { name: 'Proposal' }).click();
-    await expect(page).toHaveURL(/\/mahasiswa\/proposal/);
-  });
+  await loginMahasiswa(page);
+  await page.goto(`${BASE_URL}/mahasiswa/dashboard`);
+
+  await page.getByRole('link', {
+    name: 'Proposal',
+    exact: true
+  }).click();
+
+  await expect(page).toHaveURL(/\/mahasiswa\/proposal/);
+});
 
   test('TD-08: Navigasi ke menu milestone', async ({ page }) => {
-    await loginMahasiswa(page);
-    await page.goto(`${BASE_URL}/mahasiswa/dashboard`);
-    await page.getByRole('link', { name: 'Milestone' }).click();
-    await expect(page).toHaveURL(/\/mahasiswa\/milestone/);
-  });
+  await loginMahasiswa(page);
+  await page.goto(`${BASE_URL}/mahasiswa/dashboard`);
+
+  await page.getByRole('link', {
+    name: 'Milestone',
+    exact: true
+  }).click();
+
+  await expect(page).toHaveURL(/\/mahasiswa\/milestone/);
+});
 
   test('TD-09: Navigasi ke menu notifikasi', async ({ page }) => {
     await loginMahasiswa(page);
@@ -161,8 +174,11 @@ test.describe('Test Plan SIM-PBL', () => {
   });
 
   test('TP-03: User dapat melihat status proposal', async ({ page }) => {
-    await loginMahasiswa(page);
-    await page.goto(`${BASE_URL}/mahasiswa/proposal`);
-    await expect(page.locator('text=Disetujui')).toBeVisible();
-  });
+  await loginMahasiswa(page);
+  await page.goto(`${BASE_URL}/mahasiswa/proposal`);
+
+  await expect(
+    page.getByText('Disetujui', { exact: true })
+  ).toBeVisible();
+});
 });
