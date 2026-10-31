@@ -15,6 +15,67 @@ class DosenClassSelectionTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_dosen_can_access_semester_and_activity_pages(): void
+    {
+        $dosen = Dosen::create([
+            'nama' => 'Dian Hanifudin Subhi',
+            'email' => 'dian.dosen@example.com',
+            'password' => 'secret123',
+            'nidn' => '000111222',
+            'is_aktif' => true,
+        ]);
+
+        $this->actingAs($dosen, 'dosen')
+            ->get(route('dosen.pilih-semester'))
+            ->assertOk();
+
+        $this->actingAs($dosen, 'dosen')
+            ->get(route('dosen.laporan-aktivitas'))
+            ->assertOk();
+
+        $this->actingAs($dosen, 'dosen')
+            ->get(route('dosen.notifikasi'))
+            ->assertOk();
+    }
+
+    public function test_dosen_can_select_a_semester_and_land_on_dashboard(): void
+    {
+        $dosen = Dosen::create([
+            'nama' => 'Dian Hanifudin Subhi',
+            'email' => 'dian.dosen@example.com',
+            'password' => 'secret123',
+            'nidn' => '000111222',
+            'is_aktif' => true,
+        ]);
+
+        $response = $this->actingAs($dosen, 'dosen')
+            ->from(route('dosen.pilih-semester'))
+            ->post(route('dosen.set-semester'), ['semester_id' => 'smt5']);
+
+        $response->assertRedirect(route('dosen.dashboard'));
+
+        $this->followRedirects($response)
+            ->assertOk()
+            ->assertSee('Dashboard');
+    }
+
+    public function test_dosen_dashboard_is_available_after_semester_selection_without_class_selection(): void
+    {
+        $dosen = Dosen::create([
+            'nama' => 'Dian Hanifudin Subhi',
+            'email' => 'dian.dosen@example.com',
+            'password' => 'secret123',
+            'nidn' => '000111222',
+            'is_aktif' => true,
+        ]);
+
+        $this->actingAs($dosen, 'dosen')
+            ->withSession(['dosen.semester_id' => 'smt5'])
+            ->get(route('dosen.dashboard'))
+            ->assertOk()
+            ->assertSee('Dashboard');
+    }
+
     public function test_dosen_can_select_a_class_and_store_it_in_session(): void
     {
         $periode = Periode::create([
