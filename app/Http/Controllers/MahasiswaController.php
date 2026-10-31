@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MahasiswaController extends Controller
 {
@@ -10,15 +11,17 @@ class MahasiswaController extends Controller
      * Data kelompok dan user (hardcoded untuk prototype).
      * Saat backend lengkap, data ini diambil dari database/session.
      */
-    private function sharedViewData(): array
-    {
-        return [
-            'userName'  => 'Mochammad Tanggaq',
-            'userNim'   => '244107060105',
-            'userKelas' => 'SIB 3B',
-            'userProdi' => 'Teknologi Informasi',
-        ];
-    }
+   private function sharedViewData(): array
+{
+    $mahasiswa = Auth::guard('mahasiswa')->user();
+
+    return [
+        'userName'  => $mahasiswa?->nama ?? 'Mahasiswa',
+        'userNim'   => $mahasiswa?->nim ?? '-',
+        'userKelas' => $mahasiswa?->kelas_id ?? '-',
+        'userProdi' => 'Teknologi Informasi',
+    ];
+}
 
     public function pilihSemester()
     {
