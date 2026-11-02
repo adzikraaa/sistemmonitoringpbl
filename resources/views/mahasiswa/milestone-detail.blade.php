@@ -1,7 +1,7 @@
 @extends('layouts.mahasiswa')
 
-@section('title', 'Detail Milestone - ' . $namaMatkul)
-@section('meta_description', 'Detail capaian dan pengumpulan milestone mata kuliah ' . $namaMatkul)
+@section('title', 'Detail Milestone - ' . ($namaMatkul ?? 'Mata Kuliah'))
+@section('meta_description', 'Detail capaian dan pengumpulan milestone mata kuliah ' . ($namaMatkul ?? 'Mata Kuliah'))
 
 @section('content')
 
