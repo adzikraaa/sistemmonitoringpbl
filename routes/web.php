@@ -27,6 +27,7 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('auth:mahasiswa')->gr
 
 
     Route::get('/milestone', [MahasiswaController::class, 'milestone'])->name('milestone');
+    Route::get('/milestone/{id}', [MahasiswaController::class, 'milestoneDetail'])->name('milestone.detail');
     Route::post('/milestone/{id}/upload', [MahasiswaController::class, 'storeMilestoneUpload'])->name('milestone.upload');
     Route::get('/notifikasi', [MahasiswaController::class, 'notifikasi'])->name('notifikasi');
 
