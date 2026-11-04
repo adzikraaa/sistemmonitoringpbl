@@ -115,7 +115,7 @@
         </div>
 
         <a
-            href="{{ $selectedKelas ? route('dosen.kelompok') . '?class_id=' . $selectedKelas['id'] : '#' }}"
+            href="{{ $selectedKelas ? route('dosen.kelompok') : '#' }}"
             class="sim-class-confirm__button {{ $selectedKelas ? '' : 'sim-class-confirm__button--disabled' }}"
             onclick="{{ $selectedKelas ? '' : 'event.preventDefault(); alert(\'Pilih kelas terlebih dahulu sebelum masuk ke ruang kelas.\');' }}"
         >

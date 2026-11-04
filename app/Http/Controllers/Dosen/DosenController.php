@@ -116,118 +116,73 @@ class DosenController extends Controller
         // Simpan konteks semester aktif ke session guard dosen
         $request->session()->put('dosen.semester_id', $request->semester_id);
 
-        // Langsung ke Dashboard Dosen — bukan Pilih Kelas
+        // Setelah memilih semester, lanjut ke dashboard dosen
         return redirect()->route('dosen.dashboard');
     }
 
     /**
      * Dashboard Dosen Pengampu.
-     * Membaca konteks semester dari session (dosen.semester_id)
-     * dan kelas aktif dari session (dosen_active_class_id) milik DashboardController.
+     * Membaca konteks semester dari session.
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $semesterId = session('dosen.semester_id');
 
-        // Cari data semester yang dipilih (opsional — tidak redirect jika kosong)
-        $semester = $semesterId
-            ? collect($this->semesterData())->firstWhere('id', $semesterId)
-            : null;
+        // Jika belum memilih semester, redirect balik ke pilih semester
+        if (!$semesterId) {
+            return redirect()->route('dosen.pilih-semester')
+                ->with('info', 'Silakan pilih semester terlebih dahulu.');
+        }
 
-        // ── [MOCKUP] Data dashboard ───────────────────────────────────────
-        // Ganti dengan query Eloquent ke model Kelompok, Logbook, Proposal
-        // saat tabel DB sudah tersedia.
-        // ─────────────────────────────────────────────────────────────────
+        // Cari data semester yang dipilih
+        $semester = collect($this->semesterData())
+            ->firstWhere('id', $semesterId);
 
-        // Summary stats
-        $summaryData = [
-            'total_kelompok' => 3,
-            'laporan_masuk'  => 12,
-            'belum_review'   => 4,
-            'perlu_revisi'   => 3,
-            'terlambat'      => 1,
-        ];
+        // Jika semester tidak ditemukan (misal ID tidak valid), reset dan redirect
+        if (!$semester) {
+            $request->session()->forget('dosen.semester_id');
+            return redirect()->route('dosen.pilih-semester')
+                ->with('error', 'Semester tidak ditemukan. Silakan pilih ulang.');
+        }
 
-        // Peta bimbingan — daftar kelompok yang dibimbing dosen ini
-        $kelompokData = [
-            [
-                'nama'        => 'Kelompok 01',
-                'kelas'       => 'SIB 3A',
-                'proyek'      => 'Pengembangan Sistem Monitoring PBL',
-                'progress'    => 65,
-                'status'      => 'berjalan',
-                'last_update' => \Carbon\Carbon::now()->subHours(2),
-            ],
-            [
-                'nama'        => 'Kelompok 02',
-                'kelas'       => 'SIB 3B',
-                'proyek'      => 'Platform Kolaborasi Laboratorium',
-                'progress'    => 48,
-                'status'      => 'terlambat',
-                'last_update' => \Carbon\Carbon::now()->subHours(4),
-            ],
-            [
-                'nama'        => 'Kelompok 01',
-                'kelas'       => 'SIB 3B',
-                'proyek'      => 'Sistem Informasi Inventaris Kampus',
-                'progress'    => 82,
-                'status'      => 'selesai',
-                'last_update' => \Carbon\Carbon::now()->subHours(5),
-            ],
-        ];
-
-        // Sinyal minggu ini — kelompok yang belum aktif (null = semua aktif)
-        $sinyalKelompok = [
-            'nama'     => 'Kelompok Reka',
-            'hari_lalu' => 3,
-        ];
-
-        // Dokumen yang menunggu review dosen
-        $pendingReviews = [
-            ['type' => 'Logbook',  'label' => 'Kelompok 1 SIB 3A', 'name' => 'Dzikra'],
-            ['type' => 'Proposal', 'label' => 'Kelompok 2 SIB 3B', 'name' => 'Angga'],
-            ['type' => 'Logbook',  'label' => 'Kelompok 1 SIB 3B', 'name' => 'Niky'],
+        // [MOCKUP] Data kelompok/kelas untuk prototype
+        // Ganti dengan query DB (kelompok milik dosen ini pada semester terpilih)
+        // setelah relasi dosen ↔ kelas ↔ kelompok ↔ semester tersedia.
+        $kelompokList = [
+            ['id' => 'k1', 'nama' => 'Kelompok 1', 'kelas' => 'SIB 3B', 'proyek' => 'Sistem Monitoring PBL', 'progress' => 60, 'status' => 'Berjalan'],
+            ['id' => 'k2', 'nama' => 'Kelompok 2', 'kelas' => 'SIB 3B', 'proyek' => 'Aplikasi Inventaris Lab', 'progress' => 45, 'status' => 'Berjalan'],
+            ['id' => 'k3', 'nama' => 'Kelompok 3', 'kelas' => 'SIB 3A', 'proyek' => 'Platform E-Learning', 'progress' => 72, 'status' => 'Berjalan'],
         ];
 
         return view('dosen.dashboard', array_merge(
             $this->sharedViewData(),
             [
-                'semester'       => $semester,
-                'summaryData'    => $summaryData,
-                'kelompokData'   => $kelompokData,
-                'sinyalKelompok' => $sinyalKelompok,
-                'pendingReviews' => $pendingReviews,
+                'semester'     => $semester,
+                'kelompokList' => $kelompokList,
             ]
         ));
     }
 
-    /**
-     * Halaman Notifikasi Dosen.
-     */
     public function notifikasi()
     {
-        // [MOCKUP] — ganti dengan query notifikasi dari DB
         $notifikasi = [
             [
-                'id'      => 1,
-                'jenis'   => 'logbook',
-                'pesan'   => 'Kelompok 01 SIB 3A mengumpulkan logbook minggu ke-9.',
-                'waktu'   => \Carbon\Carbon::now()->subMinutes(30),
-                'dibaca'  => false,
+                'jenis' => 'logbook',
+                'pesan' => 'Kelompok 01 menambahkan logbook minggu ke-9 untuk ditinjau.',
+                'waktu' => now()->subHours(2),
+                'dibaca' => false,
             ],
             [
-                'id'      => 2,
-                'jenis'   => 'proposal',
-                'pesan'   => 'Proposal baru dari Kelompok 02 SIB 3B menunggu review.',
-                'waktu'   => \Carbon\Carbon::now()->subHours(2),
-                'dibaca'  => false,
+                'jenis' => 'proposal',
+                'pesan' => 'Proposal kelompok SIB 3B telah masuk dan menunggu review dosen.',
+                'waktu' => now()->subHours(7),
+                'dibaca' => false,
             ],
             [
-                'id'      => 3,
-                'jenis'   => 'pengingat',
-                'pesan'   => 'Kelompok Reka belum mengirim pembaruan sejak 3 hari lalu.',
-                'waktu'   => \Carbon\Carbon::now()->subDays(1),
-                'dibaca'  => true,
+                'jenis' => 'pengingat',
+                'pesan' => 'Jadwal bimbingan kelompok 03 dijadwalkan hari Senin pukul 09.00.',
+                'waktu' => now()->subDay(),
+                'dibaca' => true,
             ],
         ];
 
