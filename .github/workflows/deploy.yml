@@ -7,10 +7,18 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: sim-pbl-production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Deploy to AWS EC2
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
 
     steps:
       - name: Deploy application
@@ -21,39 +29,87 @@ jobs:
           DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
 
         run: |
+          set -e
+
+          echo "[1] Checking GitHub Secrets..."
+
+          test -n "$SSH_PRIVATE_KEY" || {
+            echo "ERROR: EC2_SSH_KEY kosong"
+            exit 1
+          }
+
+          test -n "$EC2_HOST" || {
+            echo "ERROR: EC2_HOST kosong"
+            exit 1
+          }
+
+          test -n "$EC2_USER" || {
+            echo "ERROR: EC2_USER kosong"
+            exit 1
+          }
+
+          test -n "$DEPLOY_PATH" || {
+            echo "ERROR: EC2_DEPLOY_PATH kosong"
+            exit 1
+          }
+
+          echo "[2] Preparing SSH..."
+
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          echo "[3] Scanning EC2 host..."
 
-          ssh -i ~/.ssh/id_ed25519 \
+          if ! ssh-keyscan -T 10 -H "$EC2_HOST" >> ~/.ssh/known_hosts; then
+            echo "ERROR: Gagal mendapatkan SSH host key dari EC2."
+            exit 1
+          fi
+
+          echo "[4] Connecting to EC2..."
+
+          ssh -v \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -i ~/.ssh/id_ed25519 \
             "$EC2_USER@$EC2_HOST" \
             "DEPLOY_PATH='$DEPLOY_PATH' bash -s" <<'ENDSSH'
 
             set -e
 
+            echo "[5] Connected to EC2"
+
             cd "$DEPLOY_PATH"
 
-            echo "Starting deployment..."
+            echo "[6] Updating Git repository..."
 
             git fetch origin main
             git merge --ff-only origin/main
+
+            echo "[7] Installing Composer dependencies..."
 
             composer install \
               --no-dev \
               --optimize-autoloader \
               --no-interaction
 
+            echo "[8] Building frontend..."
+
             npm ci
             npm run build
 
+            echo "[9] Running database migrations..."
+
             php artisan migrate --force
+
+            echo "[10] Clearing and rebuilding Laravel cache..."
 
             php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
+
+            echo "[11] Fixing permissions..."
 
             sudo chown -R www-data:www-data storage bootstrap/cache
             sudo chmod -R 775 storage bootstrap/cache
