@@ -552,7 +552,8 @@
 
                     {{-- Semester & Periode --}}
                     <li>
-                        <a href="#" class="krd-nav-link">
+                        <a href="{{ route('koordinator.periode.index') }}" 
+                        class="krd-nav-link {{ request()->routeIs('koordinator.periode.*') ? 'krd-nav-link--active' : '' }}">
                             <span class="krd-nav-icon">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>

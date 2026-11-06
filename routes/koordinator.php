@@ -6,6 +6,7 @@ use App\Http\Controllers\Koordinator\DashboardController;
 use App\Http\Controllers\Koordinator\KelasController;
 use App\Http\Controllers\Koordinator\PenggunaController;
 use App\Http\Controllers\Koordinator\PenugasanDosenController;
+use App\Http\Controllers\Koordinator\PeriodeController;
 
 Route::prefix('koordinator')->name('koordinator.')->group(function () {
     Route::middleware('auth:koordinator')->group(function () {
@@ -40,5 +41,11 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::delete('/penugasan-dosen/{dosenPengampu}', [PenugasanDosenController::class, 'destroy'])->name('penugasan-dosen.destroy');
         Route::get('/penugasan-dosen/api/data', [PenugasanDosenController::class, 'apiData'])->name('penugasan-dosen.api-data');
 
+
+        // Route Fitur Semester & Periode
+        Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');
+        Route::post('/periode', [PeriodeController::class, 'store'])->name('periode.store');
+        Route::put('/periode/{id}', [PeriodeController::class, 'update'])->name('periode.update');
+        Route::patch('/periode/{id}/toggle-aktif', [PeriodeController::class, 'toggleAktif'])->name('periode.toggle-aktif');
     });
 });
