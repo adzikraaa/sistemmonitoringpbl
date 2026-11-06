@@ -4,11 +4,6 @@
 @section('meta_description', 'Pilih periode aktif untuk masuk ke ruang kerja kelompok PBL Anda.')
 
 @section('content')
-{{-- Eyebrow breadcrumb --}}
-<div class="sim-ps-eyebrow-bar">
-    <span class="sim-ps-eyebrow-tag">RUANG MAHASISWA · PEMILIHAN PERIODE PBL</span>
-</div>
-
 {{-- Page Header --}}
 <div class="sim-ps-header">
     <h1 class="sim-ps-header__title">Pilih Semester &amp; Proyek PBL</h1>
@@ -70,7 +65,9 @@
             </div>
         </div>
         <div class="sim-ps-card__foot">
-            <a href="{{ route('mahasiswa.dashboard') }}" class="sim-ps-card__cta">
+            {{-- The chosen semester is carried in the URL so the breadcrumb on every
+                 mahasiswa page can show it without a backend session. --}}
+            <a href="{{ route('mahasiswa.dashboard', ['semester' => 5]) }}" class="sim-ps-card__cta">
                 Buka Ruang Kerja →
             </a>
         </div>
