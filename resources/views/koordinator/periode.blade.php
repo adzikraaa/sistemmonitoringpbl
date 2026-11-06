@@ -497,28 +497,37 @@
             Buat semester baru untuk kalender akademik PBL.
         </p>
 
-        <form action="{{ route('koordinator.periode.store') }}" method="POST">
+        <!-- Tambahkan id="form-tambah-semester" pada tag form -->
+        <form id="form-tambah-semester" action="{{ route('koordinator.periode.store') }}" method="POST">
             @csrf
+
             <div class="figma-form-group">
                 <label class="figma-form-label">Nama Semester <span style="color:#DC2626">*</span></label>
-                <input type="text" name="nama_periode" placeholder="cth: Semester Ganjil" class="figma-input" required>
+                <select name="nama_periode" class="figma-input-select" required>
+                    <option value="" disabled selected>-- Pilih Semester --</option>
+                    <option value="Ganjil" {{ old('nama_periode') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                    <option value="Genap" {{ old('nama_periode') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                </select>
             </div>
+
             <div class="figma-form-group">
                 <label class="figma-form-label">Tahun Akademik <span style="color:#DC2626">*</span></label>
-                <input type="text" name="tahun_akademik" placeholder="cth: 2026/2027" class="figma-input" required>
+                <input type="text" name="tahun_akademik" value="{{ old('tahun_akademik') }}" placeholder="cth: 2026/2027" class="figma-input" required>
             </div>
+
             <div class="figma-form-row">
                 <div class="figma-form-group" style="margin: 0;">
                     <label class="figma-form-label">Tanggal Mulai <span style="color:#DC2626">*</span></label>
-                    <input type="date" name="tanggal_mulai" class="figma-input" required>
+                    <input type="date" name="tanggal_mulai" value="{{ old('tanggal_mulai') }}" class="figma-input" required>
                 </div>
                 <div class="figma-form-group" style="margin: 0;">
                     <label class="figma-form-label">Tanggal Selesai <span style="color:#DC2626">*</span></label>
-                    <input type="date" name="tanggal_selesai" class="figma-input" required>
+                    <input type="date" name="tanggal_selesai" value="{{ old('tanggal_selesai') }}" class="figma-input" required>
                 </div>
             </div>
+
             <div style="display: flex; align-items: center; gap: 8px; margin-top: 14px;">
-                <input type="checkbox" name="is_aktif" id="is_aktif_baru" value="1">
+                <input type="checkbox" name="is_aktif" id="is_aktif_baru" value="1" {{ old('is_aktif') ? 'checked' : '' }}>
                 <label for="is_aktif_baru" style="font-size: 12.5px; font-weight: 600; color: var(--sim-brown-dark);">Langsung jadikan semester aktif</label>
             </div>
 
@@ -533,7 +542,6 @@
             </div>
         </form>
     </div>
-</div>
 
 @endsection
 
@@ -543,14 +551,24 @@
         document.getElementById('modal-tambah-semester').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
+
     function closeModalTambah() {
-        document.getElementById('modal-tambah-semester').classList.remove('open');
+        const modal = document.getElementById('modal-tambah-semester');
+        const form = document.getElementById('form-tambah-semester');
+
+        // Reset seluruh form (termasuk dropdown & input) saat modal ditutup/dibatal
+        if (form) {
+            form.reset();
+        }
+
+        modal.classList.remove('open');
         document.body.style.overflow = '';
     }
 
     document.getElementById('modal-tambah-semester').addEventListener('click', function(e) {
         if (e.target === this) closeModalTambah();
     });
+    
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeModalTambah();
     });
