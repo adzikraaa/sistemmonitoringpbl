@@ -19,11 +19,11 @@
     </div>
 
     <div style="display: flex; gap: 10px;">
-        <button type="button" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--sim-text-dark); cursor: pointer;">
+        <button type="button" id="btnEksporRekap" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--sim-text-dark); cursor: pointer;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Ekspor rekap
         </button>
-        <button type="button" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--sim-text-dark); cursor: pointer;">
+        <button type="button" id="btnPerbaruiData" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--sim-text-dark); cursor: pointer;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             Perbarui data
         </button>
@@ -37,29 +37,31 @@
     <div style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px; padding: 18px 24px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: center;">
         <div>
             <label style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Kelas</label>
-            <select style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
-                <option>Semua Kelas</option>
-                <option>SIB 3A</option>
-                <option>SIB 3B</option>
-                <option>SIB 3C</option>
+            <select id="filterKelas" style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
+                <option value="semua">Semua Kelas</option>
+                <option value="SIB 3A">SIB 3A</option>
+                <option value="SIB 3B">SIB 3B</option>
+                <option value="SIB 3C">SIB 3C</option>
+                <option value="SIB 3D">SIB 3D</option>
+                <option value="SIB 3E">SIB 3E</option>
             </select>
         </div>
         <div>
             <label style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Jenis Laporan</label>
-            <select style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
-                <option>Semua jenis</option>
-                <option>Logbook</option>
-                <option>Proposal</option>
-                <option>Milestone</option>
+            <select id="filterJenisLaporan" style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
+                <option value="semua">Semua jenis</option>
+                <option value="logbook">Logbook</option>
+                <option value="proposal">Proposal</option>
+                <option value="milestone">Milestone</option>
             </select>
         </div>
         <div>
             <label style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Status Evaluasi</label>
-            <select style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
-                <option>Semua status</option>
-                <option>Menunggu review</option>
-                <option>Perlu revisi</option>
-                <option>Disetujui</option>
+            <select id="filterStatusEvaluasi" style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
+                <option value="semua">Semua status</option>
+                <option value="menunggu-review">Menunggu review</option>
+                <option value="perlu-revisi">Perlu revisi</option>
+                <option value="disetujui">Disetujui</option>
             </select>
         </div>
         <div>
@@ -79,14 +81,14 @@
         {{-- List Header Info --}}
         <div style="padding: 16px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sim-text-muted);">Daftar Pembaruan & Dokumen</span>
-            <span style="font-size: 12px; color: var(--sim-text-muted);">Menampilkan 4 dari 12 aktivitas</span>
+            <span id="jumlahAktivitas" style="font-size: 12px; color: var(--sim-text-muted);">Menampilkan 5 aktivitas</span>
         </div>
 
         {{-- Items List --}}
         <div style="display: flex; flex-direction: column;">
 
             {{-- Item 1: Menunggu Review --}}
-            <div style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
+            <div data-jenis-laporan="logbook" data-status="menunggu-review" data-kelas="SIB 3A" style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
                 <div style="display: flex; align-items: flex-start; gap: 14px;">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #FDF6EE; color: #D97706; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="13" y1="17" x2="8" y2="17"/></svg>
@@ -119,7 +121,7 @@
             </div>
 
             {{-- Item 2: Perlu Revisi --}}
-            <div style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
+            <div data-jenis-laporan="proposal" data-status="perlu-revisi" data-kelas="SIB 3B" style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
                 <div style="display: flex; align-items: flex-start; gap: 14px;">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #FEE2E2; color: #DC2626; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.2"/></svg>
@@ -152,7 +154,7 @@
             </div>
 
             {{-- Item 3: Disetujui --}}
-            <div style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
+            <div data-jenis-laporan="logbook" data-status="disetujui" data-kelas="SIB 3C" style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
                 <div style="display: flex; align-items: flex-start; gap: 14px;">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #ECFDF5; color: #059669; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
@@ -185,7 +187,7 @@
             </div>
 
             {{-- Item 4: Disetujui --}}
-            <div style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
+            <div data-jenis-laporan="logbook" data-status="disetujui" data-kelas="SIB 3D" style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
                 <div style="display: flex; align-items: flex-start; gap: 14px;">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #ECFDF5; color: #059669; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
@@ -218,7 +220,7 @@
             </div>
 
             {{-- Item 5: Disetujui --}}
-            <div style="padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
+            <div data-jenis-laporan="milestone" data-status="disetujui" data-kelas="SIB 3E" style="padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
                 <div style="display: flex; align-items: flex-start; gap: 14px;">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #ECFDF5; color: #059669; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
@@ -335,5 +337,134 @@
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filterKelas = document.getElementById('filterKelas');
+    const filterJenisLaporan = document.getElementById('filterJenisLaporan');
+    const filterStatusEvaluasi = document.getElementById('filterStatusEvaluasi');
+    const daftarAktivitas = document.querySelectorAll('[data-jenis-laporan]');
+    const jumlahAktivitas = document.getElementById('jumlahAktivitas');
+
+    function filterAktivitas() {
+        const kelasDipilih = filterKelas.value;
+        const jenisDipilih = filterJenisLaporan.value;
+        const statusDipilih = filterStatusEvaluasi.value;
+        let jumlahTampil = 0;
+
+        daftarAktivitas.forEach(function (aktivitas) {
+            const sesuaiKelas =
+                kelasDipilih === 'semua' ||
+                aktivitas.dataset.kelas === kelasDipilih;
+
+            const sesuaiJenis =
+                jenisDipilih === 'semua' ||
+                aktivitas.dataset.jenisLaporan === jenisDipilih;
+
+            const sesuaiStatus =
+                statusDipilih === 'semua' ||
+                aktivitas.dataset.status === statusDipilih;
+
+            const tampil = sesuaiKelas && sesuaiJenis && sesuaiStatus;
+            aktivitas.style.display = tampil ? 'flex' : 'none';
+
+            if (tampil) {
+                jumlahTampil++;
+            }
+        });
+
+        jumlahAktivitas.textContent =
+            'Menampilkan ' + jumlahTampil + ' aktivitas';
+    }
+
+    filterKelas.addEventListener('change', filterAktivitas);
+    filterJenisLaporan.addEventListener('change', filterAktivitas);
+    filterStatusEvaluasi.addEventListener('change', filterAktivitas);
+
+    // Ekspor aktivitas yang sedang tampil sesuai filter ke file CSV.
+    document.getElementById('btnEksporRekap').addEventListener('click', function () {
+        const aktivitasTampil = Array.from(daftarAktivitas).filter(function (aktivitas) {
+            return aktivitas.style.display !== 'none';
+        });
+
+        if (aktivitasTampil.length === 0) {
+            alert('Tidak ada aktivitas yang dapat diekspor.');
+            return;
+        }
+
+        function escapeCSV(nilai) {
+            return '"' + String(nilai).replace(/"/g, '""').trim() + '"';
+        }
+
+        const baris = [
+            ['Kelas', 'Kelompok', 'Nama Proyek', 'Jenis Laporan', 'Judul Aktivitas', 'Status Evaluasi']
+        ];
+
+        aktivitasTampil.forEach(function (aktivitas) {
+            const teks = Array.from(aktivitas.querySelectorAll('span, h3'))
+                .map(function (elemen) { return elemen.textContent.trim(); })
+                .filter(Boolean);
+
+            const infoKelompok = teks.find(function (teksItem) {
+                return teksItem.includes('Kelompok');
+            }) || '';
+
+            const judul = aktivitas.querySelector('h3')?.textContent.trim() || '';
+            const kelas = aktivitas.dataset.kelas || '';
+            const jenis = aktivitas.dataset.jenisLaporan || '';
+            const status = aktivitas.dataset.status || '';
+
+            const namaProyek = teks.find(function (teksItem) {
+                return teksItem !== infoKelompok && teksItem !== judul &&
+                    !teksItem.includes('Diunggah oleh') &&
+                    !teksItem.includes('Disetujui') &&
+                    !teksItem.includes('Menunggu') &&
+                    !teksItem.includes('Perlu revisi');
+            }) || '';
+
+            const labelJenis = {
+                logbook: 'Logbook',
+                proposal: 'Proposal',
+                milestone: 'Milestone'
+            };
+            const labelStatus = {
+                'menunggu-review': 'Menunggu review',
+                'perlu-revisi': 'Perlu revisi',
+                disetujui: 'Disetujui'
+            };
+
+            baris.push([
+                kelas,
+                infoKelompok,
+                namaProyek,
+                labelJenis[jenis] || jenis,
+                judul,
+                labelStatus[status] || status
+            ]);
+        });
+
+        const isiCSV = '\uFEFF' + baris.map(function (barisData) {
+            return barisData.map(escapeCSV).join(',');
+        }).join('\r\n');
+
+        const file = new Blob([isiCSV], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(file);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'rekap-laporan-aktivitas.csv';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    });
+
+    // Muat ulang halaman untuk mengambil ulang data dari sumber halaman saat ini.
+    document.getElementById('btnPerbaruiData').addEventListener('click', function () {
+        window.location.reload();
+    });
+
+    filterAktivitas();
+});
+</script>
 
 @endsection

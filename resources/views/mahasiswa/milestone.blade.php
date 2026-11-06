@@ -1,17 +1,17 @@
 @extends('layouts.mahasiswa')
 
-@section('title', 'Milestone')
-@section('meta_description', 'Halaman Peta Perjalanan Milestone Mahasiswa SIM-PBL')
+@section('title', 'Milestone - Pilih Mata Kuliah')
+@section('meta_description', 'Pilih mata kuliah untuk melihat peta perjalanan dan detail pengumpulan milestone.')
 
 @section('content')
 
-{{-- Header Halaman --}}
+{{-- ─── Page Header (Standar SIM-PBL) ────────────────────────────────────── --}}
 <div class="sim-page-header">
     <div class="sim-page-header__left">
-        <p class="sim-page-header__eyebrow">PETA PERJALANAN PROYEK</p>
-        <h1 class="sim-page-header__title">Milestone</h1>
+        <p class="sim-page-header__eyebrow">PETA PERJALANAN</p>
+        <h1 class="sim-page-header__title">Milestone - Pilih Mata Kuliah</h1>
         <p class="sim-page-header__desc">
-            Kelompok 01 &ndash; SIB 3B &middot; Pemantauan capaian target dan pengumpulan berkas milestone proyek.
+            Pilih mata kuliah untuk melihat peta perjalanan dan detail pengumpulan.
         </p>
     </div>
 </div>
@@ -173,15 +173,21 @@
                                 {{ $item['status'] }}
                             </span>
                         </div>
-                        @endforeach
                     </div>
+
+                    <!-- Footer Card -->
+                    <div class="flex items-center justify-between pt-4 border-t border-[#E4DED5] text-xs">
+                        <span class="text-[#7D746D]">
+                            Dosen Pengampu: <strong class="text-[#1F1F1F] font-semibold">{{ $item['dosen'] }}</strong>
+                        </span>
+                        <a href="{{ route('mahasiswa.milestone.detail', $item['slug']) }}" class="text-[#7A5C4A] hover:text-[#2B221D] font-semibold inline-flex items-center gap-1 transition-colors">
+                            Buka mata kuliah &rsaquo;
+                        </a>
+                    </div>
+
                 </div>
-                @endif
-
             </div>
-        </div>
         @endforeach
-
     </div>
 </div>
 

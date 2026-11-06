@@ -145,6 +145,12 @@ class LoginController extends Controller
         );
 
         // Login mahasiswa ke guard 'mahasiswa'
+        \Log::info('SIM-PBL Mahasiswa Login', [
+        'input_nim' => $nim,
+        'mahasiswa_id' => $mahasiswa->id,
+        'mahasiswa_nim' => $mahasiswa->nim,
+        'mahasiswa_nama' => $mahasiswa->nama,
+    ]);
         Auth::guard('mahasiswa')->login($mahasiswa, $remember);
         $request->session()->regenerate();
 
