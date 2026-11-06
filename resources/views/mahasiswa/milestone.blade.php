@@ -173,20 +173,23 @@
                                 {{ $item['status'] }}
                             </span>
                         </div>
+                        @endforeach
                     </div>
-
-                    <!-- Footer Card -->
-                    <div class="flex items-center justify-between pt-4 border-t border-[#E4DED5] text-xs">
-                        <span class="text-[#7D746D]">
-                            Dosen Pengampu: <strong class="text-[#1F1F1F] font-semibold">{{ $item['dosen'] }}</strong>
-                        </span>
-                        <a href="{{ route('mahasiswa.milestone.detail', $item['slug']) }}" class="text-[#7A5C4A] hover:text-[#2B221D] font-semibold inline-flex items-center gap-1 transition-colors">
-                            Buka mata kuliah &rsaquo;
-                        </a>
-                    </div>
-
                 </div>
+                @endif
+
+                <!-- Footer Card -->
+                <div class="flex items-center justify-between pt-4 border-t border-[#E4DED5] text-xs">
+                    <span class="text-[#7D746D]">
+                        Dosen Pengampu: <strong class="text-[#1F1F1F] font-semibold">{{ $m['dosen'] }}</strong>
+                    </span>
+                    <a href="{{ route('mahasiswa.milestone.detail', $m['slug']) }}" class="text-[#7A5C4A] hover:text-[#2B221D] font-semibold inline-flex items-center gap-1 transition-colors">
+                        Buka mata kuliah &rsaquo;
+                    </a>
+                </div>
+
             </div>
+        </div>
         @endforeach
     </div>
 </div>
