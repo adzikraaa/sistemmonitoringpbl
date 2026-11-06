@@ -3,6 +3,46 @@
 @section('title', 'Kelompok')
 @section('meta_description', 'Ruang kolaborasi kelompok mahasiswa SIM-PBL')
 
+@push('styles')
+<style>
+/* Page-scoped responsive layout */
+.klp-shell { padding: 0 32px 40px; }
+.klp-banner { padding: 40px; margin-bottom: 32px; max-width: 712px; }
+.klp-banner__title { font-size: clamp(22px, 4.4vw, 32px); }
+.klp-banner-meta { display: flex; }
+.klp-banner-meta__item { min-width: 266px; }
+.klp-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; align-items: start; }
+.klp-card { padding: 28px; }
+.klp-member { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; min-width: 0; }
+.klp-member--bordered { border-bottom: 1px solid var(--sim-border-light); }
+.klp-member__id { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.klp-avatar { flex-shrink: 0; }
+.klp-member__txt { min-width: 0; }
+.klp-member__txt p { overflow-wrap: anywhere; }
+.klp-msg-btn { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+@media (max-width: 900px) {
+    .klp-grid { grid-template-columns: 1fr; gap: 24px; }
+}
+@media (max-width: 768px) {
+    .klp-shell { padding: 0 20px 32px; }
+    .klp-banner { padding: 24px; margin-bottom: 24px; max-width: none; }
+    .klp-card { padding: 24px; }
+    .klp-page-btn { min-height: 44px; }
+    .klp-msg-btn { min-width: 44px; min-height: 44px; }
+    .klp-add-btn { min-height: 44px; }
+    .klp-link { min-height: 44px; }
+}
+@media (max-width: 600px) {
+    .klp-banner-meta { flex-direction: column; gap: 20px; }
+    .klp-banner-meta__item { min-width: 0; }
+}
+@media (max-width: 480px) {
+    .klp-shell { padding: 0 16px 32px; }
+    .klp-card { padding: 20px; }
+}
+</style>
+@endpush
+
 @section('content')
 
 @php
@@ -26,7 +66,7 @@
     </div>
 
     <div class="sim-page-header__right">
-        <button class="sim-btn-secondary"
+        <button class="sim-btn-secondary klp-page-btn"
             style="border: 1px solid var(--sim-border); border-radius: 999px; padding: 10px 20px; background: #fff; gap: 8px; font-size: 13px; font-weight: 600; font-family: inherit;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -40,21 +80,21 @@
 </div>
 
 {{-- Main Container --}}
-<div style="padding: 0 32px 40px;">
+<div class="klp-shell">
 
     {{-- Banner Milestone Selanjutnya (lebar dibatasi, ada bayangan) --}}
-    <div style="background: linear-gradient(135deg, #3A291F 0%, #34241A 100%); border-radius: 24px; padding: 40px; color: #FAF7F3; margin-bottom: 32px; max-width: 712px; box-shadow: 0 18px 40px rgba(58,38,26,0.20);">
+    <div class="klp-banner" style="background: linear-gradient(135deg, #3A291F 0%, #34241A 100%); border-radius: 24px; color: #FAF7F3; box-shadow: 0 18px 40px rgba(58,38,26,0.20);">
 
         <p style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #A08C7D; margin: 0 0 8px;">
             JADWAL MILESTONE SELANJUTNYA
         </p>
 
-        <h2 style="font-family: 'DM Serif Display', serif; font-size: 32px; font-weight: 400; margin: 0 0 20px; color: #FAF7F3; line-height: 1.2;">
+        <h2 class="klp-banner__title" style="font-family: 'DM Serif Display', serif; font-weight: 400; margin: 0 0 20px; color: #FAF7F3; line-height: 1.2;">
             Milestone 2 - Implementasi Project
         </h2>
 
-        <div style="display: flex; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px;">
-            <div style="min-width: 266px;">
+        <div class="klp-banner-meta" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px;">
+            <div class="klp-banner-meta__item">
                 <p style="font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #A08C7D; margin: 0 0 6px;">
                     JADWAL MILESTONE
                 </p>
@@ -75,10 +115,10 @@
     </div>
 
     {{-- Grid 2 Kolom --}}
-    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; align-items: start;">
+    <div class="klp-grid">
 
         {{-- CARD KIRI: Anggota Kelompok --}}
-        <div style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 28px; padding: 28px; box-shadow: 0 8px 24px rgba(58,38,26,0.05);">
+        <div class="klp-card" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 28px; box-shadow: 0 8px 24px rgba(58,38,26,0.05);">
 
             <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid var(--sim-border-light);">
                 <div>
@@ -105,12 +145,12 @@
             {{-- List Anggota --}}
             <div style="display: flex; flex-direction: column; padding-top: 0;">
                 @foreach ($anggota as $a)
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 0; {{ $loop->last ? '' : 'border-bottom: 1px solid var(--sim-border-light);' }}">
-                        <div style="display: flex; align-items: center; gap: 14px;">
-                            <div style="width: 38px; height: 38px; border-radius: 50%; background: #EBE1CC; color: #6E5B3E; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">
+                    <div class="klp-member {{ $loop->last ? '' : 'klp-member--bordered' }}">
+                        <div class="klp-member__id">
+                            <div class="klp-avatar" style="width: 38px; height: 38px; border-radius: 50%; background: #EBE1CC; color: #6E5B3E; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">
                                 {{ $a['inisial'] }}
                             </div>
-                            <div>
+                            <div class="klp-member__txt">
                                 <p style="font-size: 14px; font-weight: 600; color: var(--sim-text-dark); margin: 0 0 1px;">
                                     {{ $a['nama'] }}
                                 </p>
@@ -119,7 +159,7 @@
                                 </p>
                             </div>
                         </div>
-                        <button type="button" aria-label="Pesan {{ $a['nama'] }}"
+                        <button type="button" class="klp-msg-btn" aria-label="Pesan {{ $a['nama'] }}"
                             style="border: none; background: transparent; color: var(--sim-text-light); cursor: pointer; padding: 6px;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="1.75"
@@ -135,7 +175,7 @@
 
             {{-- Tombol Tambah anggota (pojok kanan bawah card) --}}
             <div style="display: flex; justify-content: flex-end; padding-top: 16px;">
-                <button type="button"
+                <button type="button" class="klp-add-btn"
                     style="display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: 999px; padding: 11px 22px; background: #3A261A; color: #FFFFFF; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 6px 16px rgba(58,38,26,0.18);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2.25" stroke-linecap="round"
@@ -149,7 +189,7 @@
         </div>
 
         {{-- CARD KANAN: Titik Fokus (tinggi mengikuti isi) --}}
-        <div style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 28px; padding: 28px; box-shadow: 0 8px 24px rgba(58,38,26,0.05);">
+        <div class="klp-card" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 28px; box-shadow: 0 8px 24px rgba(58,38,26,0.05);">
 
             <p style="font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sim-text-muted); margin: 0 0 4px;">
                 TITIK FOKUS
@@ -186,7 +226,7 @@
             </div>
 
             {{-- Link Buka Catatan Proses --}}
-            <a href="{{ route('mahasiswa.logbook') }}"
+            <a href="{{ route('mahasiswa.logbook') }}" class="klp-link"
                 style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: #5C3317; text-decoration: none;">
                 Buka catatan proses &rarr;
             </a>

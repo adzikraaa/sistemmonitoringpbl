@@ -12,7 +12,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body class="sim-body">
+<body class="sim-body sim-body--mahasiswa">
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
 
     {{-- Sidebar: minimal, hanya label Pilih Semester --}}
@@ -25,7 +25,7 @@
             <p class="sim-sidebar__nav-label">RUANG MAHASISWA</p>
             <ul class="sim-sidebar__menu">
                 <li>
-                    <a href="{{ route('mahasiswa.pilih-semester') }}" class="sim-sidebar__menu-item sim-sidebar__menu-item--active">
+                    <a href="{{ route('mahasiswa.pilih-semester') }}" class="sim-sidebar__menu-item sim-sidebar__menu-item--active" onclick="closeSidebar()">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         Pilih Semester
                         <span class="sim-sidebar__menu-dot"></span>
@@ -51,9 +51,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
             <div class="sim-header__breadcrumb">
-                <span class="sim-header__breadcrumb-root">SIM-PBL</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sim-header__breadcrumb-sep"><polyline points="9 18 15 12 9 6"/></svg>
-                <span class="sim-header__breadcrumb-current">Ruang Mahasiswa</span>
+                <a href="{{ url('/') }}" class="sim-header__breadcrumb-root">SIM-PBL</a>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sim-header__breadcrumb-sep"><polyline points="9 18 15 12 9 6"/></svg>
                 <span class="sim-header__breadcrumb-current" style="color: var(--sim-brown-warm);">Pilih Semester</span>
             </div>

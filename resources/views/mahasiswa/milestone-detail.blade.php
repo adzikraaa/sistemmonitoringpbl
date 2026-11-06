@@ -4,30 +4,30 @@
 @section('meta_description', 'Halaman Pengumpulan Milestone Mahasiswa SIM-PBL')
 
 @section('content')
-<div style="max-width: 920px; margin: 0 auto;">
+<div class="msd-page" style="max-width: 920px; margin: 0 auto;">
 
     {{-- Tombol Kembali --}}
     <div style="margin-bottom: 1.25rem;">
-        <a href="{{ route('mahasiswa.milestone') }}" style="display: inline-flex; align-items: center; gap: 0.4rem; color: #666; font-size: 0.85rem; font-weight: 500; text-decoration: none;">
+        <a href="{{ route('mahasiswa.milestone') }}" class="msd-back" style="display: inline-flex; align-items: center; gap: 0.4rem; color: #666; font-size: 0.85rem; font-weight: 500; text-decoration: none;">
             &#8592; Kembali ke Milestone
         </a>
     </div>
 
     {{-- Header Milestone --}}
     <div style="margin-bottom: 1.5rem;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
+        <div class="msd-head-row" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <span style="font-size: 0.8rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em;">
                     MILESTONE {{ $milestone['kode'] }}
                 </span>
             </div>
             <div style="text-align: right;">
-                <span style="display: block; font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em;">TENGGAT</span>
+                <span style="display: block; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em;">TENGGAT</span>
                 <span style="font-weight: 600; color: #333; font-size: 0.85rem;">{{ $milestone['tenggat'] }}</span>
             </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+        <div class="msd-title-row" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
             <h1 style="font-size: 1.8rem; font-weight: 700; color: #1a1a1a; margin: 0;">{{ $milestone['judul'] }}</h1>
             <span class="sim-badge {{ $milestone['badge'] }}" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;">&#9679; {{ $milestone['status'] }}</span>
         </div>
@@ -101,12 +101,12 @@
             </div>
 
             {{-- Footer Upload Status & Submit Button --}}
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.25rem; pt-3; border-top: 1px solid #f0f0f0;">
+            <div class="msd-actions" style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.25rem; border-top: 1px solid #f0f0f0;">
                 <span id="file-selected-status" style="font-size: 0.82rem; color: #777;">
                     Belum ada berkas yang dipilih.
                 </span>
 
-                <button type="submit" id="btn-submit-tugas" class="sim-btn-primary" disabled style="
+                <button type="submit" id="btn-submit-tugas" class="sim-btn-primary msd-submit" disabled style="
                     padding: 0.5rem 1.2rem;
                     font-size: 0.85rem;
                     opacity: 0.5;
@@ -140,6 +140,44 @@
 
 </div>
 @endsection
+
+@push('styles')
+<style>
+/* ── Milestone detail — responsive (page-scoped) ── */
+.msd-page { min-width: 0; }
+.msd-title-row { flex-wrap: wrap; row-gap: 0.4rem; }
+.msd-title-row h1 { overflow-wrap: anywhere; min-width: 0; }
+.msd-actions { flex-wrap: wrap; gap: 0.75rem; }
+
+@media (max-width: 1024px) {
+    .msd-page { padding: 0 32px; }
+}
+
+@media (max-width: 768px) {
+    .msd-page { padding: 0 20px 32px; }
+    .msd-back { min-height: 44px; }
+    .msd-page .sim-btn-secondary,
+    .msd-submit { min-height: 44px; }
+}
+
+@media (max-width: 480px) {
+    .msd-page { padding: 0 16px 32px; }
+    .msd-head-row {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.25rem;
+    }
+    .msd-head-row > div { text-align: left !important; }
+    .msd-title-row h1 { font-size: 1.5rem !important; }
+    .msd-actions {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    .msd-actions .sim-btn-primary { width: 100%; min-height: 44px; }
+    #sim-toast { left: 16px; right: 16px; max-width: none; }
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>

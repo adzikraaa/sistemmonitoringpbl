@@ -32,7 +32,7 @@
                 <strong>Kelompok 01 &bull; SIB 3B</strong>
                 Progres dihitung otomatis dari persentase deliverables yang telah disetujui pembimbing.
             </span>
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="ms-info-actions" style="display: flex; align-items: center; gap: 0.5rem;">
                 <span class="sim-badge sim-badge--approved" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Status: On-Track</span>
                 <button onclick="toggleRumusInfo()" class="sim-btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #ffffff;">
                     &#128712; Formula Progres
@@ -45,14 +45,14 @@
     <div id="box-rumus-info" style="display: none; margin-top: -0.75rem; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background-color: #fdfbf7; border-radius: 8px; border-left: 3px solid #4a3b32; font-size: 0.82rem; color: #444;">
         <p style="margin: 0; font-weight: 600; color: #222;">Transparansi Perhitungan Progres:</p>
         <p style="margin: 0.2rem 0 0 0;">
-            Progres tiap milestone dihitung berdasarkan proporsi: 
+            Progres tiap milestone dihitung berdasarkan proporsi:
             <strong>(Deliverables Terverifikasi / Total Deliverables) &times; 100%</strong>. Validasi dilakukan oleh Dosen Pembimbing.
         </p>
     </div>
 
     {{-- List Timeline Milestone sesuai Figma --}}
-    <div style="display: flex; flex-direction: column; gap: 1.5rem; position: relative;">
-        
+    <div class="ms-timeline" style="display: flex; flex-direction: column; gap: 1.5rem; position: relative;">
+
         {{-- Garis Vertikal Timeline di Sebelah Kiri --}}
         <div style="
             position: absolute;
@@ -66,8 +66,8 @@
 
         @foreach($milestones as $m)
         {{-- Wrapper Item (Flex Horizontal) --}}
-        <div style="display: flex; gap: 1.25rem; align-items: flex-start; position: relative; z-index: 2;">
-            
+        <div class="ms-item" style="display: flex; gap: 1.25rem; align-items: flex-start; position: relative; z-index: 2;">
+
             {{-- Lingkaran M1, M2, dst (Di Luar Card) --}}
             <span style="
                 display: inline-flex;
@@ -88,12 +88,12 @@
             </span>
 
             {{-- Card Utama (Di Sebelah Kanan Lingkaran) --}}
-            <div class="sim-proposal-card" style="flex: 1; padding: 1.25rem; border-left: none;">
-                
+            <div class="sim-proposal-card ms-item__card" style="flex: 1; padding: 1.25rem; border-left: none;">
+
                 {{-- Header Card --}}
-                <div class="sim-proposal-card__header" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
-                    <div class="sim-proposal-card__meta" style="display: flex; align-items: center; gap: 0.6rem;">
-                        <h2 class="sim-proposal-card__title" style="margin: 0; font-size: 1.15rem; color: #1a1a1a;">
+                <div class="sim-proposal-card__header ms-card-header" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="sim-proposal-card__meta ms-card-meta" style="display: flex; align-items: center; gap: 0.6rem;">
+                        <h2 class="sim-proposal-card__title ms-card-title" style="margin: 0; color: #1a1a1a;">
                             {{ $m['judul'] }}
                         </h2>
                         <span class="sim-badge {{ $m['badge'] }}" style="padding: 0.15rem 0.45rem; font-size: 0.7rem;">
@@ -101,14 +101,14 @@
                         </span>
                     </div>
 
-                    <div style="text-align: right;">
-                        <span style="display: block; font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em;">TENGGAT</span>
+                    <div class="ms-card-deadline">
+                        <span style="display: block; font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em;">TENGGAT</span>
                         <span class="sim-proposal-card__date" style="font-weight: 600; color: #333; font-size: 0.85rem;">{{ $m['tenggat'] }}</span>
                     </div>
                 </div>
 
                 {{-- Deskripsi --}}
-                <p class="sim-proposal-card__desc" style="margin-bottom: 0.85rem; font-size: 0.88rem; color: #666;">{{ $m['deskripsi'] }}</p>
+                <p class="sim-proposal-card__desc ms-card-desc" style="margin-bottom: 0.85rem; font-size: 0.88rem; color: #666;">{{ $m['deskripsi'] }}</p>
 
                 {{-- Progress Bar --}}
                 <div style="margin-bottom: 0.85rem;">
@@ -118,9 +118,9 @@
                     </div>
                     <div style="width: 100%; background-color: #e5e5e5; height: 6px; border-radius: 999px; overflow: hidden;">
                         <div style="
-                            width: {{ $m['progress'] }}%; 
-                            background-color: {{ $m['status'] == 'Selesai' ? '#2e7d32' : ($m['status'] == 'Berjalan' ? '#d97706' : '#aaaaaa') }}; 
-                            height: 100%; 
+                            width: {{ $m['progress'] }}%;
+                            background-color: {{ $m['status'] == 'Selesai' ? '#2e7d32' : ($m['status'] == 'Berjalan' ? '#d97706' : '#aaaaaa') }};
+                            height: 100%;
                             border-radius: 999px;
                             transition: width 0.4s ease;
                         "></div>
@@ -130,7 +130,7 @@
                 {{-- Catatan Dosen Umum --}}
                 @if(!empty($m['catatan']))
                 <div class="sim-catatan" style="margin-bottom: 0.85rem; padding: 0.6rem 0.85rem; background-color: rgba(0,0,0,0.02); border-radius: 6px; border-left: 2px solid #888;">
-                    <p class="sim-catatan__label" style="font-size: 0.65rem; margin-bottom: 0.15rem;">CATATAN PEMBIMBING</p>
+                    <p class="sim-catatan__label" style="font-size: 0.7rem; margin-bottom: 0.15rem;">CATATAN PEMBIMBING</p>
                     <p class="sim-catatan__text" style="font-style: italic; font-size: 0.82rem; margin: 0; color: #444;">
                         "{{ $m['catatan'] }}"
                     </p>
@@ -140,14 +140,14 @@
                 {{-- List Grid Deliverables --}}
                 @if(!empty($m['deliverables']))
                 <div style="margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px dashed #e0e0e0;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.65rem;">
+                    <div class="ms-deliverables">
                         @foreach($m['deliverables'] as $item)
                         {{-- Card Deliverable Interaktif --}}
-                        <div onclick="openDeliverableModal({{ json_encode($item) }}, '{{ $m['kode'] }}')" 
+                        <div class="ms-deliverable" onclick="openDeliverableModal({{ json_encode($item) }}, '{{ $m['kode'] }}')"
                              style="
-                                background-color: #ffffff; 
-                                border: 1px solid #e2e2e2; 
-                                border-radius: 8px; 
+                                background-color: #ffffff;
+                                border: 1px solid #e2e2e2;
+                                border-radius: 8px;
                                 padding: 0.75rem 0.9rem;
                                 display: flex;
                                 align-items: center;
@@ -159,19 +159,14 @@
                              onmouseover="this.style.borderColor='#8c7355'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.06)';"
                              onmouseout="this.style.borderColor='#e2e2e2'; this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 2px rgba(0,0,0,0.02)';"
                         >
-                            <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; padding-right: 0.5rem;">
+                            <div class="ms-deliverable__inner" style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; padding-right: 0.5rem;">
                                 <span style="color: #8c7355; font-size: 0.9rem;"></span>
-                                <span style="color: #222; font-weight: 500; font-size: 0.83rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                <span class="ms-deliverable__name">
                                     {{ $item['nama'] }}
                                 </span>
                             </div>
 
-                            <span style="
-                                font-size: 0.68rem; 
-                                font-weight: 600; 
-                                padding: 0.2rem 0.55rem; 
-                                border-radius: 6px;
-                                flex-shrink: 0;
+                            <span class="ms-deliverable__status" style="
                                 background-color: {{ $item['status'] == 'Disetujui' ? '#e8f5e9' : ($item['status'] == 'Perlu Revisi' ? '#fff3e0' : '#f5f5f5') }};
                                 color: {{ $item['status'] == 'Disetujui' ? '#2e7d32' : ($item['status'] == 'Perlu Revisi' ? '#e65100' : '#666666') }};
                             ">
@@ -191,28 +186,28 @@
 </div>
 
 {{-- MODAL DETAIL & FORM PENGUMPULAN --}}
-<div id="modal-deliverable" style="
-    display: none; 
-    position: fixed; 
-    top: 0; left: 0; width: 100%; height: 100%; 
-    background-color: rgba(0,0,0,0.5); 
-    z-index: 9999; 
-    align-items: center; 
+<div id="modal-deliverable" class="ms-modal-overlay" style="
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 9999;
+    align-items: center;
     justify-content: center;
 ">
-    <div style="
-        background-color: #ffffff; 
-        width: 90%; 
-        max-width: 560px; 
-        border-radius: 12px; 
-        padding: 1.5rem; 
+    <div class="ms-modal-panel" style="
+        background-color: #ffffff;
+        width: 90%;
+        max-width: 560px;
+        border-radius: 12px;
+        padding: 1.5rem;
         box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         position: relative;
     ">
         {{-- Close Button --}}
-        <button onclick="closeDeliverableModal()" style="
-            position: absolute; top: 1rem; right: 1rem; 
-            background: none; border: none; font-size: 1.3rem; 
+        <button class="ms-modal-close" onclick="closeDeliverableModal()" style="
+            position: absolute; top: 1rem; right: 1rem;
+            background: none; border: none; font-size: 1.3rem;
             color: #888; cursor: pointer;
         ">&times;</button>
 
@@ -235,7 +230,7 @@
         <div id="modal-file-lama-container" style="display: none; margin-bottom: 1.25rem; padding: 0.6rem 0.8rem; background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px;">
             <p style="margin: 0 0 0.2rem 0; font-size: 0.72rem; color: #6c757d; font-weight: 600;">BERKAS TERAKHIR DILAMPIRKAN:</p>
             <a id="modal-item-file-link" href="#" target="_blank" style="font-size: 0.82rem; color: #2b6cb0; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
-                <span id="modal-item-file-name"></span> 
+                <span id="modal-item-file-name"></span>
             </a>
         </div>
 
@@ -261,7 +256,7 @@
                     transition: all 0.2s ease;
                 ">
                     <input type="file" id="modal-file-input" name="berkas" accept=".pdf,.zip" style="display: none;" onchange="handleModalFileSelect(this)">
-                    
+
                     {{-- STATE 1: BELUM PILIH FILE --}}
                     <div id="dropzone-empty-state">
                         <div style="width: 40px; height: 40px; border-radius: 50%; background-color: #f3efe6; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.5rem; color: #8c7355;">
@@ -284,13 +279,13 @@
                         <p style="margin: 0; font-size: 0.75rem; color: #2e7d32; font-weight: 700; text-transform: uppercase;">BERKAS SIAP DIKIRIM:</p>
                         <p id="selected-file-name" style="margin: 0.2rem 0; font-size: 0.88rem; font-weight: 700; color: #1a1a1a; word-break: break-all;"></p>
                         <p id="selected-file-size" style="margin: 0 0 0.6rem 0; font-size: 0.72rem; color: #666;"></p>
-                        <button type="button" onclick="event.stopPropagation(); document.getElementById('modal-file-input').click();" style="
-                            padding: 0.25rem 0.65rem; 
-                            font-size: 0.72rem; 
-                            background-color: #efebe4; 
-                            border: 1px solid #dcd6cd; 
-                            color: #4a3b32; 
-                            border-radius: 4px; 
+                        <button type="button" class="ms-chip" onclick="event.stopPropagation(); document.getElementById('modal-file-input').click();" style="
+                            padding: 0.25rem 0.65rem;
+                            font-size: 0.72rem;
+                            background-color: #efebe4;
+                            border: 1px solid #dcd6cd;
+                            color: #4a3b32;
+                            border-radius: 4px;
                             cursor: pointer;
                             font-weight: 600;
                         ">
@@ -300,15 +295,15 @@
                 </div>
 
                 {{-- Footer Submit Button --}}
-                <div style="text-align: right;">
-                    <button type="submit" id="modal-btn-submit" disabled style="
-                        padding: 0.5rem 1.25rem; 
-                        font-size: 0.82rem; 
-                        background-color: #4a3b32; 
-                        color: #fff; 
-                        border: none; 
-                        border-radius: 6px; 
-                        opacity: 0.5; 
+                <div class="ms-modal-actions" style="text-align: right;">
+                    <button type="submit" id="modal-btn-submit" class="ms-modal-submit" disabled style="
+                        padding: 0.5rem 1.25rem;
+                        font-size: 0.82rem;
+                        background-color: #4a3b32;
+                        color: #fff;
+                        border: none;
+                        border-radius: 6px;
+                        opacity: 0.5;
                         cursor: not-allowed;
                         font-weight: 600;
                     ">Kirim Berkas</button>
@@ -326,6 +321,83 @@
 {{-- Toast Notification --}}
 <div id="sim-toast" class="sim-toast" role="alert" aria-live="polite"></div>
 @endsection
+
+@push('styles')
+<style>
+/* ── Milestone — responsive reinforcement (page-scoped) ── */
+.ms-deliverables {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 0.65rem;
+}
+
+.ms-item,
+.ms-item__card,
+.ms-deliverable,
+.ms-deliverable__inner { min-width: 0; }
+
+.ms-card-header { flex-wrap: wrap; row-gap: 0.5rem; }
+.ms-card-meta { flex-wrap: wrap; min-width: 0; }
+.ms-card-title { font-size: 1.15rem; overflow-wrap: anywhere; }
+.ms-card-desc { overflow-wrap: anywhere; }
+.ms-card-deadline { text-align: right; flex-shrink: 0; }
+
+.ms-deliverable__name {
+    color: #222;
+    font-weight: 500;
+    font-size: 0.83rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.ms-deliverable__status {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.ms-info-actions { flex-wrap: wrap; }
+.ms-modal-overlay { padding: 16px; }
+.ms-modal-panel { max-height: 90vh; overflow-y: auto; }
+.ms-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+}
+#modal-item-file-link { overflow-wrap: anywhere; }
+
+@media (max-width: 768px) {
+    .ms-info-actions .sim-btn-secondary,
+    .ms-chip,
+    .ms-modal-submit,
+    .ms-deliverable { min-height: 44px; }
+    .ms-deliverable { align-items: center; }
+}
+
+@media (max-width: 480px) {
+    .ms-card-deadline { text-align: left; }
+    .ms-card-title { font-size: 1.05rem; }
+    .ms-deliverable { flex-wrap: wrap; gap: 0.4rem; }
+    .ms-deliverable__inner { flex: 1 1 100%; overflow: visible; padding-right: 0; }
+    .ms-deliverable__name {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        overflow-wrap: anywhere;
+    }
+    .ms-modal-panel { width: 100% !important; padding: 1.1rem !important; }
+    .ms-modal-actions { text-align: center; }
+    .ms-modal-submit { width: 100%; min-height: 44px; }
+    #sim-toast { left: 16px; right: 16px; max-width: none; }
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -396,7 +468,7 @@ function resetModalDropzone() {
     document.getElementById('modal-file-input').value = '';
     document.getElementById('dropzone-empty-state').style.display = 'block';
     document.getElementById('dropzone-selected-state').style.display = 'none';
-    
+
     const dropArea = document.getElementById('drop-area-modal');
     dropArea.style.borderColor = '#d0c8b8';
     dropArea.style.backgroundColor = '#fdfbf7';

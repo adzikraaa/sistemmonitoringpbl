@@ -54,7 +54,16 @@
     </style>
 </head>
 
-<body class="sim-body">
+<body class="sim-body sim-body--mahasiswa">
+
+    {{-- Single source of truth for the mahasiswa breadcrumb semester label.
+         The chosen semester travels in the URL (?semester=N) set by the card CTA
+         on Pilih Semester, so it survives navigation without a backend session. --}}
+    @php
+        $selectedSemester = request()->integer('semester') ?: 5;
+        $semesterQuery = ['semester' => $selectedSemester];
+        $mahasiswaSemester = 'PBL - Semester ' . $selectedSemester;
+    @endphp
 
     {{-- Sidebar Overlay --}}
     <div id="sidebar-overlay"
@@ -77,8 +86,9 @@
 
                 {{-- Dashboard --}}
                 <li>
-                    <a href="{{ route('mahasiswa.dashboard') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('mahasiswa.dashboard') ? 'sim-sidebar__menu-item--active' : '' }}">
+                    <a href="{{ route('mahasiswa.dashboard', $semesterQuery) }}"
+                       class="sim-sidebar__menu-item {{ request()->routeIs('mahasiswa.dashboard') ? 'sim-sidebar__menu-item--active' : '' }}"
+                       onclick="closeSidebar()">
 
                         <svg width="18" height="18" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor"
@@ -96,8 +106,9 @@
 
                 {{-- Kelompok --}}
                 <li>
-                    <a href="{{ route('mahasiswa.kelompok') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('mahasiswa.kelompok') ? 'sim-sidebar__menu-item--active' : '' }}">
+                    <a href="{{ route('mahasiswa.kelompok', $semesterQuery) }}"
+                       class="sim-sidebar__menu-item {{ request()->routeIs('mahasiswa.kelompok') ? 'sim-sidebar__menu-item--active' : '' }}"
+                       onclick="closeSidebar()">
 
                         <svg width="18" height="18" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor"
@@ -115,8 +126,9 @@
 
                 {{-- Proposal --}}
                 <li>
-                    <a href="{{ route('mahasiswa.proposal') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('mahasiswa.proposal') ? 'sim-sidebar__menu-item--active' : '' }}">
+                    <a href="{{ route('mahasiswa.proposal', $semesterQuery) }}"
+                       class="sim-sidebar__menu-item {{ request()->routeIs('mahasiswa.proposal') ? 'sim-sidebar__menu-item--active' : '' }}"
+                       onclick="closeSidebar()">
 
                         <svg width="18" height="18" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor"
@@ -138,8 +150,9 @@
 
                 {{-- Logbook --}}
                 <li>
-                    <a href="{{ route('mahasiswa.logbook') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('mahasiswa.logbook') ? 'sim-sidebar__menu-item--active' : '' }}">
+                    <a href="{{ route('mahasiswa.logbook', $semesterQuery) }}"
+                       class="sim-sidebar__menu-item {{ request()->routeIs('mahasiswa.logbook') ? 'sim-sidebar__menu-item--active' : '' }}"
+                       onclick="closeSidebar()">
 
                         <svg width="18" height="18" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor"
@@ -155,8 +168,9 @@
 
                 {{-- Milestone --}}
                 <li>
-                    <a href="{{ route('mahasiswa.milestone') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('mahasiswa.milestone') ? 'sim-sidebar__menu-item--active' : '' }}">
+                    <a href="{{ route('mahasiswa.milestone', $semesterQuery) }}"
+                       class="sim-sidebar__menu-item {{ request()->routeIs('mahasiswa.milestone') ? 'sim-sidebar__menu-item--active' : '' }}"
+                       onclick="closeSidebar()">
 
                         <svg width="18" height="18" viewBox="0 0 24 24"
                              fill="none" stroke="currentColor"
@@ -174,21 +188,6 @@
 
         {{-- Sidebar Footer --}}
         <div class="sim-sidebar__footer">
-<<<<<<< HEAD
-            <a href="#" class="sim-sidebar__logout">
-
-                <svg width="18" height="18" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor"
-                     stroke-width="1.75" stroke-linecap="round"
-                     stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-
-                Keluar
-            </a>
-=======
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="sim-sidebar__logout" style="width:100%;background:none;border:none;cursor:pointer;text-align:left;">
@@ -196,7 +195,6 @@
                     Keluar
                 </button>
             </form>
->>>>>>> origin/main
         </div>
 
     </aside>
@@ -221,12 +219,10 @@
                 </svg>
             </button>
 
-            {{-- Breadcrumb --}}
+            {{-- Breadcrumb: SIM-PBL > Pilih Semester > current semester --}}
             <div class="sim-header__breadcrumb">
 
-                <span class="sim-header__breadcrumb-root">
-                    SIM-PBL
-                </span>
+                <a href="{{ url('/') }}" class="sim-header__breadcrumb-root">SIM-PBL</a>
 
                 <svg width="14" height="14" viewBox="0 0 24 24"
                      fill="none" stroke="currentColor"
@@ -236,9 +232,7 @@
                     <polyline points="9 18 15 12 9 6"/>
                 </svg>
 
-                <span class="sim-header__breadcrumb-link">
-                    Ruang Mahasiswa
-                </span>
+                <a href="{{ route('mahasiswa.pilih-semester') }}" class="sim-header__breadcrumb-link">Pilih Semester</a>
 
                 <svg width="14" height="14" viewBox="0 0 24 24"
                      fill="none" stroke="currentColor"
@@ -248,48 +242,16 @@
                     <polyline points="9 18 15 12 9 6"/>
                 </svg>
 
-                <span class="sim-header__breadcrumb-link">
-                    Pilih Semester
-                </span>
-
-                <svg width="14" height="14" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round"
-                     stroke-linejoin="round"
-                     class="sim-header__breadcrumb-sep">
-                    <polyline points="9 18 15 12 9 6"/>
-                </svg>
-
-                <span class="sim-header__breadcrumb-current">
-                    PBL - Semester 5
-                </span>
+                <span class="sim-header__breadcrumb-current">{{ $mahasiswaSemester ?? 'PBL - Semester 5' }}</span>
 
             </div>
 
             {{-- User Information --}}
             <div class="sim-header__user">
-<<<<<<< HEAD
-
-                <div class="sim-header__notif">
-                    <svg width="20" height="20" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor"
-                         stroke-width="1.75" stroke-linecap="round"
-                         stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                </div>
-
-               <div class="sim-header__user-avatar">
-    MT
-</div>
-
-=======
-                <a href="{{ route('mahasiswa.notifikasi') }}" class="sim-header__notif" title="Notifikasi">
+                <a href="{{ route('mahasiswa.notifikasi', $semesterQuery) }}" class="sim-header__notif" title="Notifikasi">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 </a>
                 <div class="sim-header__user-avatar">{{ strtoupper(substr($userName ?? 'MT', 0, 2)) }}</div>
->>>>>>> origin/main
                 <div class="sim-header__user-info">
                     <span class="sim-header__user-name">
                         {{ $userName ?? 'Mahasiswa' }}
