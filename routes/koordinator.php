@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Koordinator\DashboardController;
 use App\Http\Controllers\Koordinator\KelasController;
 use App\Http\Controllers\Koordinator\PenggunaController;
+use App\Http\Controllers\Koordinator\MataKuliahController;
 use App\Http\Controllers\Koordinator\PenugasanDosenController;
 use App\Http\Controllers\Koordinator\PeriodeController;
 
@@ -33,6 +34,14 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::post('/master-data/pengguna/{role}/{id}/reset-password', [PenggunaController::class, 'resetPassword'])->name('master-data.pengguna.reset-password');
         Route::post('/master-data/pengguna/invite', [PenggunaController::class, 'invite'])->name('master-data.pengguna.invite');
         Route::delete('/master-data/pengguna/{role}/{id}', [PenggunaController::class, 'destroy'])->name('master-data.pengguna.destroy');
+
+        // Master Data Mata Kuliah
+        Route::get('/master-data/mata-kuliah', [MataKuliahController::class, 'index'])->name('master-data.mata-kuliah');
+        Route::post('/master-data/mata-kuliah', [MataKuliahController::class, 'store'])->name('master-data.mata-kuliah.store');
+        Route::put('/master-data/mata-kuliah/{mataKuliah}', [MataKuliahController::class, 'update'])->name('master-data.mata-kuliah.update');
+        Route::patch('/master-data/mata-kuliah/{mataKuliah}/toggle', [MataKuliahController::class, 'toggleStatus'])->name('master-data.mata-kuliah.toggle');
+        Route::delete('/master-data/mata-kuliah/{mataKuliah}', [MataKuliahController::class, 'destroy'])->name('master-data.mata-kuliah.destroy');
+
 
         // Penugasan Dosen
         Route::get('/penugasan-dosen', [PenugasanDosenController::class, 'index'])->name('penugasan-dosen.index');
