@@ -105,9 +105,10 @@ jobs:
             npm ci
             npm run build
 
-            echo "[10] Running database migrations..."
+            echo "[10] Running database migrations and seeding..."
 
             php artisan migrate --force
+            php artisan db:seed --force
 
             echo "[11] Clearing and rebuilding Laravel cache..."
 
