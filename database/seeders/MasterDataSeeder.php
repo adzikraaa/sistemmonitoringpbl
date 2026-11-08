@@ -25,17 +25,17 @@ class MasterDataSeeder extends Seeder
         // 3 mata kuliah
         $mk1 = MataKuliah::updateOrCreate(
             ['nama_matkul' => 'Pemrograman Web Lanjut'],
-            ['prodi' => 'D4 Sistem Informasi Bisnis', 'sks' => 3, 'is_aktif' => true]
+            ['kode' => 'SIB301', 'prodi' => 'D4 Sistem Informasi Bisnis', 'sks' => 3, 'semester' => 5, 'is_aktif' => true]
         );
 
         $mk2 = MataKuliah::updateOrCreate(
             ['nama_matkul' => 'Manajemen Proyek Sistem Informasi'],
-            ['prodi' => 'D4 Sistem Informasi Bisnis', 'sks' => 3, 'is_aktif' => true]
+            ['kode' => 'SIB302', 'prodi' => 'D4 Sistem Informasi Bisnis', 'sks' => 3, 'semester' => 5, 'is_aktif' => true]
         );
 
         $mk3 = MataKuliah::updateOrCreate(
             ['nama_matkul' => 'Penjaminan Mutu Perangkat Lunak'],
-            ['prodi' => 'D4 Sistem Informasi Bisnis', 'sks' => 3, 'is_aktif' => true]
+            ['kode' => 'SIB303', 'prodi' => 'D4 Sistem Informasi Bisnis', 'sks' => 3, 'semester' => 5, 'is_aktif' => true]
         );
 
         // Kelas terhubung ke periode

@@ -580,7 +580,8 @@
                         {{-- Submenu Master Data Sesuai Figma --}}
                         <ul class="krd-submenu-list">
                             <li>
-                                <a href="#" class="krd-submenu-link">
+                                <a href="{{ route('koordinator.master-data.mata-kuliah') }}"
+                                   class="krd-submenu-link {{ request()->routeIs('koordinator.master-data.mata-kuliah*') ? 'krd-submenu-link--active' : '' }}">
                                     <span>Mata Kuliah</span>
                                 </a>
                             </li>
