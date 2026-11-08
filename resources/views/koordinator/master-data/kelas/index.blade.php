@@ -887,7 +887,7 @@
         </div>
 
         <div>
-            <a href="#" class="btn-figma-primary" style="width: auto; justify-content: center;">
+            <a href="{{ route('koordinator.penugasan-dosen.index') }}" class="btn-figma-primary" style="width: auto; justify-content: center;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="7" y1="17" x2="17" y2="7"/>
                     <polyline points="7 7 17 7 17 17"/>
