@@ -159,8 +159,8 @@
 .db-card__link:hover { opacity: 0.7; }
 /* Circular Progress */
 .db-project { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
-.db-project__circle { position: relative; width: 78px; height: 78px; flex-shrink: 0; }
-.db-project__circle svg { transform: rotate(-90deg); }
+.db-project__circle { position: relative; width: 78px; height: 78px; max-width: 100%; aspect-ratio: 1 / 1; flex-shrink: 0; }
+.db-project__circle svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
 .db-project__circle-bg { fill: none; stroke: #F0E8DC; stroke-width: 8; }
 .db-project__circle-fg { fill: none; stroke: #4A7C59; stroke-width: 8; stroke-linecap: round; }
 .db-project__circle-label {
@@ -233,11 +233,40 @@
     .db-grid { grid-template-columns: 1fr 1fr; }
     .db-grid > .db-card:last-child { grid-column: 1 / -1; }
 }
-@media (max-width: 860px) {
+@media (max-width: 1024px) {
     .db-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 860px) {
     .db-grid { grid-template-columns: 1fr; }
     .db-grid-bottom { grid-template-columns: 1fr; }
     .db-hero__greeting { font-size: 22px; }
+}
+@media (max-width: 768px) {
+    .db-hero { margin: 16px 16px 0; border-radius: 16px; min-height: 0; }
+    .db-hero__content { padding: 24px 20px 64px; }
+    .db-hero__date { right: 16px; bottom: 16px; padding: 5px 12px; font-size: 12px; }
+    .db-stats { padding: 16px 16px 0; }
+    .db-grid { padding: 14px 16px 0; }
+    .db-grid-bottom { padding: 14px 16px 24px; }
+    .db-stat-card { min-height: 44px; }
+    .db-card__link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+@media (max-width: 560px) {
+    .db-stats { grid-template-columns: 1fr; }
+    .db-card { padding: 16px; }
+    .db-project { gap: 14px; }
+    .db-project__circle { width: 64px; height: 64px; }
+}
+@media (max-width: 400px) {
+    .db-hero__greeting { font-size: 19px; }
+    .db-hero__sub { font-size: 12.5px; }
+    .db-card__title { line-height: 1.35; }
 }
 </style>
 @endpush

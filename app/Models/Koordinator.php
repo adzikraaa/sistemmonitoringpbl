@@ -13,7 +13,7 @@ class Koordinator extends Authenticatable
 
     protected $fillable = ['nama', 'email', 'password', 'nidn', 'dosen_id'];
 
-    protected $hidden = ['password'];
+    protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {

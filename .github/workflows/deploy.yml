@@ -76,6 +76,7 @@ jobs:
             "DEPLOY_PATH='$DEPLOY_PATH' bash -s" <<'ENDSSH'
 
             set -e
+            umask 0002
 
             echo "[5] Connected to EC2"
 
@@ -86,33 +87,41 @@ jobs:
             git fetch origin main
             git merge --ff-only origin/main
 
-            echo "[7] Installing Composer dependencies..."
+            echo "[7] Preparing Laravel permissions..."
+
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo find storage bootstrap/cache -type d -exec chmod 2775 {} \;
+            sudo find storage bootstrap/cache -type f -exec chmod 664 {} \;
+
+            echo "[8] Installing Composer dependencies..."
 
             composer install \
               --no-dev \
               --optimize-autoloader \
               --no-interaction
 
-            echo "[8] Building frontend..."
+            echo "[9] Building frontend..."
 
             npm ci
             npm run build
 
-            echo "[9] Running database migrations..."
+            echo "[10] Running database migrations and seeding..."
 
             php artisan migrate --force
+            php artisan db:seed --force
 
-            echo "[10] Clearing and rebuilding Laravel cache..."
+            echo "[11] Clearing and rebuilding Laravel cache..."
 
             php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
 
-            echo "[11] Fixing permissions..."
+            echo "[12] Normalizing Laravel permissions..."
 
             sudo chown -R www-data:www-data storage bootstrap/cache
-            sudo chmod -R 775 storage bootstrap/cache
+            sudo find storage bootstrap/cache -type d -exec chmod 2775 {} \;
+            sudo find storage bootstrap/cache -type f -exec chmod 664 {} \;
 
             echo "Deployment completed successfully!"
 

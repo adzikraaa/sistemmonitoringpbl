@@ -146,44 +146,65 @@ class MahasiswaController extends Controller
         return view('mahasiswa.notifikasi', $this->sharedViewData());
     }
 
-    /** Halaman Level 2: Detail Milestone per Mata Kuliah */
-public function milestone()
+    /** Halaman daftar Milestone per Mata Kuliah */
+    public function milestone()
     {
-        $mataKuliahList = [
+        $milestones = [
             [
-                'id' => 1,
-                'kode' => 'MK1',
-                'slug' => 'pemrograman-web-lanjut',
-                'nama' => 'Pemrograman Web Lanjut',
+                'id'    => 1,
+                'kode'  => 'M1',
+                'slug'  => 'pemrograman-web-lanjut',
+                'judul' => 'Pemrograman Web Lanjut',
                 'dosen' => 'Dian Hanifudin Subhi, S.Kom., M.Kom.',
                 'progress' => 45,
-                'status' => 'Berjalan',
-                'badge_color' => 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                'status'   => 'Berjalan',
+                'badge'    => 'sim-badge--warning',
+                'tenggat'  => '30 Nov 2026',
+                'deskripsi' => 'Implementasi modul utama sistem dan integrasi API backend.',
+                'catatan'   => null,
+                'deliverables' => [
+                    ['nama' => 'Laporan Perencanaan Sprint', 'status' => 'Disetujui'],
+                    ['nama' => 'ERD & Skema Database', 'status' => 'Disetujui'],
+                    ['nama' => 'Implementasi Autentikasi', 'status' => 'Perlu Revisi'],
+                    ['nama' => 'Modul Dashboard Mahasiswa', 'status' => 'Belum'],
+                ],
             ],
             [
-                'id' => 2,
-                'kode' => 'MK2',
-                'slug' => 'manajemen-proyek-sistem-informasi',
-                'nama' => 'Manajemen Proyek Sistem Informasi',
+                'id'    => 2,
+                'kode'  => 'M2',
+                'slug'  => 'manajemen-proyek-sistem-informasi',
+                'judul' => 'Manajemen Proyek Sistem Informasi',
                 'dosen' => 'Ir. Rudy Ariyanto, S.T., M.Cs.',
                 'progress' => 30,
-                'status' => 'Berjalan',
-                'badge_color' => 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                'status'   => 'Berjalan',
+                'badge'    => 'sim-badge--warning',
+                'tenggat'  => '15 Des 2026',
+                'deskripsi' => 'Penyusunan WBS, Gantt Chart, dan dokumentasi manajemen proyek.',
+                'catatan'   => 'Pastikan timeline realistis dan sesuai kapasitas tim.',
+                'deliverables' => [
+                    ['nama' => 'WBS & Gantt Chart', 'status' => 'Disetujui'],
+                    ['nama' => 'Risk Register', 'status' => 'Belum'],
+                    ['nama' => 'Sprint Review Report', 'status' => 'Belum'],
+                ],
             ],
             [
-                'id' => 3,
-                'kode' => 'MK3',
-                'slug' => 'penjaminan-mutu-perangkat-lunak',
-                'nama' => 'Penjaminan Mutu Perangkat Lunak',
+                'id'    => 3,
+                'kode'  => 'M3',
+                'slug'  => 'penjaminan-mutu-perangkat-lunak',
+                'judul' => 'Penjaminan Mutu Perangkat Lunak',
                 'dosen' => 'Usman Nurhasan, S.Kom., M.T.',
                 'progress' => 0,
-                'status' => 'Belum dimulai',
-                'badge_color' => 'bg-gray-100 text-gray-500 border-gray-200'
+                'status'   => 'Belum dimulai',
+                'badge'    => 'sim-badge--default',
+                'tenggat'  => '10 Jan 2027',
+                'deskripsi' => 'Penyusunan test plan, test case, dan laporan hasil pengujian.',
+                'catatan'   => null,
+                'deliverables' => [],
             ],
         ];
 
         return view('mahasiswa.milestone', array_merge($this->sharedViewData(), [
-            'mataKuliahList' => $mataKuliahList
+            'milestones' => $milestones,
         ]));
     }
 

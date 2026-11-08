@@ -1392,7 +1392,7 @@ body.sim-body {
 
 /* Header */
 .sim-ps-header {
-    padding: 16px 32px 20px;
+    padding: 28px 32px 20px;
 }
 
 .sim-ps-header__title {
@@ -1430,6 +1430,9 @@ body.sim-body {
     border: 1px solid var(--sim-border);
     border-radius: 10px;
     padding: 4px;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
 }
 
 .sim-ps-tab {
@@ -1446,6 +1449,8 @@ body.sim-body {
     color: var(--sim-text-muted);
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .sim-ps-tab:hover {
@@ -1498,7 +1503,7 @@ body.sim-body {
 /* Grid */
 .sim-ps-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
     padding: 0 32px 24px;
 }
@@ -1869,6 +1874,7 @@ body.sim-body {
 
 .sim-ps-footer__links {
     display: flex;
+    flex-wrap: wrap;
     gap: 20px;
 }
 
@@ -1885,12 +1891,11 @@ body.sim-body {
 /* Responsive Pilih Semester */
 @media (max-width: 1024px) {
     .sim-ps-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 768px) {
-    .sim-ps-eyebrow-bar,
     .sim-ps-header,
     .sim-ps-filter-bar {
         padding-left: 20px;
@@ -1901,10 +1906,21 @@ body.sim-body {
         padding: 0 20px 24px;
     }
     .sim-ps-header__title { font-size: 32px; }
+    .sim-ps-card__head { padding: 16px 18px 12px; }
+    .sim-ps-card__body { padding: 0 18px 16px; }
+    .sim-ps-card__foot { padding: 0 18px 20px; }
     .sim-ps-catatan {
         flex-direction: column;
+        align-items: stretch;
         margin-left: 20px;
         margin-right: 20px;
+        padding: 18px 20px;
+    }
+    .sim-ps-catatan__btn {
+        justify-content: center;
+        width: 100%;
+        white-space: normal;
+        text-align: center;
     }
     .sim-ps-footer {
         padding: 16px 20px;
@@ -1912,11 +1928,51 @@ body.sim-body {
         align-items: flex-start;
         gap: 10px;
     }
+    .sim-ps-footer__links {
+        gap: 8px 16px;
+    }
 }
 
 @media (max-width: 480px) {
+    .sim-ps-header,
+    .sim-ps-filter-bar {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
     .sim-ps-header__title { font-size: 26px; }
-    .sim-ps-filter-bar { flex-direction: column; align-items: flex-start; }
+    .sim-ps-header__desc { font-size: 13px; }
+    .sim-ps-filter-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .sim-ps-grid { padding: 0 16px 24px; }
+    .sim-ps-catatan {
+        margin-left: 16px;
+        margin-right: 16px;
+        padding: 16px 18px;
+    }
+    .sim-ps-footer { padding: 16px; }
+}
+
+@media (max-width: 400px) {
+    .sim-ps-header__title { font-size: 22px; }
+    .sim-ps-header__desc { font-size: 12.5px; }
+    .sim-ps-card__head { padding: 14px 18px 10px; }
+    .sim-ps-card__title-row {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    .sim-ps-card__label {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .sim-ps-tab {
+        padding: 7px 12px;
+        font-size: 13px;
+    }
+    .sim-ps-catatan { padding: 14px 16px; }
 }
 
 /* ============================================================
@@ -2344,5 +2400,128 @@ body.sim-body {
     .sim-lb-card__header {
         flex-wrap: wrap;
         gap: 8px;
+    }
+}
+
+/* ============================================================
+   MAHASISWA SHELL OVERRIDES
+   Scoped to body.sim-body--mahasiswa so the shared .sim-header /
+   .sim-sidebar / .sim-content / .sim-page-header rules keep
+   rendering dosen + koordinator shells unchanged.
+   ============================================================ */
+body.sim-body--mahasiswa .sim-header {
+    flex-wrap: nowrap;
+}
+
+body.sim-body--mahasiswa .sim-header__breadcrumb {
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+body.sim-body--mahasiswa .sim-header__breadcrumb-root,
+body.sim-body--mahasiswa .sim-header__breadcrumb-link {
+    flex-shrink: 0;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+body.sim-body--mahasiswa .sim-header__breadcrumb-current {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    /* Header stays 56px tall; controls get 44px touch targets */
+    body.sim-body--mahasiswa .sim-header {
+        padding: 0 16px;
+        gap: 10px;
+    }
+
+    body.sim-body--mahasiswa .sim-header__hamburger {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        margin-left: -10px;
+    }
+
+    body.sim-body--mahasiswa .sim-header__notif {
+        width: 44px;
+        height: 44px;
+    }
+
+    body.sim-body--mahasiswa .sim-header__notif-dot {
+        top: 6px;
+        right: 6px;
+    }
+
+    body.sim-body--mahasiswa .sim-header__breadcrumb,
+    body.sim-body--mahasiswa .sim-header__breadcrumb-root,
+    body.sim-body--mahasiswa .sim-header__breadcrumb-link,
+    body.sim-body--mahasiswa .sim-header__breadcrumb-current {
+        font-size: 12px;
+    }
+
+    /* Drawer rows: 44px touch height, active indicator untouched */
+    body.sim-body--mahasiswa .sim-sidebar__menu-item,
+    body.sim-body--mahasiswa .sim-sidebar__logout {
+        min-height: 44px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+}
+
+/* Narrow header: all three crumbs stay visible and clickable — the breadcrumb
+   moves to its own full-width row instead of dropping any level. */
+@media (max-width: 640px) {
+    body.sim-body--mahasiswa .sim-header {
+        flex-wrap: wrap;
+        height: auto;
+        min-height: var(--sim-header-h);
+        padding: 6px 12px 8px;
+        row-gap: 2px;
+    }
+
+    body.sim-body--mahasiswa .sim-header__breadcrumb {
+        order: 3;
+        flex: 0 0 100%;
+        width: 100%;
+        gap: 6px;
+    }
+
+    body.sim-body--mahasiswa .sim-header__user {
+        margin-left: auto;
+    }
+
+    body.sim-body--mahasiswa .sim-header__breadcrumb-root,
+    body.sim-body--mahasiswa .sim-header__breadcrumb-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    body.sim-body--mahasiswa .sim-header {
+        padding: 6px 12px 8px;
+        gap: 8px;
+    }
+
+    body.sim-body--mahasiswa .sim-header__hamburger {
+        margin-left: -8px;
+    }
+}
+
+@media (max-width: 400px) {
+    body.sim-body--mahasiswa .sim-header__breadcrumb {
+        flex-wrap: wrap;
+        gap: 2px 4px;
+    }
+
+    body.sim-body--mahasiswa .sim-header__breadcrumb-root,
+    body.sim-body--mahasiswa .sim-header__breadcrumb-link,
+    body.sim-body--mahasiswa .sim-header__breadcrumb-current {
+        font-size: 11px;
     }
 }
