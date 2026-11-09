@@ -33,12 +33,20 @@ class LoginController extends Controller
         }
 
         // ─── Login Dosen / Koordinator (lokal) ────────────────────────────────
-        $field = 'nidn';
-
-        if (Auth::guard($role)->attempt([
-            $field     => $request->identifier,
+        // Coba pakai username dulu, fallback ke nidn (backward compatibility)
+        $authenticated = Auth::guard($role)->attempt([
+            'username' => $request->identifier,
             'password' => $request->password,
-        ], $remember)) {
+        ], $remember);
+
+        if (!$authenticated) {
+            $authenticated = Auth::guard($role)->attempt([
+                'nidn'     => $request->identifier,
+                'password' => $request->password,
+            ], $remember);
+        }
+
+        if ($authenticated) {
             $request->session()->regenerate();
 
             // Dosen Pengampu diarahkan ke halaman Pilih Semester
@@ -51,7 +59,7 @@ class LoginController extends Controller
 
         return back()
             ->withInput($request->only('identifier', 'role'))
-            ->withErrors(['identifier' => 'NIDN atau password salah.']);
+            ->withErrors(['identifier' => 'Username atau password salah.']);
     }
 
     /**
