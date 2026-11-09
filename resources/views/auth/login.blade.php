@@ -30,104 +30,113 @@
             min-height: 100vh;
         }
 
-        /* ── Left Panel ── */
+        /* ══════════════════════════════════════
+           LEFT PANEL
+        ══════════════════════════════════════ */
         .login-left {
-            width: 320px;
-            min-width: 320px;
+            width: 340px;
+            min-width: 340px;
             background-color: #231811;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 28px 32px 32px;
+            padding: 32px 36px 40px;
             position: relative;
             overflow: hidden;
         }
 
-        /* ── Logo Card (top of left panel) ── */
-        .login-logo-card {
+        /* ── Brand Card ── */
+        .brand-card {
             background: #FFFFFF;
-            border-radius: 12px;
-            padding: 14px 18px;
+            border-radius: 14px;
+            padding: 16px 20px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 16px;
         }
-        .logo-badges {
+        .brand-logos {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             flex-shrink: 0;
         }
-        /* "JH" badge — yellow/gold square */
-        .logo-badge-jh {
-            width: 36px;
-            height: 36px;
-            background: #F5C842;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* JTI text logo */
+        .logo-jti {
             font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 13px;
-            font-weight: 700;
-            color: #1A1A1A;
-            letter-spacing: 0.03em;
+            font-size: 22px;
+            font-weight: 400;
+            line-height: 1;
+            /* Match the colorful JTI style from the brand image */
+            background: linear-gradient(135deg, #E8431A 0%, #F5A623 50%, #1A3A8A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.01em;
         }
         /* Polinema circular seal */
-        .logo-badge-polinema {
-            width: 36px;
-            height: 36px;
+        .logo-polinema {
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            background: #1A3A8A;
-            border: 2px solid #E8E0D0;
+            background: linear-gradient(145deg, #1E3A8A 0%, #3B5FC0 60%, #2563EB 100%);
+            border: 1.5px solid #D4C8B8;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            position: relative;
             overflow: hidden;
         }
-        .logo-badge-polinema span {
-            font-size: 8px;
-            font-weight: 700;
+        .logo-polinema::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,215,0,0.5);
+        }
+        .logo-polinema-inner {
+            font-size: 7.5px;
+            font-weight: 800;
             color: #FFD700;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.03em;
             text-align: center;
-            line-height: 1.1;
+            line-height: 1.15;
         }
-        .logo-card-text {}
-        .logo-card-name {
-            font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 15px;
-            color: #1A1209;
-            letter-spacing: 0.02em;
-            font-weight: 700;
+        /* Divider between logos and text */
+        .brand-divider {
+            width: 1px;
+            height: 32px;
+            background: #D4C8B8;
+            flex-shrink: 0;
         }
-        .logo-card-subtitle {
-            font-size: 9px;
+        .brand-label {
+            font-size: 10px;
             font-weight: 700;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
-            color: #8B7355;
-            margin-top: 2px;
+            color: #6B5E52;
+            line-height: 1.4;
         }
 
+        /* ── Left Body (tagline area) ── */
         .login-left-body {
-            padding-bottom: 20px;
+            padding-bottom: 16px;
             position: relative;
             z-index: 1;
         }
         .login-eyebrow {
             font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.14em;
+            font-weight: 600;
+            letter-spacing: 0.16em;
             color: #B08A5A;
             text-transform: uppercase;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
         }
         .login-tagline {
             font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 36px;
-            line-height: 1.15;
+            font-size: clamp(28px, 2.5vw, 38px);
+            font-weight: 400; /* non-bold */
+            line-height: 1.18;
             color: #FAF8F5;
             margin-bottom: 20px;
         }
@@ -137,11 +146,14 @@
         }
         .login-tagline-desc {
             font-size: 12.5px;
+            font-weight: 400;
             color: #8B7B6E;
-            line-height: 1.6;
+            line-height: 1.65;
         }
 
-        /* ── Right Panel ── */
+        /* ══════════════════════════════════════
+           RIGHT PANEL
+        ══════════════════════════════════════ */
         .login-right {
             flex: 1;
             background-color: #F5F1EA;
@@ -166,7 +178,7 @@
         }
         .login-form-title {
             font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 34px;
+            font-size: clamp(26px, 3vw, 34px);
             font-weight: 400;
             color: #231811;
             line-height: 1.1;
@@ -176,35 +188,6 @@
             font-size: 13.5px;
             color: #7A6E63;
             margin-bottom: 32px;
-        }
-
-        /* ── Role Switcher ── */
-        .login-role-switcher {
-            display: flex;
-            background: #EDE8DF;
-            border-radius: 10px;
-            padding: 4px;
-            gap: 3px;
-            margin-bottom: 28px;
-        }
-        .login-role-btn {
-            flex: 1;
-            padding: 8px 10px;
-            border: none;
-            border-radius: 7px;
-            background: transparent;
-            color: #9A8E82;
-            font-family: 'Inter', sans-serif;
-            font-size: 12.5px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.15s, color 0.15s, box-shadow 0.15s;
-        }
-        .login-role-btn.active {
-            background: #fff;
-            color: #231811;
-            font-weight: 600;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
         }
 
         /* ── Error ── */
@@ -323,10 +306,65 @@
         }
         .login-submit:hover { background: #3D2820; }
 
-        /* ── Responsive ── */
+        /* ══════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════ */
+
+        /* Tablet: narrow the left panel */
+        @media (max-width: 1024px) {
+            .login-left {
+                width: 280px;
+                min-width: 280px;
+                padding: 28px 28px 36px;
+            }
+            .login-tagline {
+                font-size: 28px;
+            }
+        }
+
+        /* Mobile: stack vertically, left panel becomes top banner */
         @media (max-width: 768px) {
-            .login-left { display: none; }
-            .login-right { padding: 32px 20px; background: #FAF8F5; }
+            .login-wrap {
+                flex-direction: column;
+                min-height: 100vh;
+            }
+            .login-left {
+                width: 100%;
+                min-width: 0;
+                padding: 24px 24px 32px;
+                /* Compact on mobile — just show brand card + eyebrow */
+                justify-content: flex-start;
+                gap: 20px;
+            }
+            .login-left-body {
+                padding-bottom: 0;
+            }
+            .login-tagline {
+                font-size: 26px;
+            }
+            .login-tagline-desc {
+                display: none; /* hide on mobile to save space */
+            }
+            .login-right {
+                flex: 1;
+                padding: 36px 24px 48px;
+                background: #FAF8F5;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-left {
+                padding: 20px 20px 24px;
+            }
+            .login-tagline {
+                font-size: 23px;
+            }
+            .login-right {
+                padding: 28px 20px 40px;
+            }
+            .login-form-title {
+                font-size: 26px;
+            }
         }
     </style>
 </head>
@@ -336,22 +374,21 @@
     {{-- ── LEFT PANEL ── --}}
     <div class="login-left">
 
-        {{-- White logo card at top --}}
-        <div class="login-logo-card">
-            <div class="logo-badges">
-                {{-- JH badge (Jurusan/institusi) --}}
-                <div class="logo-badge-jh">JH</div>
-                {{-- Polinema circular seal --}}
-                <div class="logo-badge-polinema">
-                    <span>POLI<br>NEMA</span>
+        {{-- Brand Card --}}
+        <div class="brand-card">
+            <div class="brand-logos">
+                {{-- JTI Logo --}}
+                <span class="logo-jti">JTI</span>
+                {{-- Polinema Seal --}}
+                <div class="logo-polinema">
+                    <span class="logo-polinema-inner">POLI<br>NEMA</span>
                 </div>
             </div>
-            <div class="logo-card-text">
-                <div class="logo-card-name">SIM-PBL</div>
-                <div class="logo-card-subtitle">Sistem Monitoring PBL</div>
-            </div>
+            <div class="brand-divider"></div>
+            <div class="brand-label">Sistem<br>Monitoring PBL</div>
         </div>
 
+        {{-- Tagline --}}
         <div class="login-left-body">
             <p class="login-eyebrow">Selamat datang kembali</p>
             <h1 class="login-tagline">
@@ -367,40 +404,11 @@
     {{-- ── RIGHT PANEL ── --}}
     <div class="login-right">
         <div class="login-form-wrap"
-             x-data="{
-                 role: '{{ old('role', 'mahasiswa') }}',
-                 showPassword: false,
-                 get submitLabel() {
-                     const labels = { mahasiswa: 'Mahasiswa', dosen: 'Dosen', koordinator: 'Koordinator' };
-                     return 'Masuk sebagai ' + labels[this.role];
-                 }
-             }">
+             x-data="{ showPassword: false }">
 
             <p class="login-form-eyebrow">Akses Ruang Kerja</p>
             <h2 class="login-form-title">Masuk ke SIM-PBL</h2>
             <p class="login-form-desc">Gunakan akun kampus untuk melanjutkan.</p>
-
-            {{-- Role Switcher --}}
-            <div class="login-role-switcher">
-                <button type="button"
-                    class="login-role-btn"
-                    :class="{ active: role === 'mahasiswa' }"
-                    @click="role = 'mahasiswa'">
-                    Mahasiswa
-                </button>
-                <button type="button"
-                    class="login-role-btn"
-                    :class="{ active: role === 'dosen' }"
-                    @click="role = 'dosen'">
-                    Dosen
-                </button>
-                <button type="button"
-                    class="login-role-btn"
-                    :class="{ active: role === 'koordinator' }"
-                    @click="role = 'koordinator'">
-                    Koordinator
-                </button>
-            </div>
 
             {{-- Error Messages --}}
             @if ($errors->any())
@@ -413,7 +421,6 @@
 
             <form method="POST" action="{{ route('login') }}">
                 @csrf
-                <input type="hidden" name="role" :value="role">
 
                 {{-- Identifier --}}
                 <div class="login-field">
@@ -424,7 +431,7 @@
                         name="identifier"
                         value="{{ old('identifier') }}"
                         class="login-input"
-                        placeholder="Username"
+                        placeholder="NIM / NIDN"
                         autocomplete="username"
                         required>
                 </div>
@@ -461,7 +468,7 @@
 
                 {{-- Submit --}}
                 <button type="submit" class="login-submit">
-                    <span x-text="submitLabel">Masuk</span>
+                    <span>Masuk</span>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                     </svg>
