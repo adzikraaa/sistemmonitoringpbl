@@ -34,121 +34,104 @@
            LEFT PANEL
         ══════════════════════════════════════ */
         .login-left {
-            width: 340px;
-            min-width: 340px;
+            width: 360px;
+            min-width: 360px;
             background-color: #231811;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 32px 36px 40px;
+            justify-content: flex-start;
+            padding: 36px 36px 40px;
             position: relative;
             overflow: hidden;
         }
 
-        /* ── Brand Card ── */
-        .brand-card {
-            background: #FFFFFF;
-            border-radius: 14px;
-            padding: 16px 20px;
+        /* ── Brand Header (Top of left panel) ── */
+        .login-brand-header {
             display: flex;
             align-items: center;
-            gap: 16px;
-        }
-        .brand-logos {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            gap: 14px;
             flex-shrink: 0;
         }
-        /* JTI text logo */
-        .logo-jti {
-            font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 22px;
-            font-weight: 400;
-            line-height: 1;
-            /* Match the colorful JTI style from the brand image */
-            background: linear-gradient(135deg, #E8431A 0%, #F5A623 50%, #1A3A8A 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.01em;
-        }
-        /* Polinema circular seal */
-        .logo-polinema {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: linear-gradient(145deg, #1E3A8A 0%, #3B5FC0 60%, #2563EB 100%);
-            border: 1.5px solid #D4C8B8;
-            display: flex;
+
+        .brand-logo-card {
+            background: #FFFFFF;
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.18);
             flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
         }
-        .logo-polinema::before {
-            content: '';
-            position: absolute;
-            inset: 3px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,215,0,0.5);
+
+        .brand-logo-img {
+            height: 36px;
+            width: auto;
+            display: block;
+            object-fit: contain;
         }
-        .logo-polinema-inner {
-            font-size: 7.5px;
-            font-weight: 800;
-            color: #FFD700;
+
+        .brand-header-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .brand-name {
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: 16px;
+            font-weight: 400;
+            color: #FAF8F5;
             letter-spacing: 0.03em;
-            text-align: center;
-            line-height: 1.15;
+            line-height: 1.2;
         }
-        /* Divider between logos and text */
-        .brand-divider {
-            width: 1px;
-            height: 32px;
-            background: #D4C8B8;
-            flex-shrink: 0;
-        }
-        .brand-label {
-            font-size: 10px;
+
+        .brand-sub {
+            font-size: 8.5px;
             font-weight: 700;
-            letter-spacing: 0.14em;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: #6B5E52;
-            line-height: 1.4;
+            color: #C3B6AB;
+            line-height: 1.2;
         }
 
         /* ── Left Body (tagline area) ── */
         .login-left-body {
-            padding-bottom: 16px;
+            margin-top: clamp(48px, 11vh, 100px);
+            margin-bottom: auto;
             position: relative;
             z-index: 1;
         }
+
         .login-eyebrow {
             font-size: 10px;
             font-weight: 600;
             letter-spacing: 0.16em;
             color: #B08A5A;
             text-transform: uppercase;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
+
         .login-tagline {
             font-family: 'DM Serif Display', Georgia, serif;
-            font-size: clamp(28px, 2.5vw, 38px);
+            font-size: clamp(28px, 2.6vw, 36px);
             font-weight: 400; /* non-bold */
             line-height: 1.18;
             color: #FAF8F5;
             margin-bottom: 20px;
         }
+
         .login-tagline em {
             font-style: italic;
             color: #D4A86A;
         }
+
         .login-tagline-desc {
             font-size: 12.5px;
             font-weight: 400;
             color: #8B7B6E;
             line-height: 1.65;
+            max-width: 280px;
         }
 
         /* ══════════════════════════════════════
@@ -176,6 +159,7 @@
             color: #B08A5A;
             margin-bottom: 10px;
         }
+
         .login-form-title {
             font-family: 'DM Serif Display', Georgia, serif;
             font-size: clamp(26px, 3vw, 34px);
@@ -184,6 +168,7 @@
             line-height: 1.1;
             margin-bottom: 8px;
         }
+
         .login-form-desc {
             font-size: 13.5px;
             color: #7A6E63;
@@ -206,6 +191,7 @@
         .login-field {
             margin-bottom: 18px;
         }
+
         .login-label {
             display: block;
             font-size: 13px;
@@ -213,6 +199,7 @@
             color: #3A2E27;
             margin-bottom: 7px;
         }
+
         .login-input {
             width: 100%;
             padding: 11px 16px;
@@ -225,7 +212,9 @@
             outline: none;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
+
         .login-input::placeholder { color: #B8AFA5; }
+
         .login-input:focus {
             border-color: #8B6240;
             box-shadow: 0 0 0 3px rgba(139, 98, 64, 0.12);
@@ -234,9 +223,11 @@
         .login-pass-wrap {
             position: relative;
         }
+
         .login-pass-wrap .login-input {
             padding-right: 60px;
         }
+
         .login-show-btn {
             position: absolute;
             right: 14px;
@@ -251,6 +242,7 @@
             cursor: pointer;
             padding: 4px;
         }
+
         .login-show-btn:hover { color: #231811; }
 
         /* ── Remember + Forgot ── */
@@ -261,6 +253,7 @@
             margin-bottom: 24px;
             gap: 8px;
         }
+
         .login-remember {
             display: flex;
             align-items: center;
@@ -270,12 +263,14 @@
             cursor: pointer;
             user-select: none;
         }
+
         .login-remember input[type="checkbox"] {
             width: 15px;
             height: 15px;
             accent-color: #5C4036;
             cursor: pointer;
         }
+
         .login-forgot {
             font-size: 12.5px;
             color: #8B6240;
@@ -283,6 +278,7 @@
             text-decoration: none;
             white-space: nowrap;
         }
+
         .login-forgot:hover { text-decoration: underline; }
 
         /* ── Submit Button ── */
@@ -304,6 +300,7 @@
             gap: 8px;
             letter-spacing: 0.01em;
         }
+
         .login-submit:hover { background: #3D2820; }
 
         /* ══════════════════════════════════════
@@ -313,9 +310,12 @@
         /* Tablet: narrow the left panel */
         @media (max-width: 1024px) {
             .login-left {
-                width: 280px;
-                min-width: 280px;
-                padding: 28px 28px 36px;
+                width: 300px;
+                min-width: 300px;
+                padding: 30px 28px 36px;
+            }
+            .brand-logo-img {
+                height: 32px;
             }
             .login-tagline {
                 font-size: 28px;
@@ -331,36 +331,44 @@
             .login-left {
                 width: 100%;
                 min-width: 0;
-                padding: 24px 24px 32px;
-                /* Compact on mobile — just show brand card + eyebrow */
-                justify-content: flex-start;
-                gap: 20px;
+                padding: 24px 20px 24px;
             }
             .login-left-body {
-                padding-bottom: 0;
+                margin-top: 18px;
+                margin-bottom: 0;
             }
             .login-tagline {
-                font-size: 26px;
+                font-size: 24px;
+                margin-bottom: 8px;
             }
             .login-tagline-desc {
-                display: none; /* hide on mobile to save space */
+                display: none;
             }
             .login-right {
                 flex: 1;
-                padding: 36px 24px 48px;
+                padding: 32px 20px 40px;
                 background: #FAF8F5;
             }
         }
 
         @media (max-width: 480px) {
             .login-left {
-                padding: 20px 20px 24px;
+                padding: 20px 16px 20px;
+            }
+            .brand-logo-img {
+                height: 28px;
+            }
+            .brand-name {
+                font-size: 14px;
+            }
+            .brand-sub {
+                font-size: 7.5px;
             }
             .login-tagline {
-                font-size: 23px;
+                font-size: 22px;
             }
             .login-right {
-                padding: 28px 20px 40px;
+                padding: 24px 16px 36px;
             }
             .login-form-title {
                 font-size: 26px;
@@ -374,18 +382,15 @@
     {{-- ── LEFT PANEL ── --}}
     <div class="login-left">
 
-        {{-- Brand Card --}}
-        <div class="brand-card">
-            <div class="brand-logos">
-                {{-- JTI Logo --}}
-                <span class="logo-jti">JTI</span>
-                {{-- Polinema Seal --}}
-                <div class="logo-polinema">
-                    <span class="logo-polinema-inner">POLI<br>NEMA</span>
-                </div>
+        {{-- Brand Header (Logo Card + App Name) --}}
+        <div class="login-brand-header">
+            <div class="brand-logo-card">
+                <img src="{{ asset('images/logo-jti-polinema.png') }}" alt="JTI Polinema" class="brand-logo-img">
             </div>
-            <div class="brand-divider"></div>
-            <div class="brand-label">Sistem<br>Monitoring PBL</div>
+            <div class="brand-header-text">
+                <div class="brand-name">SIM-PBL</div>
+                <div class="brand-sub">SISTEM MONITORING PBL</div>
+            </div>
         </div>
 
         {{-- Tagline --}}
