@@ -357,7 +357,10 @@
             </p>
         </div>
 
-        <div class="login-left-footer" style="visibility:hidden; height:0; overflow:hidden;"></div>
+        <div class="login-left-footer">
+            <span class="login-status-dot"></span>
+            SIM-PBL siap digunakan
+        </div>
     </div>
 
     {{-- ── RIGHT PANEL ── --}}
@@ -366,6 +369,12 @@
              x-data="{
                  role: '{{ old('role', 'mahasiswa') }}',
                  showPassword: false,
+                 get identifierLabel() {
+                     return this.role === 'mahasiswa' ? 'NIM' : 'NIDN';
+                 },
+                 get identifierPlaceholder() {
+                     return this.role === 'mahasiswa' ? 'Ketikkan NIM kamu' : 'Ketikkan NIDN kamu';
+                 },
                  get submitLabel() {
                      const labels = { mahasiswa: 'Mahasiswa', dosen: 'Dosen', koordinator: 'Koordinator' };
                      return 'Masuk sebagai ' + labels[this.role];
@@ -413,14 +422,13 @@
 
                 {{-- Identifier --}}
                 <div class="login-field">
-                    <label class="login-label" for="identifier">Username</label>
+                    <label class="login-label" x-text="identifierLabel"></label>
                     <input
                         type="text"
-                        id="identifier"
                         name="identifier"
                         value="{{ old('identifier') }}"
                         class="login-input"
-                        placeholder="Username"
+                        :placeholder="identifierPlaceholder"
                         autocomplete="username"
                         required>
                 </div>
@@ -434,7 +442,7 @@
                             name="password"
                             id="password"
                             class="login-input"
-                            placeholder="Kata sandi"
+                            placeholder="••••••••"
                             autocomplete="current-password"
                             required>
                         <button type="button" class="login-show-btn" @click="showPassword = !showPassword"
@@ -463,6 +471,10 @@
                     </svg>
                 </button>
             </form>
+
+            <p class="login-note">
+                Demo navigasi aktif untuk pratinjau.<br>Pilih peran untuk melihat ruang kerja yang berbeda.
+            </p>
         </div>
     </div>
 </div>

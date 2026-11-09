@@ -19,15 +19,14 @@ class RoleSeeder extends Seeder
                 'email'    => 'nadia.kusuma@polinema.ac.id',
                 'password' => 'password',
                 'nidn'     => '0099000001',
-                'username' => '0099000001',
             ]
         );
 
         $dosenList = [
-            ['nidn' => '0099000002', 'nama' => 'Dosen Test',                      'email' => 'dosen@test.com'],
-            ['nidn' => '0012058401', 'nama' => 'Dr. Bambang Pratama, M.Kom.',     'email' => 'bambang.pratama@polinema.ac.id'],
-            ['nidn' => '0024088902', 'nama' => 'Dr. Rian Hidayat, M.T.',          'email' => 'rian.hidayat@polinema.ac.id'],
-            ['nidn' => '0015039203', 'nama' => 'Siti Aminah, S.Kom., M.Kom.',     'email' => 'siti.aminah@polinema.ac.id'],
+            ['nidn' => '0099000002', 'nama' => 'Dosen Test', 'email' => 'dosen@test.com'],
+            ['nidn' => '0012058401', 'nama' => 'Dr. Bambang Pratama, M.Kom.', 'email' => 'bambang.pratama@polinema.ac.id'],
+            ['nidn' => '0024088902', 'nama' => 'Dr. Rian Hidayat, M.T.', 'email' => 'rian.hidayat@polinema.ac.id'],
+            ['nidn' => '0015039203', 'nama' => 'Siti Aminah, S.Kom., M.Kom.', 'email' => 'siti.aminah@polinema.ac.id'],
         ];
 
         foreach ($dosenList as $d) {
@@ -38,7 +37,6 @@ class RoleSeeder extends Seeder
                     'email'          => $d['email'],
                     'password'       => 'password',
                     'nidn'           => $d['nidn'],
-                    'username'       => $d['nidn'],
                     'koordinator_id' => $koordinator->id,
                     'is_aktif'       => true,
                 ]
