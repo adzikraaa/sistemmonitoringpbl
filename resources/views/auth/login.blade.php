@@ -39,7 +39,7 @@
             background-color: #231811;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
             padding: 32px 36px 40px;
             position: relative;
             overflow: hidden;
@@ -49,78 +49,61 @@
         .brand-card {
             background: #FFFFFF;
             border-radius: 14px;
-            padding: 16px 20px;
+            padding: 14px 18px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
+            flex-shrink: 0;
         }
         .brand-logos {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             flex-shrink: 0;
         }
-        /* JTI text logo */
-        .logo-jti {
-            font-family: 'DM Serif Display', Georgia, serif;
-            font-size: 22px;
-            font-weight: 400;
-            line-height: 1;
-            /* Match the colorful JTI style from the brand image */
-            background: linear-gradient(135deg, #E8431A 0%, #F5A623 50%, #1A3A8A 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.01em;
-        }
-        /* Polinema circular seal */
-        .logo-polinema {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: linear-gradient(145deg, #1E3A8A 0%, #3B5FC0 60%, #2563EB 100%);
-            border: 1.5px solid #D4C8B8;
+
+        /* ── JTI SVG Logo ── */
+        .logo-jti-wrap {
+            height: 40px;
             display: flex;
             align-items: center;
-            justify-content: center;
             flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
         }
-        .logo-polinema::before {
-            content: '';
-            position: absolute;
-            inset: 3px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,215,0,0.5);
+        .logo-jti-wrap svg { height: 40px; width: auto; }
+
+        /* ── Polinema Shield Logo ── */
+        .logo-polinema-wrap {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
         }
-        .logo-polinema-inner {
-            font-size: 7.5px;
-            font-weight: 800;
-            color: #FFD700;
-            letter-spacing: 0.03em;
-            text-align: center;
-            line-height: 1.15;
-        }
+        .logo-polinema-wrap svg { height: 44px; width: auto; }
+
         /* Divider between logos and text */
         .brand-divider {
             width: 1px;
-            height: 32px;
-            background: #D4C8B8;
+            height: 36px;
+            background: #D0C8BC;
             flex-shrink: 0;
+            margin: 0 2px;
         }
         .brand-label {
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 700;
-            letter-spacing: 0.14em;
+            letter-spacing: 0.13em;
             text-transform: uppercase;
             color: #6B5E52;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         /* ── Left Body (tagline area) ── */
         .login-left-body {
-            padding-bottom: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px 0 0;
             position: relative;
             z-index: 1;
         }
@@ -377,11 +360,38 @@
         {{-- Brand Card --}}
         <div class="brand-card">
             <div class="brand-logos">
-                {{-- JTI Logo --}}
-                <span class="logo-jti">JTI</span>
-                {{-- Polinema Seal --}}
-                <div class="logo-polinema">
-                    <span class="logo-polinema-inner">POLI<br>NEMA</span>
+                {{-- JTI Logo (SVG recreation) --}}
+                <div class="logo-jti-wrap">
+                    <svg viewBox="0 0 72 48" xmlns="http://www.w3.org/2000/svg">
+                        <!-- J: dark navy -->
+                        <path d="M6 4 L6 34 Q6 44 16 44 Q22 44 25 38 L19 35 Q18 40 16 40 Q12 40 12 34 L12 4 Z" fill="#1B2A5E"/>
+                        <!-- T: left rect orange, right rect red-orange -->
+                        <rect x="27" y="4" width="8" height="40" fill="#E8431A"/>
+                        <rect x="27" y="4" width="22" height="8" fill="#F47B20"/>
+                        <!-- i dot: yellow circle -->
+                        <circle cx="60" cy="8" r="5" fill="#F5C518"/>
+                        <!-- i stem: orange -->
+                        <rect x="56" y="17" width="8" height="27" fill="#F47B20"/>
+                    </svg>
+                </div>
+                {{-- Polinema Shield Logo (SVG recreation) --}}
+                <div class="logo-polinema-wrap">
+                    <svg viewBox="0 0 48 54" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Pentagon shield shape -->
+                        <path d="M24 1 L46 10 L46 32 Q46 48 24 53 Q2 48 2 32 L2 10 Z" fill="#4A2F8F" stroke="#6A4FC0" stroke-width="1"/>
+                        <!-- Inner border ring -->
+                        <path d="M24 5 L42 13 L42 32 Q42 45 24 50 Q6 45 6 32 L6 13 Z" fill="none" stroke="#C8A800" stroke-width="1.2"/>
+                        <!-- Gear/sun rays simplified -->
+                        <circle cx="24" cy="28" r="12" fill="#3A2070"/>
+                        <circle cx="24" cy="28" r="8" fill="#4A2F8F"/>
+                        <!-- Tower/monument simplified -->
+                        <rect x="22" y="20" width="4" height="14" fill="#C8A800" rx="1"/>
+                        <polygon points="24,16 21,22 27,22" fill="#C8A800"/>
+                        <!-- Base -->
+                        <rect x="19" y="34" width="10" height="3" fill="#C8A800" rx="1"/>
+                        <!-- Text arc placeholder -->
+                        <text x="24" y="10" text-anchor="middle" font-size="4" font-weight="700" fill="#FFD700" letter-spacing="0.5">POLINEMA</text>
+                    </svg>
                 </div>
             </div>
             <div class="brand-divider"></div>
