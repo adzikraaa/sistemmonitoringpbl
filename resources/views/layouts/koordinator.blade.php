@@ -604,7 +604,8 @@
 
                     {{-- Milestone Global --}}
                     <li>
-                        <a href="#" class="krd-nav-link">
+                        <a href="{{ route('koordinator.milestone-global.index') }}"
+                           class="krd-nav-link {{ request()->routeIs('koordinator.milestone-global.*') ? 'krd-nav-link--active' : '' }}">
                             <span class="krd-nav-icon">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>

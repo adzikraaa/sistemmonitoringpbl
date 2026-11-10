@@ -8,6 +8,7 @@ use App\Http\Controllers\Koordinator\PenggunaController;
 use App\Http\Controllers\Koordinator\MataKuliahController;
 use App\Http\Controllers\Koordinator\PenugasanDosenController;
 use App\Http\Controllers\Koordinator\PeriodeController;
+use App\Http\Controllers\Koordinator\MilestoneController;
 
 Route::prefix('koordinator')->name('koordinator.')->group(function () {
     Route::middleware('auth:koordinator')->group(function () {
@@ -56,5 +57,10 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::post('/periode', [PeriodeController::class, 'store'])->name('periode.store');
         Route::put('/periode/{id}', [PeriodeController::class, 'update'])->name('periode.update');
         Route::patch('/periode/{id}/toggle-aktif', [PeriodeController::class, 'toggleAktif'])->name('periode.toggle-aktif');
+
+        // Milestone Global
+        Route::get('/milestone-global', [MilestoneController::class, 'index'])->name('milestone-global.index');
+        Route::post('/milestone-global', [MilestoneController::class, 'store'])->name('milestone-global.store');
+        Route::put('/milestone-global/{milestone}', [MilestoneController::class, 'update'])->name('milestone-global.update');
     });
 });
