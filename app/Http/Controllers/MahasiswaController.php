@@ -11,17 +11,17 @@ class MahasiswaController extends Controller
      * Data kelompok dan user (hardcoded untuk prototype).
      * Saat backend lengkap, data ini diambil dari database/session.
      */
-   private function sharedViewData(): array
-{
-    $mahasiswa = Auth::guard('mahasiswa')->user();
+    private function sharedViewData(): array
+    {
+        $mahasiswa = Auth::guard('mahasiswa')->user();
 
-    return [
-        'userName'  => $mahasiswa?->nama ?? 'Mahasiswa',
-        'userNim'   => $mahasiswa?->nim ?? '-',
-        'userKelas' => $mahasiswa?->kelas_id ?? '-',
-        'userProdi' => 'Teknologi Informasi',
-    ];
-}
+        return [
+            'userName'  => $mahasiswa?->nama ?? 'Mahasiswa',
+            'userNim'   => $mahasiswa?->nim ?? '-',
+            'userKelas' => $mahasiswa?->kelas_id ?? '-',
+            'userProdi' => 'Teknologi Informasi',
+        ];
+    }
 
     public function pilihSemester()
     {
@@ -203,8 +203,21 @@ class MahasiswaController extends Controller
             ],
         ];
 
+        $mataKuliahList = array_map(function ($item) {
+            return [
+                'id'       => $item['id'],
+                'kode'     => $item['kode'],
+                'slug'     => $item['slug'],
+                'nama'     => $item['judul'],
+                'dosen'    => $item['dosen'],
+                'progress' => $item['progress'],
+                'status'   => $item['status'],
+            ];
+        }, $milestones);
+
         return view('mahasiswa.milestone', array_merge($this->sharedViewData(), [
-            'milestones' => $milestones,
+            'milestones'     => $milestones,
+            'mataKuliahList' => $mataKuliahList,
         ]));
     }
 
@@ -229,32 +242,39 @@ class MahasiswaController extends Controller
             ['nama' => 'Fernanda Ayu', 'nim' => '244107060123', 'role' => 'Anggota', 'avatar' => 'FA'],
         ];
 
-        if ($slug === 'penjaminan-mutu-perangkat-lunak') {
+        $prefixMatkul = match ($slug) {
+            'pemrograman-web-lanjut' => 'PWL',
+            'manajemen-proyek-sistem-informasi' => 'MPSI',
+            default => 'PMPL',
+        };
+
+        // Ambil riwayat tambahan dari session (simulasi sebelum DB disambungkan)
+        $uploadedSession = session("uploaded_milestones_{$slug}", []);
+
+        if ($slug === 'penjaminan-mutu-perangkat-lunak' && empty($uploadedSession)) {
             return view('mahasiswa.milestone-detail', array_merge($this->sharedViewData(), [
                 'slug' => $slug,
                 'namaMatkul' => $namaMatkul,
                 'anggotaKelompok' => $anggotaKelompok,
                 'berkasTerkumpul' => false,
-                'milestones' => []
+                'milestones' => [],
             ]));
         }
 
-        $prefixMatkul = ($slug === 'pemrograman-web-lanjut') ? 'PWL' : 'MPSI';
-
-        $milestones = [
+        $defaultMilestones = ($slug === 'penjaminan-mutu-perangkat-lunak') ? [] : [
             [
                 'id' => 2,
                 'judul' => 'Milestone 2 – Laporan ' . $namaMatkul,
                 'status' => 'Menunggu Review',
-                'ringkasan' => 'Fokus pada arsitektur REST full API backend, implementasi otentikasi JWT, middleware Role-Based Access Control (RBAC), dan skema relasi database inventaris terintegrasi dengan ORM Prisma.',
+                'ringkasan' => 'Fokus pada arsitektur REST full API backend, implementasi otentikasi JWT, middleware Role-Based Access Control (RBAC), dan skema relasi database inventaris terintegrasi dengan ORM.',
                 'waktu' => '18 Oktober 2026, 14:20 WIB',
                 'pengunggah' => 'Muhammad Adzikra',
                 'dokumen' => [
-                    ['tipe' => 'pdf', 'nama' => 'Laporan-M2-' . $prefixMatkul . '-Kel02.pdf', 'sub' => 'Dokumen PDF • 3.8 MB', 'action' => 'download'],
-                    ['tipe' => 'image', 'nama' => 'Skema-relasi-db-erd.png', 'sub' => 'Diagram ERD & Arsitektur • 1.6 MB', 'action' => 'download'],
-                    ['tipe' => 'github', 'nama' => 'GitHub Repository (branch)', 'sub' => 'github.com/sim-pbl/inventaris', 'action' => 'open'],
-                    ['tipe' => 'postman', 'nama' => 'Postman Collection Docs', 'sub' => 'api.sim-pbl.ac.id/docs', 'action' => 'open'],
-                ]
+                    ['tipe' => 'pdf', 'nama' => 'Laporan-M2-' . $prefixMatkul . '-Kel02.pdf', 'sub' => 'Dokumen PDF • 3.8 MB', 'action' => 'download', 'url' => '#'],
+                    ['tipe' => 'image', 'nama' => 'Skema-relasi-db-erd.png', 'sub' => 'Diagram ERD & Arsitektur • 1.6 MB', 'action' => 'download', 'url' => '#'],
+                    ['tipe' => 'github', 'nama' => 'GitHub Repository (branch)', 'sub' => 'github.com/sim-pbl/inventaris', 'action' => 'open', 'url' => 'https://github.com/adzikraaa/sistemmonitoringpbl'],
+                    ['tipe' => 'postman', 'nama' => 'Postman Collection Docs', 'sub' => 'api.sim-pbl.ac.id/docs', 'action' => 'open', 'url' => '#'],
+                ],
             ],
             [
                 'id' => 1,
@@ -264,33 +284,103 @@ class MahasiswaController extends Controller
                 'waktu' => '18 September 2026, 15:05 WIB',
                 'pengunggah' => 'Niky Tania',
                 'dokumen' => [
-                    ['tipe' => 'pdf', 'nama' => 'Laporan-M1-' . $prefixMatkul . '-Kel02.pdf', 'sub' => 'Dokumen PDF • 2.4 MB', 'action' => 'download'],
-                    ['tipe' => 'docs', 'nama' => 'Pembagian Tugas PBL Kel 02', 'sub' => 'Lembar Kerja Analisis • 940 KB', 'action' => 'open'],
-                    ['tipe' => 'notion', 'nama' => 'Kanban Sprint Backlog & Roadmapping', 'sub' => 'notion.so/pbl-kelompok01/sprint-m1', 'action' => 'open', 'full_width' => true],
-                ]
-            ]
+                    ['tipe' => 'pdf', 'nama' => 'Laporan-M1-' . $prefixMatkul . '-Kel02.pdf', 'sub' => 'Dokumen PDF • 2.4 MB', 'action' => 'download', 'url' => '#'],
+                    ['tipe' => 'docs', 'nama' => 'Pembagian Tugas PBL Kel 02', 'sub' => 'Lembar Kerja Analisis • 940 KB', 'action' => 'open', 'url' => '#'],
+                    ['tipe' => 'notion', 'nama' => 'Kanban Sprint Backlog & Roadmapping', 'sub' => 'notion.so/pbl-kelompok01/sprint-m1', 'action' => 'open', 'url' => '#', 'full_width' => true],
+                ],
+            ],
         ];
+
+        $milestones = array_merge($uploadedSession, $defaultMilestones);
 
         return view('mahasiswa.milestone-detail', array_merge($this->sharedViewData(), [
             'slug' => $slug,
             'namaMatkul' => $namaMatkul,
             'anggotaKelompok' => $anggotaKelompok,
-            'berkasTerkumpul' => true,
-            'milestones' => $milestones
+            'berkasTerkumpul' => !empty($milestones),
+            'milestones' => $milestones,
         ]));
     }
 
-    /** Menyimpan upload berkas deliverable. */
+    /** Menyimpan pengumpulan milestone & berkas pendukung (Pertemuan 6: Validasi & File Storage) */
     public function storeMilestoneUpload(Request $request, $id)
     {
-        $request->validate([
-            'berkas' => 'required|file|mimes:pdf,zip|max:20480',
-            'item_id' => 'required|string',
+        $validated = $request->validate([
+            'mata_kuliah'  => ['required', 'string'],
+            'milestone_id' => ['required', 'in:1,2,3'],
+            'catatan'      => ['required', 'string', 'max:2000'],
+            'berkas'       => ['required', 'file', 'mimes:pdf,zip', 'max:20480'], // Maks 20 MB
+            'link_bukti'   => ['nullable', 'url', 'max:255'],
+        ], [
+            'milestone_id.required' => 'Tahapan milestone wajib dipilih.',
+            'catatan.required'      => 'Ringkasan capaian milestone wajib diisi.',
+            'berkas.required'       => 'Berkas laporan (PDF/ZIP) wajib diunggah.',
+            'berkas.mimes'          => 'Format berkas harus berupa PDF atau ZIP.',
+            'berkas.max'            => 'Ukuran berkas maksimal 20 MB.',
+            'link_bukti.url'        => 'Format tautan repositori/demo tidak valid (harus diawali http:// atau https://).',
         ]);
 
+        $slug = $validated['mata_kuliah'] ?: $id;
+
+        $matkulNames = [
+            'pemrograman-web-lanjut' => 'Pemrograman Web Lanjut',
+            'manajemen-proyek-sistem-informasi' => 'Manajemen Proyek Sistem Informasi',
+            'penjaminan-mutu-perangkat-lunak' => 'Penjaminan Mutu Perangkat Lunak',
+        ];
+        $namaMatkul = $matkulNames[$slug] ?? 'Mata Kuliah PBL';
+
+        $tahapanLabels = [
+            '1' => 'Milestone 1',
+            '2' => 'Milestone 2',
+            '3' => 'Milestone 3',
+        ];
+
+        // Simpan file fisik ke storage/app/public/milestones
+        $file = $request->file('berkas');
+        $originalName = $file->getClientOriginalName();
+        $sizeInMb = number_format($file->getSize() / (1024 * 1024), 2) . ' MB';
+        $storedPath = $file->store('milestones/' . $slug, 'public');
+        $fileUrl = asset('storage/' . $storedPath);
+
+        $dokumenList = [
+            [
+                'tipe'   => strtolower($file->getClientOriginalExtension()) === 'pdf' ? 'pdf' : 'zip',
+                'nama'   => $originalName,
+                'sub'    => 'Dokumen ' . strtoupper($file->getClientOriginalExtension()) . ' • ' . $sizeInMb,
+                'action' => 'download',
+                'url'    => $fileUrl,
+            ],
+        ];
+
+        if (!empty($validated['link_bukti'])) {
+            $dokumenList[] = [
+                'tipe'   => 'github',
+                'nama'   => 'Tautan Repositori / Demo',
+                'sub'    => preg_replace('#^https?://#', '', $validated['link_bukti']),
+                'action' => 'open',
+                'url'    => $validated['link_bukti'],
+            ];
+        }
+
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $pengunggah = $mahasiswa?->nama ?? 'Niky Tania';
+
+        // Simpan entri baru ke session agar langsung muncul di halaman detail
+        $existing = session("uploaded_milestones_{$slug}", []);
+        array_unshift($existing, [
+            'id'         => (int) $validated['milestone_id'],
+            'judul'      => ($tahapanLabels[$validated['milestone_id']] ?? 'Milestone') . ' – Laporan ' . $namaMatkul,
+            'status'     => 'Menunggu Review',
+            'ringkasan'  => $validated['catatan'],
+            'waktu'      => now()->translatedFormat('d F Y, H:i') . ' WIB',
+            'pengunggah' => $pengunggah,
+            'dokumen'    => $dokumenList,
+        ]);
+        session(["uploaded_milestones_{$slug}" => $existing]);
+
         return redirect()
-            ->route('mahasiswa.milestone')
-            ->with('success', 'Berkas deliverable berhasil dikirim!');
+            ->route('mahasiswa.milestone.detail', $slug)
+            ->with('success', 'Laporan milestone berhasil dikumpulkan dan menunggu review dosen!');
     }
 
     /**
