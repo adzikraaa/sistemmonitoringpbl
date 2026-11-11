@@ -50,6 +50,8 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::get('/kelompok', [KelompokController::class, 'index'])->name('kelompok');
         Route::post('/kelompok', [KelompokController::class, 'store'])->name('kelompok.store');
         Route::get('/kelompok/{id}', [KelompokController::class, 'show'])->name('kelompok.show');
+        Route::patch('/kelompok/{id}/status', [KelompokController::class, 'updateStatus'])->name('kelompok.update-status');
+        Route::delete('/kelompok/{id}', [KelompokController::class, 'destroy'])->name('kelompok.destroy');
         Route::post('/kelompok/{id}/anggota', [KelompokController::class, 'storeAnggota'])->name('kelompok.anggota.store');
 
         // Penugasan Dosen

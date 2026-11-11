@@ -44,6 +44,7 @@ class KelompokController extends Controller
             'kelas_id'      => $request->kelas_id,
             'periode_id'    => $request->periode_id,
             'jadwal_bimbingan' => $request->jadwal_bimbingan,
+            'status'        => 'Aktif',
             'tanggal_dibuat' => now()->toDateString(),
         ]);
 
@@ -91,5 +92,33 @@ class KelompokController extends Controller
         ]);
 
         return redirect()->route('koordinator.kelompok.show', $kelompok->id)->with('success', 'Anggota berhasil ditambahkan.');
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string|in:Aktif,Draft,Ditangguhkan',
+        ]);
+
+        $kelompok = Kelompok::findOrFail($id);
+        $kelompok->update([
+            'status' => $request->status,
+        ]);
+
+        return redirect()->route('koordinator.kelompok.index')->with('success', 'Status kelompok berhasil diperbarui.');
+    }
+
+    public function destroy($id)
+    {
+        $kelompok = Kelompok::with(['anggotaKelompok', 'milestoneKelompok', 'proposal'])->findOrFail($id);
+
+        $kelompok->anggotaKelompok()->delete();
+        $kelompok->milestoneKelompok()->delete();
+        $kelompok->proposal()->delete();
+
+        $namaKelompok = $kelompok->nama_kelompok;
+        $kelompok->delete();
+
+        return redirect()->route('koordinator.kelompok.index')->with('success', "Kelompok {$namaKelompok} berhasil dihapus.");
     }
 }
