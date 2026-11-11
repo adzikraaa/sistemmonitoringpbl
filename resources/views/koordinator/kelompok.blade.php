@@ -618,8 +618,13 @@
                             $memberCount = $item->anggotaKelompok->count();
                             $milestoneCount = $item->milestoneKelompok->count();
                             $milestonePercent = $milestoneCount > 0 ? min(100, (int) (($milestoneCount / 5) * 100)) : 20;
-                            $status = $item->dosen ? 'Aktif' : 'Draft';
-                            $statusClass = $item->dosen ? 'active' : 'draft';
+                            $status = $item->status ?? ($item->dosen ? 'Aktif' : 'Draft');
+                            $statusClass = match ($status) {
+                                'Aktif' => 'active',
+                                'Draft' => 'draft',
+                                'Ditangguhkan' => 'pending',
+                                default => 'active',
+                            };
                         @endphp
                         <tr>
                             <td>
@@ -772,10 +777,15 @@
             </div>
         </div>
 
-        <div class="sim-kelompok-status-footer">
-            <button type="button" class="sim-kelompok-status-btn sim-kelompok-status-btn--secondary" onclick="closeKelompokStatusModal()">Batal</button>
-            <button type="button" id="confirmKelompokStatus" class="sim-kelompok-status-btn sim-kelompok-status-btn--primary">Ubah Status</button>
-        </div>
+        <form id="kelompokStatusForm" method="POST" action="">
+            @csrf
+            @method('PATCH')
+            <input type="hidden" name="status" id="statusKelompokHidden" value="Aktif">
+            <div class="sim-kelompok-status-footer">
+                <button type="button" class="sim-kelompok-status-btn sim-kelompok-status-btn--secondary" onclick="closeKelompokStatusModal()">Batal</button>
+                <button type="submit" id="confirmKelompokStatus" class="sim-kelompok-status-btn sim-kelompok-status-btn--primary">Ubah Status</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -820,22 +830,22 @@
         });
     });
 
-    document.getElementById('confirmKelompokStatus')?.addEventListener('click', function () {
+    document.getElementById('confirmKelompokStatus')?.addEventListener('click', function (event) {
         const modal = document.getElementById('kelompokStatusModal');
+        const form = document.getElementById('kelompokStatusForm');
         const selectEl = document.getElementById('statusKelompokSelect');
+        const hiddenStatusEl = document.getElementById('statusKelompokHidden');
+
         const status = selectEl ? selectEl.value : 'Aktif';
         const groupId = modal ? modal.dataset.kelompokId : null;
-        const chip = groupId ? document.querySelector('[data-status-chip="' + groupId + '"]') : null;
 
-        if (chip) {
-            chip.textContent = status;
-            chip.classList.remove('active', 'draft', 'pending');
-            chip.classList.add(status === 'Aktif' ? 'active' : (status === 'Draft' ? 'draft' : 'pending'));
+        if (!form || !groupId) {
+            return;
         }
 
-        if (modal) {
-            modal.classList.remove('open');
-        }
+        hiddenStatusEl.value = status;
+        form.action = '/koordinator/kelompok/' + groupId + '/status';
+        form.submit();
     });
 
     document.addEventListener('click', function (event) {

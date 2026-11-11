@@ -19,16 +19,34 @@
 @endphp
 
 <style>
+    /* Taruh variabel warnamu di sini */
+    :root {
+        --dp-green:       #3B7454;
+        --dp-green-light: #D6ECDE;
+        --dp-green-pale:  #EAF4EE;
+        --dp-brown:       #2D2621;
+        --dp-brown-deep:  #261E19;
+        --dp-taupe:       #A3978A;
+        --dp-ochre:       #B87C2B;
+        --dp-gold:        #CBA153;
+        --dp-beige:       #E8E2D8;
+        --dp-ivory:       #F4F0E8;
+        --dp-offwhite:    #FAF8F4;
+        --dp-border:      #CFC7BC;
+        --dp-border-light:#E3DDD6;
+    }
+
     .sim-detail-page {
-        background: #f4f0ea;
+        background: var(--dp-offwhite);
         min-height: 100%;
-        padding: 32px 28px 24px;
-        color: #2f2a28;
+        padding: 0;
+        color: var(--dp-brown);
     }
 
     .sim-detail-panel {
         max-width: 1180px;
         margin: 0 auto;
+        background: transparent;
     }
 
     .sim-detail-breadcrumb {
@@ -37,7 +55,7 @@
         justify-content: space-between;
         gap: 16px;
         margin-bottom: 14px;
-        color: #5d564f;
+        color: var(--dp-taupe);
         font-size: 12px;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -45,7 +63,7 @@
 
     .sim-detail-breadcrumb .left {
         font-weight: 700;
-        color: #665e59;
+        color: var(--dp-brown);
     }
 
     .sim-detail-header {
@@ -62,14 +80,14 @@
         line-height: 1.08;
         letter-spacing: -0.04em;
         font-weight: 800;
-        color: #2d2927;
+        color: var(--dp-brown-deep);
         font-family: Georgia, 'Times New Roman', serif;
     }
 
     .sim-detail-code {
         margin-top: 8px;
         font-size: 14px;
-        color: #675f5b;
+        color: var(--dp-taupe);
         display: flex;
         align-items: center;
         gap: 10px;
@@ -78,18 +96,23 @@
 
     .sim-detail-code strong {
         font-weight: 700;
-        color: #2c2725;
+        color: var(--dp-brown);
     }
 
     .sim-detail-status-btn {
-        border: 1px solid #d7cab8;
-        background: rgba(255,255,255,0.06);
-        color: #403930;
+        border: 1px solid var(--dp-border);
+        background: var(--dp-offwhite);
+        color: var(--dp-brown);
         border-radius: 9px;
         padding: 10px 16px;
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .sim-detail-status-btn:hover {
+        background: var(--dp-beige);
     }
 
     .sim-detail-summary {
@@ -97,8 +120,8 @@
         grid-template-columns: repeat(4, minmax(180px, 1fr));
         gap: 16px;
         margin-bottom: 20px;
-        background: #f3efe9;
-        border: 1px solid #d9d0c5;
+        background: #ffffff;
+        border: 1px solid rgba(74, 61, 54, 0.18);
         border-radius: 16px;
         padding: 18px 20px;
     }
@@ -111,7 +134,7 @@
         font-size: 11px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #7e756d;
+        color: var(--dp-taupe);
         margin-bottom: 8px;
         font-weight: 700;
     }
@@ -122,17 +145,17 @@
         justify-content: center;
         padding: 4px 10px;
         border-radius: 999px;
-        background: #ebf8ee;
-        color: #2d7a4f;
+        background: var(--dp-green-light);
+        color: var(--dp-green);
         font-weight: 700;
         font-size: 12px;
-        border: 1px solid #cbe7d0;
+        border: 1px solid var(--dp-green-pale);
     }
 
     .sim-detail-value {
         font-size: 16px;
         font-weight: 700;
-        color: #2d2927;
+        color: var(--dp-brown-deep);
     }
 
     .sim-detail-progress {
@@ -145,7 +168,7 @@
     .sim-detail-progress-bar {
         flex: 1;
         height: 10px;
-        background: #e3dace;
+        background: var(--dp-beige);
         border-radius: 999px;
         overflow: hidden;
     }
@@ -153,8 +176,8 @@
     .sim-detail-progress-bar span {
         display: block;
         height: 100%;
-        width: {{ $milestone }}%;
-        background: #3f3936;
+        width: 40%; /* <--- UBAH INI JIKA MAU DINAMIS: {{ $milestone ?? 40 }}% */
+        background: var(--dp-green); /* Hijau elegan */
         border-radius: 999px;
     }
 
@@ -162,7 +185,7 @@
         display: flex;
         align-items: center;
         gap: 20px;
-        border-bottom: 1px solid #d3c8b7;
+        border-bottom: 1px solid var(--dp-border-light);
         margin-bottom: 24px;
     }
 
@@ -170,7 +193,7 @@
         padding: 14px 8px 12px;
         border: none;
         background: transparent;
-        color: #6d6662;
+        color: var(--dp-taupe);
         font-weight: 600;
         cursor: pointer;
         position: relative;
@@ -178,7 +201,7 @@
     }
 
     .sim-detail-tab.active {
-        color: #2d2927;
+        color: var(--dp-brown-deep);
         font-weight: 700;
     }
 
@@ -189,7 +212,7 @@
         right: 0;
         bottom: -1px;
         height: 2px;
-        background: #2d2927;
+        background: var(--dp-brown-deep);
         border-radius: 2px;
     }
 
@@ -207,8 +230,8 @@
     }
 
     .sim-detail-card {
-        background: #f7f3ee;
-        border: 1px solid #d9d0c3;
+        background: #ffffff;
+        border: 1px solid rgba(74, 61, 54, 0.18);
         border-radius: 16px;
         padding: 20px 22px 18px;
     }
@@ -217,7 +240,7 @@
         font-size: 12px;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: #7a706a;
+        color: var(--dp-taupe);
         margin-bottom: 16px;
         font-weight: 700;
     }
@@ -232,14 +255,14 @@
         font-size: 31px;
         line-height: 1.2;
         font-weight: 800;
-        color: #2d2927;
+        color: var(--dp-brown-deep);
         margin-bottom: 14px;
     }
 
     .sim-detail-copy {
         font-size: 14px;
         line-height: 1.7;
-        color: #4f4945;
+        color: var(--dp-brown);
     }
 
     .sim-detail-subitem {
@@ -251,8 +274,8 @@
     }
 
     .sim-detail-side-box {
-        background: #f7f3ee;
-        border: 1px solid #d9d0c3;
+        background: #ffffff;
+        border: 1px solid rgba(74, 61, 54, 0.18);
         border-radius: 16px;
         padding: 20px 20px 18px;
     }
@@ -261,7 +284,7 @@
         font-size: 34px;
         line-height: 1.2;
         font-weight: 800;
-        color: #2a2827;
+        color: var(--dp-brown-deep);
         margin-bottom: 10px;
     }
 
@@ -269,8 +292,8 @@
         width: 42px;
         height: 42px;
         border-radius: 50%;
-        background: #2b2827;
-        color: #fff;
+        background: var(--dp-brown-deep);
+        color: var(--dp-offwhite);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -289,12 +312,12 @@
     .sim-detail-dosen-name {
         font-size: 18px;
         font-weight: 800;
-        color: #2d2827;
+        color: var(--dp-brown-deep);
     }
 
     .sim-detail-dosen-nip {
         font-size: 12px;
-        color: #5c5652;
+        color: var(--dp-taupe);
     }
 
     .sim-detail-tab-panel {
@@ -306,8 +329,8 @@
     }
 
     .sim-detail-member-box {
-        background: #f7f3ee;
-        border: 1px solid #d9d0c3;
+        background: #ffffff;
+        border: 1px solid rgba(74, 61, 54, 0.18);
         border-radius: 16px;
         padding: 18px 20px 16px;
     }
@@ -323,49 +346,56 @@
     .sim-detail-member-title {
         font-size: 18px;
         font-weight: 800;
-        color: #2f2a28;
+        color: var(--dp-brown-deep);
         margin: 0;
         font-family: Georgia, 'Times New Roman', serif;
     }
 
     .sim-detail-add-btn {
-        border: 1px solid #d7cab8;
-        background: rgba(255,255,255,0.2);
-        color: #403930;
+        border: 1px solid var(--dp-border);
+        background: var(--dp-green);
+        color: var(--dp-offwhite);
         border-radius: 9px;
         padding: 8px 14px;
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .sim-detail-add-btn:hover {
+        background: var(--dp-green-pale);
+        color: var(--dp-green);
     }
 
     .sim-detail-table-wrap {
         overflow: hidden;
-        border: 1px solid #d9d0c3;
-        border-radius: 14px;
+        border: 1px solid transparent;
+        border-radius: 0;
+        background: transparent;
     }
 
     .sim-detail-table {
         width: 100%;
         border-collapse: collapse;
-        background: #f7f3ee;
+        background: transparent;
     }
 
     .sim-detail-table thead th {
-        background: #e5dfd6;
-        color: #615a55;
+        background: var(--dp-ivory);
+        color: var(--dp-taupe);
         text-transform: uppercase;
         letter-spacing: 0.08em;
         font-size: 11px;
         text-align: left;
         padding: 13px 14px;
-        border-bottom: 1px solid #d7cbb9;
+        border-bottom: 1px solid var(--dp-border);
     }
 
     .sim-detail-table tbody td {
         padding: 14px;
-        border-bottom: 1px solid #e3d8ca;
-        color: #2d2827;
+        border-bottom: 1px solid var(--dp-border-light);
+        color: var(--dp-brown);
         font-size: 14px;
         vertical-align: middle;
     }
@@ -375,8 +405,8 @@
     }
 
     .sim-detail-milestone-box {
-        background: #f7f3ee;
-        border: 1px solid #d9d0c3;
+        background: #ffffff;
+        border: 1px solid rgba(74, 61, 54, 0.18);
         border-radius: 16px;
         padding: 18px 20px 16px;
     }
@@ -393,7 +423,7 @@
         margin: 0;
         font-size: 18px;
         font-weight: 800;
-        color: #2d2927;
+        color: var(--dp-brown-deep);
         font-family: Georgia, 'Times New Roman', serif;
     }
 
@@ -402,7 +432,7 @@
         align-items: center;
         gap: 12px;
         font-size: 12px;
-        color: #625d59;
+        color: var(--dp-taupe);
         white-space: nowrap;
     }
 
@@ -418,14 +448,14 @@
         gap: 12px;
         margin-bottom: 10px;
         font-weight: 800;
-        color: #2d2927;
+        color: var(--dp-brown-deep);
         font-size: 16px;
     }
 
     .sim-detail-milestone-progress-bar {
         width: 100%;
         height: 10px;
-        background: #e4dccc;
+        background: var(--dp-beige);
         border-radius: 999px;
         overflow: hidden;
         position: relative;
@@ -435,38 +465,39 @@
         display: block;
         height: 100%;
         width: 60%;
-        background: #7a695d;
+        background: var(--dp-ochre); /* Warna ochre/gold untuk aksen milestone */
         border-radius: 999px;
     }
 
     .sim-detail-milestone-table-wrap {
         overflow: hidden;
-        border: 1px solid #d9d0c3;
-        border-radius: 14px;
+        border: 1px solid transparent;
+        border-radius: 0;
         margin-top: 14px;
+        background: transparent;
     }
 
     .sim-detail-milestone-table {
         width: 100%;
         border-collapse: collapse;
-        background: #f7f3ee;
+        background: transparent;
     }
 
     .sim-detail-milestone-table thead th {
-        background: #e5dfd6;
-        color: #615a55;
+        background: var(--dp-ivory);
+        color: var(--dp-taupe);
         text-transform: uppercase;
         letter-spacing: 0.08em;
         font-size: 11px;
         text-align: left;
         padding: 13px 14px;
-        border-bottom: 1px solid #d7cbb9;
+        border-bottom: 1px solid var(--dp-border);
     }
 
     .sim-detail-milestone-table tbody td {
         padding: 14px;
-        border-bottom: 1px solid #e3d8ca;
-        color: #2d2827;
+        border-bottom: 1px solid var(--dp-border-light);
+        color: var(--dp-brown);
         font-size: 14px;
         vertical-align: middle;
     }
@@ -483,16 +514,15 @@
         border-radius: 999px;
         font-size: 11px;
         font-weight: 700;
-        border: 1px solid #d7cab8;
-        background: #eef3ec;
-        color: #317a4d;
-        border-color: #cfe3d1;
+        border: 1px solid var(--dp-green-light);
+        background: var(--dp-green-pale);
+        color: var(--dp-green);
     }
 
     .sim-detail-status-chip--pending {
-        background: #f8efe4;
-        color: #ad7231;
-        border-color: #e8d0a4;
+        background: #FBF4E6;
+        color: var(--dp-ochre);
+        border-color: var(--dp-gold);
     }
 
     .sim-detail-role {
@@ -503,21 +533,21 @@
         border-radius: 999px;
         font-size: 11px;
         font-weight: 700;
-        border: 1px solid #d7cab8;
-        background: rgba(255,255,255,0.3);
-        color: #564f4a;
+        border: 1px solid var(--dp-border);
+        background: var(--dp-beige);
+        color: var(--dp-brown);
     }
 
     .sim-detail-role.ketua {
-        background: #f2e6d3;
-        color: #6e5328;
-        border-color: #e2c998;
+        background: var(--dp-green-pale);
+        color: var(--dp-green);
+        border-color: var(--dp-green-light);
     }
 
     .sim-detail-role.anggota {
-        background: #f0f0eb;
-        color: #5d574f;
-        border-color: #d7d0c8;
+        background: var(--dp-ivory);
+        color: var(--dp-taupe);
+        border-color: var(--dp-border-light);
     }
 
     .sim-detail-actions {
@@ -529,16 +559,22 @@
     }
 
     .sim-detail-action-link {
-        color: #483f3b;
+        color: var(--dp-ochre); 
         text-decoration: none;
         font-size: 12px;
         font-weight: 700;
     }
 
-    .sim-status-modal-backdrop {
+    .sim-detail-action-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Modal Styles */
+    .sim-status-modal-backdrop, .sim-anggota-modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(33, 25, 21, 0.28);
+        background: rgba(45, 38, 33, 0.6); /* Overlay coklat transparan */
+        backdrop-filter: blur(3px);
         display: none;
         align-items: center;
         justify-content: center;
@@ -546,52 +582,52 @@
         padding: 20px;
     }
 
-    .sim-status-modal-backdrop.open {
+    .sim-status-modal-backdrop.open, .sim-anggota-modal-backdrop.open {
         display: flex;
     }
 
-    .sim-status-modal {
+    .sim-status-modal, .sim-anggota-modal {
         width: min(620px, calc(100vw - 40px));
-        background: #f4efe9;
-        border: 1px solid #d8cbb9;
+        background: var(--dp-ivory);
+        border: 1px solid var(--dp-border);
         border-radius: 14px;
-        box-shadow: 0 24px 60px rgba(36, 30, 27, 0.12);
+        box-shadow: 0 20px 40px rgba(38, 30, 25, 0.2);
         overflow: hidden;
     }
 
-    .sim-status-modal-header {
+    .sim-status-modal-header, .sim-anggota-modal-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
         padding: 18px 20px 14px;
-        border-bottom: 1px solid #ddd0c1;
+        border-bottom: 1px solid var(--dp-border-light);
     }
 
-    .sim-status-modal-title {
+    .sim-status-modal-title, .sim-anggota-modal-title {
         margin: 0;
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 800;
-        color: #2d2927;
+        color: var(--dp-brown-deep);
         font-family: Georgia, 'Times New Roman', serif;
     }
 
-    .sim-status-modal-close {
+    .sim-status-modal-close, .sim-anggota-modal-close {
         border: none;
         background: transparent;
-        color: #544d49;
+        color: var(--dp-taupe);
         font-size: 28px;
         line-height: 1;
         cursor: pointer;
     }
 
-    .sim-status-modal-body {
+    .sim-status-modal-body, .sim-anggota-modal-body {
         padding: 18px 20px 10px;
     }
 
-    .sim-status-modal-panel {
-        background: rgba(255,255,255,0.2);
-        border: 1px solid #d8cbb9;
+    .sim-status-modal-panel, .sim-anggota-panel {
+        background: var(--dp-offwhite);
+        border: 1px solid var(--dp-border-light);
         border-radius: 12px;
         padding: 14px;
         margin-bottom: 18px;
@@ -604,18 +640,18 @@
         align-items: stretch;
     }
 
-    .sim-status-modal-field {
+    .sim-status-modal-field, .sim-anggota-field {
         display: flex;
         flex-direction: column;
         gap: 6px;
         min-width: 0;
     }
 
-    .sim-status-modal-label {
+    .sim-status-modal-label, .sim-anggota-label {
         font-size: 11px;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #69615d;
+        color: var(--dp-taupe);
         font-weight: 700;
     }
 
@@ -626,52 +662,43 @@
         justify-content: flex-start;
         padding: 8px 12px;
         border-radius: 8px;
-        border: 1px solid #d9cab6;
-        background: rgba(255,255,255,0.35);
+        border: 1px solid var(--dp-border);
+        background: var(--dp-offwhite);
         font-size: 14px;
         font-weight: 700;
-        color: #2d2927;
-        white-space: normal;
-        overflow-wrap: anywhere;
-        min-width: 0;
-        width: 100%;
+        color: var(--dp-brown-deep);
     }
 
-    .sim-status-select {
+    .sim-status-select, .sim-anggota-select, .sim-anggota-input {
         width: 100%;
-        border: 1px solid #d8cbb9;
+        border: 1px solid var(--dp-border);
         border-radius: 8px;
-        background: rgba(255,255,255,0.35);
-        color: #2d2927;
+        background: var(--dp-offwhite);
+        color: var(--dp-brown-deep);
         padding: 10px 12px;
         font-size: 14px;
         box-sizing: border-box;
-        appearance: none;
-        background-image: linear-gradient(45deg, transparent 50%, #4a4039 50%), linear-gradient(135deg, #4a4039 50%, transparent 50%);
-        background-position: calc(100% - 16px) calc(50% - 2px), calc(100% - 11px) calc(50% - 2px);
-        background-size: 5px 5px, 5px 5px;
-        background-repeat: no-repeat;
     }
 
     .sim-status-note {
         margin-top: 4px;
         padding: 12px 14px;
-        background: #f7e7d7;
-        border: 1px solid #e7c6a1;
+        background: var(--dp-green-pale);
+        border: 1px solid var(--dp-green-light);
         border-radius: 10px;
-        color: #7a562c;
+        color: var(--dp-green);
         font-size: 13px;
         line-height: 1.5;
     }
 
-    .sim-status-modal-footer {
+    .sim-status-modal-footer, .sim-anggota-footer {
         display: flex;
         justify-content: flex-end;
         gap: 12px;
         padding: 14px 20px 18px;
     }
 
-    .sim-status-modal-btn {
+    .sim-status-modal-btn, .sim-anggota-btn {
         border-radius: 9px;
         padding: 10px 18px;
         font-size: 14px;
@@ -679,78 +706,16 @@
         cursor: pointer;
     }
 
-    .sim-status-modal-btn--secondary {
+    .sim-status-modal-btn--secondary, .sim-anggota-btn--secondary {
         background: transparent;
-        border: 1px solid #d8cbb9;
-        color: #413a36;
+        border: 1px solid var(--dp-border);
+        color: var(--dp-brown);
     }
 
-    .sim-status-modal-btn--primary {
-        background: #3d312d;
-        border: 1px solid #3d312d;
-        color: #fff;
-    }
-
-    .sim-anggota-modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(33, 25, 21, 0.28);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 999;
-        padding: 20px;
-    }
-
-    .sim-anggota-modal-backdrop.open {
-        display: flex;
-    }
-
-    .sim-anggota-modal {
-        width: min(760px, calc(100vw - 40px));
-        background: #f4f0ea;
-        border: 1px solid #d8cbb9;
-        border-radius: 14px;
-        box-shadow: 0 24px 60px rgba(36, 30, 27, 0.12);
-        overflow: hidden;
-    }
-
-    .sim-anggota-modal-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 18px 20px 12px;
-        border-bottom: 1px solid #ddd1c1;
-    }
-
-    .sim-anggota-modal-title {
-        font-size: 22px;
-        font-weight: 800;
-        color: #2d2927;
-        font-family: Georgia, 'Times New Roman', serif;
-        margin: 0;
-    }
-
-    .sim-anggota-modal-close {
-        border: none;
-        background: transparent;
-        color: #544d49;
-        font-size: 28px;
-        line-height: 1;
-        cursor: pointer;
-    }
-
-    .sim-anggota-modal-body {
-        padding: 18px 20px 20px;
-    }
-
-    .sim-anggota-panel {
-        background: rgba(255,255,255,0.2);
-        border: 1px solid #d8cbb9;
-        border-radius: 12px;
-        padding: 12px 14px;
-        margin-bottom: 16px;
+    .sim-status-modal-btn--primary, .sim-anggota-btn--primary {
+        background: var(--dp-green);
+        border: 1px solid var(--dp-green);
+        color: var(--dp-offwhite);
     }
 
     .sim-anggota-row {
@@ -759,63 +724,11 @@
         gap: 14px 18px;
     }
 
-    .sim-anggota-field {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .sim-anggota-label {
-        font-size: 11px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #6e665f;
-        font-weight: 700;
-    }
-
-    .sim-anggota-input,
-    .sim-anggota-select {
-        width: 100%;
-        border: 1px solid #d8cbb9;
-        border-radius: 8px;
-        background: rgba(255,255,255,0.4);
-        color: #2d2927;
-        padding: 10px 12px;
-        font-size: 14px;
-        box-sizing: border-box;
-    }
-
-    .sim-anggota-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-        margin-top: 18px;
-    }
-
-    .sim-anggota-btn {
-        border-radius: 9px;
-        padding: 10px 18px;
-        font-size: 14px;
-        font-weight: 700;
-        cursor: pointer;
-    }
-
-    .sim-anggota-btn--secondary {
-        background: transparent;
-        border: 1px solid #d8cbb9;
-        color: #403930;
-    }
-
-    .sim-anggota-btn--primary {
-        background: #3d312d;
-        border: 1px solid #3d312d;
-        color: white;
-    }
-
     @media (max-width: 980px) {
         .sim-detail-summary,
         .sim-detail-project-grid,
-        .sim-detail-content {
+        .sim-detail-content,
+        .sim-anggota-row {
             grid-template-columns: 1fr;
         }
     }
