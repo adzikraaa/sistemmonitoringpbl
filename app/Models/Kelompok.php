@@ -18,6 +18,7 @@ class Kelompok extends Model
         'kelas_id',
         'periode_id',
         'jadwal_bimbingan',
+        'status',
         'tanggal_dibuat',
     ];
 
