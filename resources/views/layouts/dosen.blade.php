@@ -102,7 +102,7 @@
 
                 {{-- Kelompok --}}
                 <li>
-                    <a href="{{ route('dosen.kelompok') }}"
+                    <a href="{{ route('dosen.kelompok.index') }}"
                        class="sim-sidebar__menu-item {{ request()->routeIs('dosen.kelompok*') ? 'sim-sidebar__menu-item--active' : '' }}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
