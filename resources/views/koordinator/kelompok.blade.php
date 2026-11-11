@@ -213,7 +213,7 @@
     .sim-kelompok-table {
         width: 100%;
         border-collapse: collapse;
-        table-layout: fixed;
+        table-layout: auto;
     }
 
     .sim-kelompok-table thead th {
@@ -233,6 +233,8 @@
         vertical-align: middle;
         font-size: 14px;
         color: #2b2927;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     .sim-kelompok-table tbody tr:hover {
@@ -240,7 +242,7 @@
     }
 
     .sim-kelompok-code {
-        font-size: 11px;
+        font-size: 10px;
         color: #726b65;
         letter-spacing: 0.06em;
         text-transform: uppercase;
@@ -249,7 +251,7 @@
     }
 
     .sim-kelompok-name {
-        font-size: 20px;
+        font-size: 17px;
         font-weight: 700;
         color: #2b2927;
         line-height: 1.3;
@@ -258,13 +260,13 @@
 
     .sim-kelompok-people {
         color: #4d4743;
-        font-size: 14px;
+        font-size: 13px;
         line-height: 1.5;
     }
 
     .sim-kelompok-dosen {
         color: #4d4743;
-        font-size: 14px;
+        font-size: 13px;
         line-height: 1.5;
         font-weight: 600;
     }
@@ -301,12 +303,14 @@
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
-        padding: 4px 10px;
+        padding: 6px 12px;
         border: 1px solid transparent;
-        line-height: 1.2;
-        white-space: nowrap;
+        line-height: 1.3;
+        white-space: normal;
+        min-width: 120px;
+        text-align: center;
     }
 
     .sim-kelompok-status.active {
@@ -330,10 +334,11 @@
     .sim-kelompok-actions {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: flex-start;
         gap: 8px;
-        white-space: nowrap;
-        flex-wrap: nowrap;
+        white-space: normal;
+        flex-wrap: wrap;
+        min-width: 0;
     }
 
     .sim-kelompok-detail {
@@ -343,6 +348,7 @@
         font-size: 12px;
         line-height: 1.2;
         padding: 5px 0;
+        white-space: nowrap;
     }
 
     .sim-kelompok-action-select {
@@ -362,11 +368,13 @@
         color: #4a4039;
         padding: 7px 10px;
         border-radius: 8px;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
         cursor: pointer;
-        min-width: 92px;
-        height: 30px;
+        min-width: 96px;
+        height: auto;
+        line-height: 1.4;
+        white-space: normal;
     }
 
     .sim-kelompok-status-backdrop {
@@ -385,7 +393,7 @@
     }
 
     .sim-kelompok-status-modal {
-        width: min(620px, calc(100vw - 40px));
+        width: min(760px, calc(100vw - 40px));
         background: #f4efe9;
         border: 1px solid #d9cab6;
         border-radius: 14px;
@@ -433,7 +441,7 @@
 
     .sim-kelompok-status-row {
         display: grid;
-        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.2fr);
         gap: 14px 18px;
         align-items: stretch;
     }
@@ -457,7 +465,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: flex-start;
-        min-height: 38px;
+        min-height: 46px;
         padding: 8px 12px;
         border-radius: 8px;
         border: 1px solid #d9cab6;
@@ -467,17 +475,19 @@
         color: #2d2927;
         white-space: normal;
         overflow-wrap: anywhere;
+        word-break: break-word;
         min-width: 0;
         width: 100%;
     }
 
     .sim-kelompok-status-select {
         width: 100%;
+        min-height: 46px;
         border: 1px solid #d8cbb9;
         border-radius: 8px;
         background: rgba(255,255,255,0.35);
         color: #2d2927;
-        padding: 10px 12px;
+        padding: 10px 42px 10px 12px;
         font-size: 14px;
         box-sizing: border-box;
         appearance: none;
@@ -603,12 +613,12 @@
             <table class="sim-kelompok-table">
                 <thead>
                     <tr>
-                        <th style="width: 32%;">Kelompok / Proyek</th>
-                        <th style="width: 17%;">Anggota</th>
-                        <th style="width: 18%;">Dosen Pembimbing</th>
-                        <th style="width: 15%;">Milestone</th>
-                        <th style="width: 10%;">Status</th>
-                        <th style="width: 12%;">Tindakan</th>
+                        <th style="width: 24%;">Kelompok / Proyek</th>
+                        <th style="width: 16%;">Anggota</th>
+                        <th style="width: 17%;">Dosen Pembimbing</th>
+                        <th style="width: 13%;">Milestone</th>
+                        <th style="width: 17%;">Status</th>
+                        <th style="width: 13%;">Tindakan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -651,6 +661,11 @@
                                 <div class="sim-kelompok-actions">
                                     <a class="sim-kelompok-detail" href="{{ route('koordinator.kelompok.show', $item->id) }}">Detail →</a>
                                     <button type="button" class="sim-kelompok-action-btn" data-status-toggle="open" data-kelompok-id="{{ $item->id }}" data-kelompok-name="{{ $item->nama_kelompok }}" data-current-status="{{ $status }}" aria-label="Ubah status {{ $item->nama_kelompok }}">Ubah Status</button>
+                                    <form method="POST" action="{{ route('koordinator.kelompok.destroy', $item->id) }}" onsubmit="return confirm('Hapus kelompok {{ addslashes($item->nama_kelompok) }}?')" style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="sim-kelompok-action-btn" style="background:#fff2f2; color:#a33b2c; border-color:#e7b1a8;">Hapus</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
