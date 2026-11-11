@@ -535,6 +535,162 @@
         font-weight: 700;
     }
 
+    .sim-status-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(33, 25, 21, 0.28);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        padding: 20px;
+    }
+
+    .sim-status-modal-backdrop.open {
+        display: flex;
+    }
+
+    .sim-status-modal {
+        width: min(620px, calc(100vw - 40px));
+        background: #f4efe9;
+        border: 1px solid #d8cbb9;
+        border-radius: 14px;
+        box-shadow: 0 24px 60px rgba(36, 30, 27, 0.12);
+        overflow: hidden;
+    }
+
+    .sim-status-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 20px 14px;
+        border-bottom: 1px solid #ddd0c1;
+    }
+
+    .sim-status-modal-title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 800;
+        color: #2d2927;
+        font-family: Georgia, 'Times New Roman', serif;
+    }
+
+    .sim-status-modal-close {
+        border: none;
+        background: transparent;
+        color: #544d49;
+        font-size: 28px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .sim-status-modal-body {
+        padding: 18px 20px 10px;
+    }
+
+    .sim-status-modal-panel {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid #d8cbb9;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 18px;
+    }
+
+    .sim-status-modal-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        gap: 14px 18px;
+        align-items: stretch;
+    }
+
+    .sim-status-modal-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .sim-status-modal-label {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #69615d;
+        font-weight: 700;
+    }
+
+    .sim-status-badge-box {
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #d9cab6;
+        background: rgba(255,255,255,0.35);
+        font-size: 14px;
+        font-weight: 700;
+        color: #2d2927;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .sim-status-select {
+        width: 100%;
+        border: 1px solid #d8cbb9;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.35);
+        color: #2d2927;
+        padding: 10px 12px;
+        font-size: 14px;
+        box-sizing: border-box;
+        appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, #4a4039 50%), linear-gradient(135deg, #4a4039 50%, transparent 50%);
+        background-position: calc(100% - 16px) calc(50% - 2px), calc(100% - 11px) calc(50% - 2px);
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+    }
+
+    .sim-status-note {
+        margin-top: 4px;
+        padding: 12px 14px;
+        background: #f7e7d7;
+        border: 1px solid #e7c6a1;
+        border-radius: 10px;
+        color: #7a562c;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .sim-status-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 14px 20px 18px;
+    }
+
+    .sim-status-modal-btn {
+        border-radius: 9px;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .sim-status-modal-btn--secondary {
+        background: transparent;
+        border: 1px solid #d8cbb9;
+        color: #413a36;
+    }
+
+    .sim-status-modal-btn--primary {
+        background: #3d312d;
+        border: 1px solid #3d312d;
+        color: #fff;
+    }
+
     .sim-anggota-modal-backdrop {
         position: fixed;
         inset: 0;
@@ -681,7 +837,7 @@
                     <span>{{ $kelas }}</span>
                 </div>
             </div>
-            <button type="button" class="sim-detail-status-btn">Ubah Status</button>
+            <button type="button" class="sim-detail-status-btn" onclick="openStatusModal()">Ubah Status</button>
         </div>
 
         <div class="sim-detail-summary">
@@ -953,7 +1109,76 @@
     </div>
 </div>
 
+<div id="statusModal" class="sim-status-modal-backdrop" aria-hidden="true">
+    <div class="sim-status-modal" role="dialog" aria-modal="true" aria-labelledby="statusModalTitle">
+        <div class="sim-status-modal-header">
+            <h2 id="statusModalTitle" class="sim-status-modal-title">Konfirmasi Ubah Status</h2>
+            <button type="button" class="sim-status-modal-close" onclick="closeStatusModal()" aria-label="Tutup">×</button>
+        </div>
+
+        <div class="sim-status-modal-body">
+            <div class="sim-status-modal-panel">
+                <div class="sim-status-modal-grid">
+                    <div class="sim-status-modal-field">
+                        <div class="sim-status-modal-label">Kelompok</div>
+                        <div class="sim-status-badge-box">{{ $projectName }}</div>
+                    </div>
+                    <div class="sim-status-modal-field">
+                        <div class="sim-status-modal-label">Status saat ini</div>
+                        <div class="sim-status-badge-box" id="statusCurrentBadge">{{ $statusKelompok }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sim-status-modal-field">
+                <label for="statusSelect" class="sim-status-modal-label">Ubah status menjadi</label>
+                <select id="statusSelect" class="sim-status-select">
+                    <option value="Aktif" {{ $statusKelompok === 'Aktif' ? 'selected' : '' }}>Aktif</option>
+                    <option value="Draft" {{ $statusKelompok === 'Draft' ? 'selected' : '' }}>Draft</option>
+                    <option value="Ditangguhkan" {{ $statusKelompok === 'Ditangguhkan' ? 'selected' : '' }}>Ditangguhkan</option>
+                </select>
+            </div>
+
+            <div class="sim-status-note">
+                Periksa kembali perubahan status sebelum menyimpannya. Status yang diubah akan langsung terlihat di daftar kelompok dan halaman detail.
+            </div>
+        </div>
+
+        <div class="sim-status-modal-footer">
+            <button type="button" class="sim-status-modal-btn sim-status-modal-btn--secondary" onclick="closeStatusModal()">Batal</button>
+            <button type="button" class="sim-status-modal-btn sim-status-modal-btn--primary" onclick="applyStatusChange()">Ubah Status</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    function openStatusModal() {
+        const modal = document.getElementById('statusModal');
+        if (modal) modal.classList.add('open');
+    }
+
+    function closeStatusModal() {
+        const modal = document.getElementById('statusModal');
+        if (modal) modal.classList.remove('open');
+    }
+
+    function applyStatusChange() {
+        const select = document.getElementById('statusSelect');
+        const badge = document.getElementById('statusCurrentBadge');
+        const newStatus = select ? select.value : 'Aktif';
+
+        if (badge) {
+            badge.textContent = newStatus;
+        }
+
+        const detailBadge = document.querySelector('.sim-detail-badge');
+        if (detailBadge) {
+            detailBadge.textContent = newStatus;
+        }
+
+        closeStatusModal();
+    }
+
     function openAnggotaModal() {
         const modal = document.getElementById('anggotaModal');
         if (modal) {
@@ -995,6 +1220,15 @@
             modalBackdrop.addEventListener('click', function (event) {
                 if (event.target === modalBackdrop) {
                     closeAnggotaModal();
+                }
+            });
+        }
+
+        const statusBackdrop = document.getElementById('statusModal');
+        if (statusBackdrop) {
+            statusBackdrop.addEventListener('click', function (event) {
+                if (event.target === statusBackdrop) {
+                    closeStatusModal();
                 }
             });
         }
