@@ -10,8 +10,10 @@ Route::prefix('dosen')->name('dosen.')->group(function () {
 
                 //Halaman Daftar Kelompok Bimbingan Dosen
                 Route::get('/kelompok', [KelompokController::class, 'index'])->name('kelompok.index');
+                Route::post('/kelompok/pengingat', [KelompokController::class, 'kirimPengingat'])->name('kelompok.pengingat');
                 //Halaman Detail Kelompok Bimbingan
                 Route::get('/kelompok/{id}', [KelompokController::class, 'show'])->name('kelompok.show');
+
                 Route::get('/laporan-aktivitas', [DashboardController::class, 'laporanAktivitas'])->name('laporan-aktivitas');
         });
 });

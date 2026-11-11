@@ -219,5 +219,26 @@ class KelompokController extends Controller
             compact('kelompok')
         ));
     }
+
+    /**
+     * Mengirim pengingat bimbingan ke kelompok mahasiswa (Standar Laravel Form + Flash Session).
+     */
+    public function kirimPengingat(Request $request)
+    {
+        $validated = $request->validate([
+            'kelompok_nama' => 'required|string|max:100',
+            'pesan'         => 'required|string|max:1000',
+        ], [
+            'kelompok_nama.required' => 'Kelompok tujuan wajib dipilih.',
+            'pesan.required'         => 'Pesan pengingat tidak boleh kosong.',
+        ]);
+
+        // TODO (Integrasi DB): Simpan ke tabel notifikasi_mahasiswa setelah tabel notifikasi siap
+        // Notifikasi::create([...]);
+
+        return redirect()
+            ->route('dosen.kelompok.index')
+            ->with('success', 'Pengingat bimbingan berhasil dikirim ke ' . $validated['kelompok_nama'] . '!');
+    }
     
 }
