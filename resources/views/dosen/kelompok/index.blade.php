@@ -59,7 +59,7 @@
     </div>
 
     <!-- Filter & Search Bar -->
-    <form method="GET" action="{{ route('dosen.kelompok.index') }}" class="mb-6">
+    <form method="GET" action="{{ route('dosen.kelompok') }}" class="mb-6">
         <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             <!-- Input Search -->
             <div class="relative w-full md:w-1/2">
@@ -172,7 +172,7 @@
         @empty
             <div class="col-span-1 md:col-span-2 text-center py-12 bg-white rounded-2xl border border-dashed border-[#CFC7BC]">
                 <p class="text-[#7D746D] text-sm">Tidak ada kelompok bimbingan yang ditemukan.</p>
-                <a href="{{ route('dosen.kelompok.index') }}" class="inline-block mt-2 text-xs font-semibold text-[#2F5C4A] underline">
+                <a href="{{ route('dosen.kelompok') }}" class="inline-block mt-2 text-xs font-semibold text-[#2F5C4A] underline">
                     Tampilkan semua kelompok
                 </a>
             </div>

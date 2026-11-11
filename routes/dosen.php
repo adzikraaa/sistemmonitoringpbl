@@ -14,7 +14,7 @@ Route::prefix('dosen')->name('dosen.')->group(function () {
         Route::post('/pilih-kelas/select', [DashboardController::class, 'selectKelas'])->name('pilih-kelas.select');
 
         // Halaman Daftar Kelompok Bimbingan Dosen
-        Route::get('/kelompok', [KelompokController::class, 'index'])->name('kelompok.index');
+        Route::get('/kelompok', [KelompokController::class, 'index'])->name('kelompok');
         Route::post('/kelompok/pengingat', [KelompokController::class, 'kirimPengingat'])->name('kelompok.pengingat');
         // Halaman Detail Kelompok Bimbingan
         Route::get('/kelompok/{id}', [KelompokController::class, 'show'])->name('kelompok.show');
