@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -20,33 +19,32 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'role'       => 'required|in:mahasiswa,dosen,koordinator',
             'identifier' => 'required|string',
             'password'   => 'required',
         ]);
 
-        $role     = $request->role;
         $remember = $request->boolean('remember');
 
-        // ─── Login Mahasiswa via SIAKAD ────────────────────────────────────────
-        if ($role === 'mahasiswa') {
-            return $this->loginViaSiakad($request, $remember);
-        }
-
-        // ─── Login Dosen / Koordinator (lokal) ────────────────────────────────
-        $field = 'nidn';
-
-        if (Auth::guard($role)->attempt([
-            $field     => $request->identifier,
+        // ─── 1. Coba Koordinator (lokal) ──────────────────────────────────────
+        if (Auth::guard('koordinator')->attempt([
+            'nidn'     => $request->identifier,
             'password' => $request->password,
         ], $remember)) {
             $request->session()->regenerate();
-            return redirect()->route("{$role}.dashboard");
+            return redirect()->route('koordinator.dashboard');
         }
 
-        return back()
-            ->withInput($request->only('identifier', 'role'))
-            ->withErrors(['identifier' => 'NIDN atau password salah.']);
+        // ─── 2. Coba Dosen (lokal) ────────────────────────────────────────────
+        if (Auth::guard('dosen')->attempt([
+            'nidn'     => $request->identifier,
+            'password' => $request->password,
+        ], $remember)) {
+            $request->session()->regenerate();
+            return redirect()->route('dosen.pilih-semester');
+        }
+
+        // ─── 3. Coba Mahasiswa via SIAKAD ────────────────────────────────────
+        return $this->loginViaSiakad($request, $remember);
     }
 
     /**
@@ -78,7 +76,7 @@ class LoginController extends Controller
             $csrfToken = null;
             if (preg_match('/name=["\']csrf_token["\'][^>]*value=["\'](.*?)["\']/i', $getResponse->body(), $m)) {
                 $csrfToken = $m[1];
-            } elseif (preg_match('/value=["\'](.*?)["\']\s+name=["\']csrf_token["\']/i', $getResponse->body(), $m)) {
+            } elseif (preg_match('/value=["\'](.*?)["\']\\s+name=["\']csrf_token["\']/i', $getResponse->body(), $m)) {
                 $csrfToken = $m[1];
             }
 
@@ -117,14 +115,14 @@ class LoginController extends Controller
             if (!$response->successful() || ($data['output'] ?? '') !== 'ok') {
                 $siakadMsg = $data['output'] ?? 'Login gagal';
                 return back()
-                    ->withInput($request->only('identifier', 'role'))
-                    ->withErrors(['identifier' => 'SIAKAD: ' . $siakadMsg]);
+                    ->withInput($request->only('identifier'))
+                    ->withErrors(['identifier' => 'Username atau password salah. (' . $siakadMsg . ')']);
             }
         } catch (\Exception $e) {
             \Log::error('SIAKAD Login Error', ['message' => $e->getMessage()]);
             return back()
-                ->withInput($request->only('identifier', 'role'))
-                ->withErrors(['identifier' => 'Tidak dapat terhubung ke SIAKAD: ' . $e->getMessage()]);
+                ->withInput($request->only('identifier'))
+                ->withErrors(['identifier' => 'Username atau password salah.']);
         }
 
         // Cari mahasiswa di database lokal berdasarkan NIM
@@ -134,12 +132,18 @@ class LoginController extends Controller
             [
                 'nama'     => 'Mahasiswa ' . $nim, // sementara, bisa diupdate nanti
                 'email'    => $nim . '@student.polinema.ac.id',
-                'password' => bcrypt(\Str::random(32)), // password random (login via SIAKAD)
+                'password' => bcrypt(Str::random(32)), // password random (login via SIAKAD)
                 'kelas_id' => null,
             ]
         );
 
         // Login mahasiswa ke guard 'mahasiswa'
+        \Log::info('SIM-PBL Mahasiswa Login', [
+        'input_nim' => $nim,
+        'mahasiswa_id' => $mahasiswa->id,
+        'mahasiswa_nim' => $mahasiswa->nim,
+        'mahasiswa_nama' => $mahasiswa->nama,
+    ]);
         Auth::guard('mahasiswa')->login($mahasiswa, $remember);
         $request->session()->regenerate();
 

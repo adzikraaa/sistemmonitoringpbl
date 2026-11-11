@@ -24,7 +24,7 @@
 @section('content')
 
 {{-- ─── Page Header ───────────────────────────────────────────────────────── --}}
-<div class="sim-page-header">
+<div class="sim-page-header lb-page-header">
     <div class="sim-page-header__left">
         <p class="sim-page-header__eyebrow">CATATAN PROSES</p>
         <h1 class="sim-page-header__title">Logbook</h1>
@@ -41,7 +41,7 @@
 </div>
 
 {{-- ─── Content Wrap ───────────────────────────────────────────────────────── --}}
-<div class="sim-lb-wrap">
+<div class="sim-lb-wrap lb-page">
 
     {{-- Info bar --}}
     <div class="sim-lb-info-bar">
@@ -350,6 +350,88 @@
 <div id="sim-toast" class="sim-toast" role="alert" aria-live="polite"></div>
 
 @endsection
+
+@push('styles')
+<style>
+/* ── Logbook — responsive reinforcement (page-scoped, overrides app.css) ── */
+.lb-page-header { flex-wrap: wrap; }
+.lb-page-header .sim-page-header__desc { overflow-wrap: anywhere; }
+
+.lb-page,
+.lb-page .sim-lb-card,
+.lb-page .sim-lb-card__response > div { min-width: 0; }
+
+.lb-page .sim-lb-card__title,
+.lb-page .sim-lb-card__desc,
+.lb-page .sim-lb-card__week,
+.lb-page .sim-lb-card__date,
+.lb-page .sim-lb-card__detail-text,
+.lb-page .sim-lb-card__kendala,
+.lb-page .sim-lb-card__response-text,
+.lb-page .sim-lb-info-bar { overflow-wrap: anywhere; }
+
+.lb-page .sim-lb-info-bar { align-items: flex-start; }
+.lb-page .sim-lb-card__header { row-gap: 8px; }
+
+@media (max-width: 960px) {
+    .lb-page .sim-lb-layout { flex-direction: column; align-items: stretch; }
+    .lb-page .sim-lb-sidebar { width: 100%; position: static; top: auto; }
+}
+
+@media (max-width: 768px) {
+    .lb-page .sim-lb-card__detail-grid { grid-template-columns: minmax(0, 1fr); }
+    .lb-page .sim-lb-card__date { margin-left: 0; }
+    .lb-page .sim-lb-card__actions { margin-left: 0; flex-wrap: wrap; }
+    .lb-page .sim-lb-card__action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0 10px;
+    }
+    #btn-tambah-logbook,
+    .lb-page .sim-btn-primary,
+    .lb-page .sim-btn-secondary { min-height: 44px; }
+    .lb-page .sim-lb-card__progress-label,
+    .lb-page .sim-lb-card__detail-label,
+    .lb-page .sim-lb-card__response-label { font-size: 11px; }
+    #logbook-modal-overlay .sim-modal__eyebrow { font-size: 11px; }
+    #logbook-modal-overlay .sim-modal__close { width: 44px; height: 44px; }
+    .lb-page .sim-badge { white-space: nowrap; flex-shrink: 0; }
+}
+
+@media (max-width: 480px) {
+    #logbook-modal-overlay { padding: 16px; }
+    #logbook-modal-overlay .sim-modal {
+        width: 100%;
+        max-width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        border-radius: 16px;
+    }
+    #logbook-modal-overlay .sim-modal__header { padding: 20px 16px 0; }
+    #logbook-modal-overlay .sim-modal__form { padding: 16px; }
+    #logbook-modal-overlay .sim-modal__form .sim-form-input,
+    #logbook-modal-overlay .sim-modal__form .sim-form-textarea {
+        min-width: 0;
+        max-width: 100%;
+    }
+    #logbook-modal-overlay .sim-modal__footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 8px;
+    }
+    #logbook-modal-overlay .sim-modal__footer .sim-btn-primary,
+    #logbook-modal-overlay .sim-modal__footer .sim-btn-secondary {
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+    }
+    #sim-toast { left: 16px; right: 16px; max-width: none; }
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>

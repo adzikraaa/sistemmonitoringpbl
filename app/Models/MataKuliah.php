@@ -10,9 +10,11 @@ class MataKuliah extends Model
     protected $table = 'mata_kuliah';
 
     protected $fillable = [
+        'kode',
         'nama_matkul',
         'prodi',
         'sks',
+        'semester',
         'is_aktif',
     ];
 
@@ -20,6 +22,7 @@ class MataKuliah extends Model
     {
         return [
             'sks'      => 'integer',
+            'semester' => 'integer',
             'is_aktif' => 'boolean',
         ];
     }

@@ -11,7 +11,7 @@
 
 @section('content')
 {{-- Page Header --}}
-<div class="sim-page-header">
+<div class="sim-page-header prop-page-header">
     <div class="sim-page-header__left">
         <p class="sim-page-header__eyebrow">DOKUMEN PROYEK</p>
         <h1 class="sim-page-header__title">Proposal</h1>
@@ -26,7 +26,7 @@
 </div>
 
 {{-- Main Content Grid --}}
-<div class="sim-proposal-grid">
+<div class="sim-proposal-grid prop-page">
 
     {{-- LEFT: Proposal Card --}}
     <div class="sim-proposal-main">
@@ -196,6 +196,80 @@
 {{-- Toast Notification --}}
 <div id="sim-toast" class="sim-toast" role="alert" aria-live="polite"></div>
 @endsection
+
+@push('styles')
+<style>
+/* ── Proposal — responsive reinforcement (page-scoped, overrides app.css) ── */
+.prop-page-header { flex-wrap: wrap; }
+.prop-page-header .sim-page-header__desc { overflow-wrap: anywhere; }
+
+.prop-page,
+.prop-page .sim-proposal-main,
+.prop-page .sim-proposal-sidebar,
+.prop-page .sim-proposal-card { min-width: 0; }
+
+.prop-page .sim-proposal-card__title,
+.prop-page .sim-proposal-card__desc,
+.prop-page .sim-proposal-detail__text,
+.prop-page .sim-catatan__text,
+.prop-page .sim-timeline__event,
+.prop-page .sim-timeline__date,
+.prop-page .sim-proposal-attachment__name { overflow-wrap: anywhere; }
+
+.prop-page .sim-proposal-card__header { flex-wrap: wrap; row-gap: 8px; }
+.prop-page .sim-proposal-card__meta { flex-wrap: wrap; }
+.prop-page .sim-status-box > div { flex-wrap: wrap; gap: 0.5rem; }
+.prop-page .sim-proposal-attachment__name { min-width: 0; }
+.prop-page .sim-badge { white-space: nowrap; flex-shrink: 0; max-width: 100%; }
+
+@media (max-width: 1024px) {
+    .prop-page { grid-template-columns: minmax(0, 1fr) 240px; }
+}
+
+@media (max-width: 768px) {
+    .prop-page { grid-template-columns: minmax(0, 1fr); }
+    .prop-page .sim-proposal-detail { grid-template-columns: minmax(0, 1fr); }
+    #btn-ajukan-proposal,
+    .prop-page .sim-btn-primary,
+    .prop-page .sim-btn-secondary { min-height: 44px; }
+    .prop-page .sim-proposal-detail__label,
+    .prop-page .sim-catatan__label,
+    .prop-page .sim-timeline-card__title { font-size: 11px; }
+    #proposal-modal-overlay .sim-modal__eyebrow { font-size: 11px; }
+    #proposal-modal-overlay .sim-modal__close { width: 44px; height: 44px; }
+}
+
+@media (max-width: 480px) {
+    #proposal-modal-overlay { padding: 16px; }
+    #proposal-modal-overlay .sim-modal {
+        width: 100%;
+        max-width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        border-radius: 16px;
+    }
+    #proposal-modal-overlay .sim-modal__header { padding: 20px 16px 0; }
+    #proposal-modal-overlay .sim-modal__form { padding: 16px; }
+    #proposal-modal-overlay .sim-modal__form .sim-form-input,
+    #proposal-modal-overlay .sim-modal__form .sim-form-textarea {
+        min-width: 0;
+        max-width: 100%;
+    }
+    #proposal-modal-overlay .sim-modal__footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 8px;
+    }
+    #proposal-modal-overlay .sim-modal__footer .sim-btn-primary,
+    #proposal-modal-overlay .sim-modal__footer .sim-btn-secondary {
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+    }
+    #sim-toast { left: 16px; right: 16px; max-width: none; }
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MahasiswaController extends Controller
 {
@@ -12,10 +13,12 @@ class MahasiswaController extends Controller
      */
     private function sharedViewData(): array
     {
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+
         return [
-            'userName'  => 'Mochammad Tanggaq',
-            'userNim'   => '244107060105',
-            'userKelas' => 'SIB 3B',
+            'userName'  => $mahasiswa?->nama ?? 'Mahasiswa',
+            'userNim'   => $mahasiswa?->nim ?? '-',
+            'userKelas' => $mahasiswa?->kelas_id ?? '-',
             'userProdi' => 'Teknologi Informasi',
         ];
     }
@@ -143,193 +146,241 @@ class MahasiswaController extends Controller
         return view('mahasiswa.notifikasi', $this->sharedViewData());
     }
 
+    /** Halaman daftar Milestone per Mata Kuliah */
     public function milestone()
     {
         $milestones = [
             [
-                'id' => 'm1',
-                'kode' => 'M1',
-                'judul' => 'Inisiasi Proyek & Proposal',
-                'status' => 'Selesai',
-                'badge' => 'sim-badge--approved',
-                'tenggat' => '25 Apr 2026',
-                'deskripsi' => 'Pengajuan proposal, pemodelan lingkup masalah, dan persetujuan dosen pembimbing.',
-                'progress' => 100,
-                'catatan' => 'Proposal dan rumusan masalah disetujui dosen. Lanjutkan ke pemodelan UML dan wireframe.',
+                'id'    => 1,
+                'kode'  => 'M1',
+                'slug'  => 'pemrograman-web-lanjut',
+                'judul' => 'Pemrograman Web Lanjut',
+                'dosen' => 'Dian Hanifudin Subhi, S.Kom., M.Kom.',
+                'progress' => 45,
+                'status'   => 'Berjalan',
+                'badge'    => 'sim-badge--warning',
+                'tenggat'  => '30 Nov 2026',
+                'deskripsi' => 'Implementasi modul utama sistem dan integrasi API backend.',
+                'catatan'   => null,
                 'deliverables' => [
-                    [
-                        'id' => 'd1',
-                        'nama' => 'Draf Proposal Proyek',
-                        'status' => 'Disetujui',
-                        'file_name' => 'Draft_Proposal_PBL_v2.pdf',
-                        'file_url' => '#',
-                        'catatan' => 'Format dan isi sudah sesuai.',
-                    ],
-                    [
-                        'id' => 'd2',
-                        'nama' => 'Struktur WBS & Timeline Proyek',
-                        'status' => 'Disetujui',
-                        'file_name' => 'WBS_Timeline_Kelompok01.pdf',
-                        'file_url' => '#',
-                        'catatan' => 'Timeline realistis.',
-                    ],
-                    [
-                        'id' => 'd3',
-                        'nama' => 'Pembagian Peran Anggota Tim',
-                        'status' => 'Disetujui',
-                        'file_name' => 'Pembagian_Peran_Tim.pdf',
-                        'file_url' => '#',
-                        'catatan' => '',
-                    ],
+                    ['nama' => 'Laporan Perencanaan Sprint', 'status' => 'Disetujui'],
+                    ['nama' => 'ERD & Skema Database', 'status' => 'Disetujui'],
+                    ['nama' => 'Implementasi Autentikasi', 'status' => 'Perlu Revisi'],
+                    ['nama' => 'Modul Dashboard Mahasiswa', 'status' => 'Belum'],
                 ],
             ],
             [
-                'id' => 'm2',
-                'kode' => 'M2',
-                'judul' => 'Desain Arsitektur & Basis Data',
-                'status' => 'Berjalan',
-                'badge' => 'sim-badge--pending',
-                'tenggat' => '30 Mei 2026',
-                'deskripsi' => 'Perencanaan UI/UX Figma, skema relasi database (ERD), Use Case, dan inisiasi modul backend.',
-                'progress' => 50,
-                'catatan' => 'Modul dashboard dan skema ERD sudah terarah baik. Perbaiki kardinalitas relasi pada tabel evaluasi.',
+                'id'    => 2,
+                'kode'  => 'M2',
+                'slug'  => 'manajemen-proyek-sistem-informasi',
+                'judul' => 'Manajemen Proyek Sistem Informasi',
+                'dosen' => 'Ir. Rudy Ariyanto, S.T., M.Cs.',
+                'progress' => 30,
+                'status'   => 'Berjalan',
+                'badge'    => 'sim-badge--warning',
+                'tenggat'  => '15 Des 2026',
+                'deskripsi' => 'Penyusunan WBS, Gantt Chart, dan dokumentasi manajemen proyek.',
+                'catatan'   => 'Pastikan timeline realistis dan sesuai kapasitas tim.',
                 'deliverables' => [
-                    [
-                        'id' => 'd4',
-                        'nama' => 'Prototype High-Fidelity UI/UX Figma',
-                        'status' => 'Disetujui',
-                        'file_name' => 'Figma_Link_Export_v1.pdf',
-                        'file_url' => '#',
-                        'catatan' => 'Desain rapi dan konsisten.',
-                    ],
-                    [
-                        'id' => 'd5',
-                        'nama' => 'Diagram Use Case & Flowchart Sistem',
-                        'status' => 'Disetujui',
-                        'file_name' => 'Diagram_UseCase_Flowchart.pdf',
-                        'file_url' => '#',
-                        'catatan' => 'Aktor dan alur sesuai.',
-                    ],
-                    [
-                        'id' => 'd6',
-                        'nama' => 'ERD & Kamus Data Fisik (PostgreSQL)',
-                        'status' => 'Perlu Revisi',
-                        'file_name' => 'ERD_Physical_Model_v1.pdf',
-                        'file_url' => '#',
-                        'catatan' => 'Kardinalitas relasi antara tabel mahasiswa dan evaluasi perlu diperbaiki.',
-                    ],
-                    [
-                        'id' => 'd7',
-                        'nama' => 'Dokumen Spesifikasi Kebutuhan (SRS)',
-                        'status' => 'Belum Dimulai',
-                        'file_name' => '',
-                        'file_url' => '',
-                        'catatan' => 'Silakan unggah draf dokumen SRS awal.',
-                    ],
+                    ['nama' => 'WBS & Gantt Chart', 'status' => 'Disetujui'],
+                    ['nama' => 'Risk Register', 'status' => 'Belum'],
+                    ['nama' => 'Sprint Review Report', 'status' => 'Belum'],
                 ],
             ],
             [
-                'id' => 'm3',
-                'kode' => 'M3',
-                'judul' => 'Implementasi Modul & Fitur Inti',
-                'status' => 'Belum dimulai',
-                'badge' => 'sim-badge--draft',
-                'tenggat' => '10 Jun 2026',
-                'deskripsi' => 'Pengembangan controller, Blade views, middleware RBAC, dan integrasi fitur monitoring.',
+                'id'    => 3,
+                'kode'  => 'M3',
+                'slug'  => 'penjaminan-mutu-perangkat-lunak',
+                'judul' => 'Penjaminan Mutu Perangkat Lunak',
+                'dosen' => 'Usman Nurhasan, S.Kom., M.T.',
                 'progress' => 0,
-                'catatan' => '',
-                'deliverables' => [
-                    ['id' => 'd8', 'nama' => 'Modul Ruang Mahasiswa (Proposal & Milestone)', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
-                    ['id' => 'd9', 'nama' => 'Modul Ruang Dosen (Review & Assessment)', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
-                    ['id' => 'd10', 'nama' => 'Autentikasi & Middleware Multi-Role', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
+                'status'   => 'Belum dimulai',
+                'badge'    => 'sim-badge--default',
+                'tenggat'  => '10 Jan 2027',
+                'deskripsi' => 'Penyusunan test plan, test case, dan laporan hasil pengujian.',
+                'catatan'   => null,
+                'deliverables' => [],
+            ],
+        ];
+
+        $mataKuliahList = array_map(function ($item) {
+            return [
+                'id'       => $item['id'],
+                'kode'     => $item['kode'],
+                'slug'     => $item['slug'],
+                'nama'     => $item['judul'],
+                'dosen'    => $item['dosen'],
+                'progress' => $item['progress'],
+                'status'   => $item['status'],
+            ];
+        }, $milestones);
+
+        return view('mahasiswa.milestone', array_merge($this->sharedViewData(), [
+            'milestones'     => $milestones,
+            'mataKuliahList' => $mataKuliahList,
+        ]));
+    }
+
+    /** Halaman Level 2: Detail Milestone per Mata Kuliah */
+    public function milestoneDetail($id)
+    {
+        $slug = $id;
+
+        $matkulNames = [
+            'pemrograman-web-lanjut' => 'Pemrograman Web Lanjut',
+            'manajemen-proyek-sistem-informasi' => 'Manajemen Proyek Sistem Informasi',
+            'penjaminan-mutu-perangkat-lunak' => 'Penjaminan Mutu Perangkat Lunak',
+        ];
+
+        $namaMatkul = $matkulNames[$slug] ?? 'Pemrograman Web Lanjut';
+
+        $anggotaKelompok = [
+            ['nama' => 'Muhammad Adzikra', 'nim' => '244107060044', 'role' => 'Ketua', 'avatar' => 'MA'],
+            ['nama' => 'Mochammad Tanggaq', 'nim' => '244107060126', 'role' => 'Anggota', 'avatar' => 'MT'],
+            ['nama' => 'Niky Tania', 'nim' => '244107060053', 'role' => 'Anggota', 'avatar' => 'NT'],
+            ['nama' => 'Dina Mei', 'nim' => '244107060105', 'role' => 'Anggota', 'avatar' => 'DM'],
+            ['nama' => 'Fernanda Ayu', 'nim' => '244107060123', 'role' => 'Anggota', 'avatar' => 'FA'],
+        ];
+
+        $prefixMatkul = match ($slug) {
+            'pemrograman-web-lanjut' => 'PWL',
+            'manajemen-proyek-sistem-informasi' => 'MPSI',
+            default => 'PMPL',
+        };
+
+        // Ambil riwayat tambahan dari session (simulasi sebelum DB disambungkan)
+        $uploadedSession = session("uploaded_milestones_{$slug}", []);
+
+        if ($slug === 'penjaminan-mutu-perangkat-lunak' && empty($uploadedSession)) {
+            return view('mahasiswa.milestone-detail', array_merge($this->sharedViewData(), [
+                'slug' => $slug,
+                'namaMatkul' => $namaMatkul,
+                'anggotaKelompok' => $anggotaKelompok,
+                'berkasTerkumpul' => false,
+                'milestones' => [],
+            ]));
+        }
+
+        $defaultMilestones = ($slug === 'penjaminan-mutu-perangkat-lunak') ? [] : [
+            [
+                'id' => 2,
+                'judul' => 'Milestone 2 – Laporan ' . $namaMatkul,
+                'status' => 'Menunggu Review',
+                'ringkasan' => 'Fokus pada arsitektur REST full API backend, implementasi otentikasi JWT, middleware Role-Based Access Control (RBAC), dan skema relasi database inventaris terintegrasi dengan ORM.',
+                'waktu' => '18 Oktober 2026, 14:20 WIB',
+                'pengunggah' => 'Muhammad Adzikra',
+                'dokumen' => [
+                    ['tipe' => 'pdf', 'nama' => 'Laporan-M2-' . $prefixMatkul . '-Kel02.pdf', 'sub' => 'Dokumen PDF • 3.8 MB', 'action' => 'download', 'url' => '#'],
+                    ['tipe' => 'image', 'nama' => 'Skema-relasi-db-erd.png', 'sub' => 'Diagram ERD & Arsitektur • 1.6 MB', 'action' => 'download', 'url' => '#'],
+                    ['tipe' => 'github', 'nama' => 'GitHub Repository (branch)', 'sub' => 'github.com/sim-pbl/inventaris', 'action' => 'open', 'url' => 'https://github.com/adzikraaa/sistemmonitoringpbl'],
+                    ['tipe' => 'postman', 'nama' => 'Postman Collection Docs', 'sub' => 'api.sim-pbl.ac.id/docs', 'action' => 'open', 'url' => '#'],
                 ],
             ],
             [
-                'id' => 'm4',
-                'kode' => 'M4',
-                'judul' => 'Pengujian Sistem & Quality Assurance',
-                'status' => 'Belum dimulai',
-                'badge' => 'sim-badge--draft',
-                'tenggat' => '18 Jun 2026',
-                'deskripsi' => 'Eksekusi pengujian fungsional (Blackbox Testing), pencatatan bug report, dan usability testing.',
-                'progress' => 0,
-                'catatan' => '',
-                'deliverables' => [
-                    ['id' => 'd11', 'nama' => 'Dokumen Test Case & Test Plan (PMPL)', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
-                    ['id' => 'd12', 'nama' => 'Laporan Eksekusi Pengujian & Bug Fixing', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
-                ],
-            ],
-            [
-                'id' => 'm5',
-                'kode' => 'M5',
-                'judul' => 'Laporan Akhir & Gelar Karya (Expo)',
-                'status' => 'Belum dimulai',
-                'badge' => 'sim-badge--draft',
-                'tenggat' => '28 Jun 2026',
-                'deskripsi' => 'Penyusunan naskah laporan Bab 1-5, poster pameran, video demo produk, dan pendaftaran sidang.',
-                'progress' => 0,
-                'catatan' => '',
-                'deliverables' => [
-                    ['id' => 'd13', 'nama' => 'Laporan Akhir Proyek PBL (PDF)', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
-                    ['id' => 'd14', 'nama' => 'Video Demo & Poster Produk', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
-                    ['id' => 'd15', 'nama' => 'Peer Assessment & Kelayakan Sidang', 'status' => 'Belum Dimulai', 'file_name' => '', 'file_url' => '', 'catatan' => ''],
+                'id' => 1,
+                'judul' => 'Milestone 1 – Laporan ' . $namaMatkul,
+                'status' => 'Disetujui',
+                'ringkasan' => 'Penyusunan Work Breakdown Structure (WBS) Sprint 1–4, estimasi beban kerja tim (man-hour), Gantt Chart timeline rilis fitur, dan pemetaan alokasi resource anggota kelompok sesuai pembagian peran.',
+                'waktu' => '18 September 2026, 15:05 WIB',
+                'pengunggah' => 'Niky Tania',
+                'dokumen' => [
+                    ['tipe' => 'pdf', 'nama' => 'Laporan-M1-' . $prefixMatkul . '-Kel02.pdf', 'sub' => 'Dokumen PDF • 2.4 MB', 'action' => 'download', 'url' => '#'],
+                    ['tipe' => 'docs', 'nama' => 'Pembagian Tugas PBL Kel 02', 'sub' => 'Lembar Kerja Analisis • 940 KB', 'action' => 'open', 'url' => '#'],
+                    ['tipe' => 'notion', 'nama' => 'Kanban Sprint Backlog & Roadmapping', 'sub' => 'notion.so/pbl-kelompok01/sprint-m1', 'action' => 'open', 'url' => '#', 'full_width' => true],
                 ],
             ],
         ];
 
-        return view('mahasiswa.milestone', array_merge($this->sharedViewData(), [
+        $milestones = array_merge($uploadedSession, $defaultMilestones);
+
+        return view('mahasiswa.milestone-detail', array_merge($this->sharedViewData(), [
+            'slug' => $slug,
+            'namaMatkul' => $namaMatkul,
+            'anggotaKelompok' => $anggotaKelompok,
+            'berkasTerkumpul' => !empty($milestones),
             'milestones' => $milestones,
         ]));
     }
 
-    /** Menampilkan detail milestone pengumpulan bukti kerja. */
-    public function milestoneDetail($id)
+    /** Menyimpan pengumpulan milestone & berkas pendukung (Pertemuan 6: Validasi & File Storage) */
+    public function storeMilestoneUpload(Request $request, $id)
     {
-        // Data milestone sementara (dummy).
-        $milestones = [
-            'm1' => [
-                'id' => 'm1',
-                'kode' => 'M1',
-                'judul' => 'Inisiasi Proyek & Proposal',
-                'status' => 'Selesai',
-                'badge' => 'sim-badge--approved',
-                'tenggat' => '25 Apr 2026',
-                'deskripsi' => 'Pengajuan proposal, pemodelan lingkup masalah, dan persetujuan dosen pembimbing.',
-                'catatan' => 'Proposal dan rumusan masalah disetujui dosen. Lanjutkan ke pemodelan UML dan wireframe.',
-            ],
-            'm2' => [
-                'id' => 'm2',
-                'kode' => 'M2',
-                'judul' => 'Implementasi',
-                'status' => 'Berjalan',
-                'badge' => 'sim-badge--pending',
-                'tenggat' => '30 Mei 2026',
-                'deskripsi' => 'Pembangunan modul inti aplikasi.',
-                'catatan' => 'Modul dashboard dan proposal sedang diselesaikan.',
+        $validated = $request->validate([
+            'mata_kuliah'  => ['required', 'string'],
+            'milestone_id' => ['required', 'in:1,2,3'],
+            'catatan'      => ['required', 'string', 'max:2000'],
+            'berkas'       => ['required', 'file', 'mimes:pdf,zip', 'max:20480'], // Maks 20 MB
+            'link_bukti'   => ['nullable', 'url', 'max:255'],
+        ], [
+            'milestone_id.required' => 'Tahapan milestone wajib dipilih.',
+            'catatan.required'      => 'Ringkasan capaian milestone wajib diisi.',
+            'berkas.required'       => 'Berkas laporan (PDF/ZIP) wajib diunggah.',
+            'berkas.mimes'          => 'Format berkas harus berupa PDF atau ZIP.',
+            'berkas.max'            => 'Ukuran berkas maksimal 20 MB.',
+            'link_bukti.url'        => 'Format tautan repositori/demo tidak valid (harus diawali http:// atau https://).',
+        ]);
+
+        $slug = $validated['mata_kuliah'] ?: $id;
+
+        $matkulNames = [
+            'pemrograman-web-lanjut' => 'Pemrograman Web Lanjut',
+            'manajemen-proyek-sistem-informasi' => 'Manajemen Proyek Sistem Informasi',
+            'penjaminan-mutu-perangkat-lunak' => 'Penjaminan Mutu Perangkat Lunak',
+        ];
+        $namaMatkul = $matkulNames[$slug] ?? 'Mata Kuliah PBL';
+
+        $tahapanLabels = [
+            '1' => 'Milestone 1',
+            '2' => 'Milestone 2',
+            '3' => 'Milestone 3',
+        ];
+
+        // Simpan file fisik ke storage/app/public/milestones
+        $file = $request->file('berkas');
+        $originalName = $file->getClientOriginalName();
+        $sizeInMb = number_format($file->getSize() / (1024 * 1024), 2) . ' MB';
+        $storedPath = $file->store('milestones/' . $slug, 'public');
+        $fileUrl = asset('storage/' . $storedPath);
+
+        $dokumenList = [
+            [
+                'tipe'   => strtolower($file->getClientOriginalExtension()) === 'pdf' ? 'pdf' : 'zip',
+                'nama'   => $originalName,
+                'sub'    => 'Dokumen ' . strtoupper($file->getClientOriginalExtension()) . ' • ' . $sizeInMb,
+                'action' => 'download',
+                'url'    => $fileUrl,
             ],
         ];
 
-        $milestone = $milestones[$id] ?? $milestones['m2'];
+        if (!empty($validated['link_bukti'])) {
+            $dokumenList[] = [
+                'tipe'   => 'github',
+                'nama'   => 'Tautan Repositori / Demo',
+                'sub'    => preg_replace('#^https?://#', '', $validated['link_bukti']),
+                'action' => 'open',
+                'url'    => $validated['link_bukti'],
+            ];
+        }
 
-        return view('mahasiswa.milestone-detail', array_merge($this->sharedViewData(), [
-            'milestone' => $milestone,
-        ]));
-    }
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $pengunggah = $mahasiswa?->nama ?? 'Niky Tania';
 
-    /** Menyimpan upload berkas deliverable. */
-    public function storeMilestoneUpload(Request $request, $id)
-    {
-        $request->validate([
-            'berkas' => 'required|file|mimes:pdf,zip|max:20480', // Maksimal 20 MB.
-            'item_id' => 'required|string',
+        // Simpan entri baru ke session agar langsung muncul di halaman detail
+        $existing = session("uploaded_milestones_{$slug}", []);
+        array_unshift($existing, [
+            'id'         => (int) $validated['milestone_id'],
+            'judul'      => ($tahapanLabels[$validated['milestone_id']] ?? 'Milestone') . ' – Laporan ' . $namaMatkul,
+            'status'     => 'Menunggu Review',
+            'ringkasan'  => $validated['catatan'],
+            'waktu'      => now()->translatedFormat('d F Y, H:i') . ' WIB',
+            'pengunggah' => $pengunggah,
+            'dokumen'    => $dokumenList,
         ]);
-
-        // TODO: Simpan ke database/storage berdasarkan item_id.
-        // Contoh: $path = $request->file('berkas')->store('deliverables');
+        session(["uploaded_milestones_{$slug}" => $existing]);
 
         return redirect()
-            ->route('mahasiswa.milestone')
-            ->with('success', 'Berkas deliverable berhasil dikirim!');
+            ->route('mahasiswa.milestone.detail', $slug)
+            ->with('success', 'Laporan milestone berhasil dikumpulkan dan menunggu review dosen!');
     }
 
     /**

@@ -23,29 +23,31 @@ class MasterDataSeeder extends Seeder
         );
 
         // 3 mata kuliah
-        MataKuliah::updateOrCreate(
+        $mk1 = MataKuliah::updateOrCreate(
             ['nama_matkul' => 'Pemrograman Web Lanjut'],
-            ['prodi' => 'Teknologi Informasi', 'sks' => 3, 'is_aktif' => true]
+            ['kode' => 'SIB301', 'prodi' => 'D4 Sistem Informasi Bisnis', 'sks' => 3, 'semester' => 5, 'is_aktif' => true]
         );
 
-        MataKuliah::updateOrCreate(
+        $mk2 = MataKuliah::updateOrCreate(
             ['nama_matkul' => 'Manajemen Proyek Sistem Informasi'],
-            ['prodi' => 'Teknologi Informasi', 'sks' => 3, 'is_aktif' => true]
+            ['kode' => 'SIB302', 'prodi' => 'D4 Sistem Informasi Bisnis', 'sks' => 3, 'semester' => 5, 'is_aktif' => true]
         );
 
-        MataKuliah::updateOrCreate(
+        $mk3 = MataKuliah::updateOrCreate(
             ['nama_matkul' => 'Penjaminan Mutu Perangkat Lunak'],
-            ['prodi' => 'Teknologi Informasi', 'sks' => 3, 'is_aktif' => true]
+            ['kode' => 'SIB303', 'prodi' => 'D4 Sistem Informasi Bisnis', 'sks' => 3, 'semester' => 5, 'is_aktif' => true]
         );
 
-        // 1 kelas terhubung ke periode
-        Kelas::updateOrCreate(
-            ['nama_kelas' => 'SIB 3B'],
-            [
-                'prodi'     => 'Teknologi Informasi',
-                'periode_id' => $periode->id,
-                'is_aktif'  => true,
-            ]
-        );
+        // Kelas terhubung ke periode
+        foreach (['SIB 3A', 'SIB 3B', 'SIB 3C'] as $namaKelas) {
+            Kelas::updateOrCreate(
+                ['nama_kelas' => $namaKelas],
+                [
+                    'prodi'      => 'D4 Sistem Informasi Bisnis',
+                    'periode_id' => $periode->id,
+                    'is_aktif'   => true,
+                ]
+            );
+        }
     }
 }

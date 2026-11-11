@@ -13,10 +13,12 @@ class Kelompok extends Model
 
     protected $fillable = [
         'nama_kelompok',
+        'judul_proyek',
         'dosen_id',
         'kelas_id',
         'periode_id',
         'jadwal_bimbingan',
+        'status',
         'tanggal_dibuat',
     ];
 
@@ -82,5 +84,10 @@ class Kelompok extends Model
     public function penilaianIndividu(): HasMany
     {
         return $this->hasMany(PenilaianIndividu::class);
+    }
+
+    public function riwayatPenugasan(): HasMany
+    {
+        return $this->hasMany(RiwayatPenugasanDosen::class);
     }
 }
