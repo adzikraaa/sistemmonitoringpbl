@@ -13,11 +13,12 @@ Route::prefix('dosen')->name('dosen.')->group(function () {
         Route::get('/pilih-kelas', [DashboardController::class, 'pilihKelas'])->name('pilih-kelas');
         Route::post('/pilih-kelas/select', [DashboardController::class, 'selectKelas'])->name('pilih-kelas.select');
 
-        Route::get('/kelompok', [KelompokController::class, 'index'])->name('kelompok');
-        Route::get('/kelompok-index', [KelompokController::class, 'index'])->name('kelompok.index');
-        Route::get('/kelompok/{id}', [KelompokController::class, 'show'])->name('kelompok.show');
+                //Halaman Daftar Kelompok Bimbingan Dosen
+                Route::get('/kelompok', [KelompokController::class, 'index'])->name('kelompok.index');
+                Route::post('/kelompok/pengingat', [KelompokController::class, 'kirimPengingat'])->name('kelompok.pengingat');
+                //Halaman Detail Kelompok Bimbingan
+                Route::get('/kelompok/{id}', [KelompokController::class, 'show'])->name('kelompok.show');
 
-        Route::get('/laporan-aktivitas', [DashboardController::class, 'laporanAktivitas'])->name('laporan-aktivitas');
-        Route::get('/notifikasi', [DosenController::class, 'notifikasi'])->name('notifikasi');
-    });
+                Route::get('/laporan-aktivitas', [DashboardController::class, 'laporanAktivitas'])->name('laporan-aktivitas');
+        });
 });

@@ -29,6 +29,28 @@
 {{-- Main Content Wrap (Standar SIM-PBL) --}}
 <div style="padding: 0 32px 40px;">
 
+    {{-- Flash Alert Sukses Kirim Pengingat (Standar Laravel Session) --}}
+    @if(session('success'))
+        <div class="mb-5 bg-[#EAF3EC] border border-[#C6DFC8] text-[#2F5C4A] px-4 py-3 rounded-xl text-xs font-medium flex items-center justify-between gap-2.5">
+            <div class="flex items-center gap-2.5">
+                <span class="font-bold">✓</span>
+                <span>{{ session('success') }}</span>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-[#2F5C4A] hover:text-[#1F1F1F] font-bold">&times;</button>
+        </div>
+    @endif
+
+    {{-- Flash Alert Error Validasi --}}
+    @if($errors->any())
+        <div class="mb-5 bg-[#FDF2F2] border border-[#FECACA] text-[#B91C1C] px-4 py-3 rounded-xl text-xs">
+            <ul class="list-disc list-inside space-y-0.5">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <!-- Tab Navigasi -->
     <div class="border-b border-[#E4DED5] mb-6">
         <div class="inline-block pb-3 border-b-2 border-[#2F5C4A] text-sm font-semibold text-[#1F1F1F]">
@@ -151,7 +173,7 @@
             <div class="col-span-1 md:col-span-2 text-center py-12 bg-white rounded-2xl border border-dashed border-[#CFC7BC]">
                 <p class="text-[#7D746D] text-sm">Tidak ada kelompok bimbingan yang ditemukan.</p>
                 <a href="{{ route('dosen.kelompok.index') }}" class="inline-block mt-2 text-xs font-semibold text-[#2F5C4A] underline">
-                    Reset filter
+                    Tampilkan semua kelompok
                 </a>
             </div>
         @endforelse
@@ -177,10 +199,63 @@
                 <p class="text-xs text-[#F3EFEA] mt-0.5"><strong>Sinyal perhatian:</strong> Kelompok 02 memerlukan review berkala pada logbook sprint 3.</p>
             </div>
         </div>
-        <a href="{{ route('dosen.kelompok.index') }}" class="bg-[#EAD4A7] hover:bg-[#DFC38B] text-[#2B221D] text-xs font-bold px-4 py-2.5 rounded-xl transition-colors flex-shrink-0">
+        <button type="button" onclick="openModalPengingat()" class="bg-[#EAD4A7] hover:bg-[#DFC38B] text-[#2B221D] text-xs font-bold px-4 py-2.5 rounded-xl transition-colors flex-shrink-0 cursor-pointer">
             Kirim pengingat &rarr;
-        </a>
+        </button>
     </div>
 
 </div>
+
+{{-- MODAL KIRIM PENGINGAT BIMBINGAN --}}
+<div id="modalPengingat" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/45 p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl relative border border-[#E4DED5]">
+        <button type="button" onclick="closeModalPengingat()" class="absolute top-4 right-4 text-[#7D746D] hover:text-[#1F1F1F] text-xl font-bold p-1 cursor-pointer">&times;</button>
+
+        <span class="text-[10px] font-bold text-[#8C7A6B] uppercase tracking-widest block">RUANG DOSEN &bull; NOTIFIKASI</span>
+        <h2 class="text-xl font-serif font-bold text-[#1F1F1F] mt-0.5">Kirim Pengingat Bimbingan</h2>
+        <p class="text-xs text-[#7D746D] mb-5">Kirim pesan tindak lanjut kepada kelompok mahasiswa terkait progres proyek.</p>
+
+        <form action="{{ route('dosen.kelompok.pengingat') }}" method="POST" class="space-y-4 text-xs">
+            @csrf
+            <div>
+                <label class="block font-bold text-[#1F1F1F] mb-1.5">Kelompok Tujuan <span class="text-rose-500">*</span></label>
+                <select name="kelompok_nama" required class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 text-[#1F1F1F] focus:border-[#2F5C4A] outline-none">
+                    @foreach($kelompokList as $item)
+                        <option value="{{ $item->nama_kelompok }}" {{ ($item->nama_kelompok ?? '') === 'Kelompok 02' ? 'selected' : '' }}>
+                            {{ $item->nama_kelompok }} — {{ $item->judul_proyek }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pesan Pengingat <span class="text-rose-500">*</span></label>
+                <textarea name="pesan" rows="3" required class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 text-[#1F1F1F] focus:border-[#2F5C4A] outline-none">Mohon segera melengkapi dan memperbarui catatan logbook sprint 3 untuk ditinjau pada sesi bimbingan berikutnya.</textarea>
+            </div>
+
+            <div class="flex justify-end gap-2.5 pt-2">
+                <button type="button" onclick="closeModalPengingat()" class="px-4 py-2 bg-white border border-[#CFC7BC] hover:bg-[#FBF9F5] text-[#1F1F1F] font-semibold rounded-xl cursor-pointer">
+                    Batal
+                </button>
+                <button type="submit" class="px-4 py-2 bg-[#2F5C4A] hover:bg-[#234739] text-white font-semibold rounded-xl cursor-pointer">
+                    Kirim Pengingat
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openModalPengingat() {
+    const modal = document.getElementById('modalPengingat');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeModalPengingat() {
+    const modal = document.getElementById('modalPengingat');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+</script>
 @endsection

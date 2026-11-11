@@ -125,8 +125,8 @@
                 </div>
             </div>
 
-            <a href="{{ Route::has('dosen.laporan-aktivitas') ? route('dosen.laporan-aktivitas') : '#' }}"
-               class="block w-full text-center py-2.5 bg-white border border-[#CFC7BC] hover:bg-[#FBF9F5] text-[#1F1F1F] text-xs font-semibold rounded-xl transition-colors">
+            <a href="{{ route('dosen.laporan-aktivitas') }}"
+            class="block w-full text-center py-2.5 bg-white border border-[#CFC7BC] hover:bg-[#FBF9F5] text-[#1F1F1F] text-xs font-semibold rounded-xl transition-colors">
                 Buka Laporan Aktivitas
             </a>
         </div>
