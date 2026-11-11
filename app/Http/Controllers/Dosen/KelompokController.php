@@ -237,7 +237,7 @@ class KelompokController extends Controller
         // Notifikasi::create([...]);
 
         return redirect()
-            ->route('dosen.kelompok.index')
+            ->route('dosen.kelompok')
             ->with('success', 'Pengingat bimbingan berhasil dikirim ke ' . $validated['kelompok_nama'] . '!');
     }
     
