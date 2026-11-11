@@ -9,6 +9,7 @@ use App\Http\Controllers\Koordinator\MataKuliahController;
 use App\Http\Controllers\Koordinator\PenugasanDosenController;
 use App\Http\Controllers\Koordinator\PeriodeController;
 use App\Http\Controllers\Koordinator\MilestoneController;
+use App\Http\Controllers\Koordinator\KelompokController;
 
 Route::prefix('koordinator')->name('koordinator.')->group(function () {
     Route::middleware('auth:koordinator')->group(function () {
@@ -43,6 +44,13 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::patch('/master-data/mata-kuliah/{mataKuliah}/toggle', [MataKuliahController::class, 'toggleStatus'])->name('master-data.mata-kuliah.toggle');
         Route::delete('/master-data/mata-kuliah/{mataKuliah}', [MataKuliahController::class, 'destroy'])->name('master-data.mata-kuliah.destroy');
 
+
+        // Kelompok PBL
+        Route::get('/kelompok-pbl', [KelompokController::class, 'index'])->name('kelompok.index');
+        Route::get('/kelompok', [KelompokController::class, 'index'])->name('kelompok');
+        Route::post('/kelompok', [KelompokController::class, 'store'])->name('kelompok.store');
+        Route::get('/kelompok/{id}', [KelompokController::class, 'show'])->name('kelompok.show');
+        Route::post('/kelompok/{id}/anggota', [KelompokController::class, 'storeAnggota'])->name('kelompok.anggota.store');
 
         // Penugasan Dosen
         Route::get('/penugasan-dosen', [PenugasanDosenController::class, 'index'])->name('penugasan-dosen.index');
