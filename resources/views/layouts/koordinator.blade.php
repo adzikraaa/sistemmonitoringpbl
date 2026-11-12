@@ -216,13 +216,6 @@
             color: #FFFFFF !important;
             font-weight: 600;
         }
-        .krd-submenu-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: #FFFFFF;
-            display: inline-block;
-        }
 
         /* Sidebar Info Widgets */
         .krd-sidebar-info-card {
@@ -589,14 +582,12 @@
                                 <a href="{{ route('koordinator.master-data.kelas') }}"
                                    class="krd-submenu-link {{ request()->routeIs('koordinator.master-data.kelas') || request()->routeIs('koordinator.kelas') ? 'krd-submenu-link--active' : '' }}">
                                     <span>Kelas</span>
-                                    <span class="krd-submenu-dot"></span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('koordinator.master-data.pengguna') }}"
                                    class="krd-submenu-link {{ request()->routeIs('koordinator.master-data.pengguna*') || request()->routeIs('koordinator.pengguna*') ? 'krd-submenu-link--active' : '' }}">
                                     <span>Pengguna</span>
-                                    <span class="krd-submenu-dot"></span>
                                 </a>
                             </li>
                         </ul>
