@@ -88,9 +88,12 @@ class PeriodeController extends Controller
     {
         DB::transaction(function () use ($id) {
             Periode::query()->update(['is_aktif' => false]);
-            Periode::where('id', $id)->update(['is_aktif' => true]);
+            if ($id > 0) {
+                Periode::where('id', $id)->update(['is_aktif' => true]);
+            }
         });
 
-        return redirect()->route('koordinator.periode.index')->with('success', 'Semester aktif berhasil diubah!');
+        $msg = $id > 0 ? 'Semester aktif berhasil diubah!' : 'Semua semester berhasil dinonaktifkan.';
+        return redirect()->route('koordinator.periode.index')->with('success', $msg);
     }
 }
