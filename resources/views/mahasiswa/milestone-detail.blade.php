@@ -1,7 +1,7 @@
 @extends('layouts.mahasiswa')
 
-@section('title', 'Detail Milestone - ' . ($namaMatkul ?? 'Mata Kuliah'))
-@section('meta_description', 'Detail capaian dan pengumpulan milestone mata kuliah ' . ($namaMatkul ?? 'Mata Kuliah'))
+@section('title', 'Detail Milestone - ' . $namaMatkul)
+@section('meta_description', 'Detail capaian dan pengumpulan milestone mata kuliah ' . $namaMatkul)
 
 @section('content')
 
@@ -29,6 +29,27 @@
 
 {{-- ─── Main Content Wrap ────────────────────────────────────────────────── --}}
 <div style="padding: 0 32px 40px;">
+
+    {{-- Alert Sukses Upload (Pertemuan 6) --}}
+    @if(session('success'))
+        <div class="mb-5 bg-[#EAF3EC] border border-[#C6DFC8] text-[#2F5C4A] px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2.5">
+            <span>✓</span>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    {{-- Alert Error Validasi Input (Pertemuan 6) --}}
+    @if($errors->any())
+        <div class="mb-5 bg-[#FDF2F2] border border-[#F8B4B4] text-[#9B1C1C] px-4 py-3 rounded-xl text-xs space-y-1">
+            <p class="font-bold">Gagal mengumpulkan milestone, periksa kembali isian berikut:</p>
+            <ul class="list-disc list-inside">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <!-- Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
@@ -49,7 +70,7 @@
                     </div>
                 </div>
             @else
-                <!-- Filled State (Looping List Milestone Bertingkat Langsung dari Controller) -->
+                <!-- Filled State -->
                 @foreach($milestones as $ms)
                     <div class="bg-white border border-[#CFC7BC] rounded-2xl p-6 shadow-sm space-y-5">
                         <!-- Card Header & Badge Status -->
@@ -91,7 +112,7 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     @foreach($ms['dokumen'] as $doc)
                                         <div class="flex items-center justify-between p-3 bg-white border border-[#E4DED5] rounded-xl text-xs {{ isset($doc['full_width']) && $doc['full_width'] ? 'sm:col-span-2' : '' }}">
-                                            <div class="flex items-center gap-3">
+                                            <div class="flex items-center gap-3 min-w-0 pr-2">
                                                 @if(($doc['tipe'] ?? '') == 'pdf')
                                                     <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center font-bold flex-shrink-0">
                                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -110,18 +131,18 @@
                                                     </div>
                                                 @endif
 
-                                                <div>
-                                                    <span class="font-bold text-[#1F1F1F] block">{{ $doc['nama'] }}</span>
-                                                    <span class="text-[10px] text-[#7D746D]">{{ $doc['sub'] }}</span>
+                                                <div class="min-w-0">
+                                                    <span class="font-bold text-[#1F1F1F] block truncate">{{ $doc['nama'] }}</span>
+                                                    <span class="text-[10px] text-[#7D746D] block truncate">{{ $doc['sub'] }}</span>
                                                 </div>
                                             </div>
 
                                             @if(($doc['action'] ?? '') == 'download')
-                                                <a href="#" class="text-[#7D746D] hover:text-[#1F1F1F] p-1" title="Unduh">
+                                                <a href="{{ $doc['url'] ?? '#' }}" download class="text-[#7D746D] hover:text-[#1F1F1F] p-1 flex-shrink-0" title="Unduh">
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                                 </a>
                                             @else
-                                                <a href="#" target="_blank" class="px-3 py-1 bg-sky-50 text-sky-600 hover:bg-sky-100 font-semibold rounded-md text-[11px]">Buka</a>
+                                                <a href="{{ $doc['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="px-3 py-1 bg-sky-50 text-sky-600 hover:bg-sky-100 font-semibold rounded-md text-[11px] flex-shrink-0">Buka</a>
                                             @endif
                                         </div>
                                     @endforeach
@@ -162,16 +183,16 @@
 
 <!-- MODAL FORMULIR PENGUMPULAN -->
 <div id="modalPengumpulan" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/45 backdrop-blur-xs p-4">
-    <div class="bg-white w-full max-w-xl rounded-2xl p-6 shadow-2xl relative">
+    <div class="bg-white w-full max-w-xl rounded-2xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <button type="button" onclick="closeModalForm()" class="absolute top-4 right-4 text-[#7D746D] hover:text-[#1F1F1F] text-xl font-bold p-1">&times;</button>
 
         <span class="text-[10px] font-bold text-[#7D746D] uppercase tracking-wider block">RUANG KERJA • MAHASISWA</span>
         <h2 class="text-xl font-serif font-bold text-[#1F1F1F] mt-0.5">Formulir Pengumpulan Milestone</h2>
         <p class="text-xs text-[#7D746D] mb-5">Lengkapi ringkasan capaian dan unggah dokumen pendukung untuk ditinjau oleh dosen pembimbing.</p>
 
-        <form action="{{ route('mahasiswa.milestone.upload', $slug) }}" method="POST" enctype="multipart/form-data">
+        <form id="formPengumpulanMilestone" action="{{ route('mahasiswa.milestone.upload', $slug) }}" method="POST" enctype="multipart/form-data">
             @csrf
-            <div class="grid grid-cols-2 gap-4 mb-4 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 text-xs">
                 <div>
                     <label class="block font-bold text-[#1F1F1F] mb-1.5">Mata Kuliah <span class="text-rose-500">*</span></label>
                     <select name="mata_kuliah" class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">
@@ -184,20 +205,21 @@
                         <option value="">Pilih tahapan milestone...</option>
                         <option value="1">Milestone 1 - Laporan Awalan</option>
                         <option value="2">Milestone 2 - Implementasi Utama</option>
+                        <option value="3">Milestone 3 - Finalisasi & Pengujian</option>
                     </select>
                 </div>
             </div>
 
             <div class="mb-4 text-xs">
                 <label class="block font-bold text-[#1F1F1F] mb-1.5">Ringkasan Capaian Milestone <span class="text-rose-500">*</span></label>
-                <textarea name="catatan" rows="3" required placeholder="Jelaskan ringkasan pekerjaan, hasil progres, dan kendala yang telah diselesaikan..." class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none"></textarea>
+                <textarea name="catatan" rows="3" required placeholder="Jelaskan ringkasan pekerjaan, hasil progres, dan kendala yang telah diselesaikan..." class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">{{ old('catatan') }}</textarea>
             </div>
 
             <!-- Dropzone Upload -->
             <div class="mb-4 text-xs">
-                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-[#7D746D] font-normal">(PDF/ZIP maks 20 MB)</span></label>
+                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-rose-500">*</span> <span class="text-[#7D746D] font-normal">(PDF/ZIP maks 20 MB)</span></label>
                 <div onclick="document.getElementById('fileInputReal').click()" class="border-2 border-dashed border-[#CFC7BC] rounded-xl p-6 text-center bg-[#F7F6F0]/60 hover:bg-[#F7F6F0] transition-colors cursor-pointer">
-                    <input type="file" name="berkas" id="fileInputReal" class="hidden" accept=".pdf,.zip" onchange="previewFileSelected(this)">
+                    <input type="file" name="berkas" id="fileInputReal" class="hidden" accept=".pdf,.zip" required onchange="previewFileSelected(this)">
                     
                     <div id="dropzoneEmpty">
                         <svg class="w-8 h-8 text-[#7D746D] mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
@@ -214,7 +236,7 @@
 
             <div class="mb-6 text-xs">
                 <label class="block font-bold text-[#1F1F1F] mb-1.5">Tautan Repositori / Demo <span class="text-[#7D746D] font-normal">(Opsional)</span></label>
-                <input type="url" name="link_bukti" placeholder="https://github.com/organisasi/proyek-pbl" class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">
+                <input type="url" name="link_bukti" value="{{ old('link_bukti') }}" placeholder="https://github.com/organisasi/proyek-pbl" class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">
             </div>
 
             <div class="flex justify-end gap-3 text-xs">
@@ -234,6 +256,14 @@ function openModalForm() {
 
 function closeModalForm() {
     const modal = document.getElementById('modalPengumpulan');
+    const form = document.getElementById('formPengumpulanMilestone');
+
+    if (form) {
+        form.reset();
+    }
+    document.getElementById('dropzoneEmpty').classList.remove('hidden');
+    document.getElementById('dropzoneFilled').classList.add('hidden');
+
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 }
@@ -241,6 +271,13 @@ function closeModalForm() {
 function previewFileSelected(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
+
+        if (file.size > 20 * 1024 * 1024) {
+            alert('Ukuran berkas melebihi batas maksimal 20 MB!');
+            input.value = '';
+            return;
+        }
+
         document.getElementById('dropzoneEmpty').classList.add('hidden');
         document.getElementById('dropzoneFilled').classList.remove('hidden');
         document.getElementById('fileNameText').textContent = '📄 ' + file.name;
