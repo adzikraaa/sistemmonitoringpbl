@@ -319,7 +319,7 @@
         @if($periodeAktif)
         <form action="{{ route('koordinator.periode.update', $periodeAktif->id) }}" method="POST">
             @csrf
-            @method('PUT')
+            @method('PUT') 
 
             <div style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-light); text-transform: uppercase; margin-bottom: 12px;">
                 SEMESTER UTAMA
@@ -328,7 +328,10 @@
             <div class="figma-form-row">
                 <div class="figma-form-group" style="margin: 0;">
                     <label class="figma-form-label">Nama semester</label>
-                    <input type="text" name="nama_periode" value="{{ old('nama_periode', $periodeAktif->nama_periode) }}" class="figma-input" required>
+                    <select name="nama_periode" class="figma-input-select" required>
+                        <option value="Ganjil" {{ old('nama_periode', $periodeAktif->nama_periode ?? '') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                        <option value="Genap" {{ old('nama_periode', $periodeAktif->nama_periode ?? '') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                    </select>
                 </div>
                 <div class="figma-form-group" style="margin: 0;">
                     <label class="figma-form-label">Tahun akademik</label>
@@ -350,12 +353,6 @@
                 </div>
             </div>
 
-            <div class="figma-form-group">
-                <label class="figma-form-label">Status periode</label>
-                <select class="figma-input-select">
-                    <option value="aktif">Aktif — menerima aktivitas PBL</option>
-                </select>
-            </div>
 
             <!-- Switch Status Aktif -->
             <div style="background: var(--sim-cream-head); border: 1px solid var(--sim-border-warm); border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
@@ -380,12 +377,21 @@
 
             <!-- Action Buttons -->
             <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--sim-border-warm);">
-                <button type="button" style="color: #DC2626; background: none; border: none; font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: underline;">
-                    Nonaktifkan semester
-                </button>
+               @if($periodeAktif && $periodeAktif->is_aktif)
+                    <form action="{{ route('koordinator.periode.toggle-aktif', 0) }}" method="POST" onsubmit="return confirm('Yakin ingin menonaktifkan semester aktif ini?');" style="display:inline;">
+                        @csrf
+                        @method('PATCH') <!-- Sesuaikan dengan route -->
+                        <button type="submit" style="color: #DC2626; background: none; border: none; font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: underline; padding: 0;">
+                            Nonaktifkan semester
+                        </button>
+                    </form>
+                @else
+                    <span></span>
+                @endif
 
                 <div style="display: flex; items-center; gap: 10px;">
-                    <button type="reset" class="btn-figma-outline">Batal</button>
+                    <!-- DIPERBAIKI: Menggunakan window.location.reload() agar tombol batal mereset form -->
+                    <button type="button" class="btn-figma-outline" onclick="window.location.reload();">Batal</button>
                     <button type="submit" class="btn-figma-primary">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12"/>
@@ -472,13 +478,15 @@
                         @if(!$row->is_aktif)
                             <form action="{{ route('koordinator.periode.toggle-aktif', $row->id) }}" method="POST" style="display: inline;">
                                 @csrf
-                                @method('PATCH')
+                                @method('PUT')
                                 <button type="submit" style="background: none; border: none; color: var(--sim-brown-btn); font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: underline;">
                                     Aktifkan
                                 </button>
                             </form>
                         @else
-                            <span style="color: var(--sim-text-light); font-size: 12.5px;">Edit periode</span>
+                            <button type="button" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="background: none; border: none; color: var(--sim-brown-btn); font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: underline;">
+                                Edit periode
+                            </button>
                         @endif
                     </td>
                 </tr>
@@ -542,6 +550,7 @@
             </div>
         </form>
     </div>
+</div>
 
 @endsection
 
