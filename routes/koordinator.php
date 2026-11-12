@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -65,12 +64,8 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         // Route Fitur Semester & Periode
         Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');
         Route::post('/periode', [PeriodeController::class, 'store'])->name('periode.store');
-
         Route::match(['put', 'patch'], '/periode/{id}', [PeriodeController::class, 'update'])->name('periode.update');
         Route::match(['put', 'patch'], '/periode/{id}/toggle-aktif', [PeriodeController::class, 'toggleAktif'])->name('periode.toggle-aktif');
-
-        Route::put('/periode/{id}', [PeriodeController::class, 'update'])->name('periode.update');
-        Route::patch('/periode/{id}/toggle-aktif', [PeriodeController::class, 'toggleAktif'])->name('periode.toggle-aktif');
 
         // Milestone Global
         Route::get('/milestone-global', [MilestoneController::class, 'index'])->name('milestone-global.index');
