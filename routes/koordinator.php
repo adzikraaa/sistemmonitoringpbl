@@ -14,6 +14,9 @@ use App\Http\Controllers\Koordinator\KelompokController;
 Route::prefix('koordinator')->name('koordinator.')->group(function () {
     Route::middleware('auth:koordinator')->group(function () {
 
+        Route::get('', fn () => redirect()->route('koordinator.dashboard'))->name('index');
+        Route::get('/', fn () => redirect()->route('koordinator.dashboard'));
+
         // Dashboard Koordinator
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('dashboard');
@@ -49,6 +52,7 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::get('/kelompok-pbl', [KelompokController::class, 'index'])->name('kelompok.index');
         Route::get('/kelompok', [KelompokController::class, 'index'])->name('kelompok');
         Route::post('/kelompok', [KelompokController::class, 'store'])->name('kelompok.store');
+        Route::put('/kelompok/{id}', [KelompokController::class, 'update'])->name('kelompok.update');
         Route::get('/kelompok/{id}', [KelompokController::class, 'show'])->name('kelompok.show');
         Route::patch('/kelompok/{id}/status', [KelompokController::class, 'updateStatus'])->name('kelompok.update-status');
         Route::delete('/kelompok/{id}', [KelompokController::class, 'destroy'])->name('kelompok.destroy');

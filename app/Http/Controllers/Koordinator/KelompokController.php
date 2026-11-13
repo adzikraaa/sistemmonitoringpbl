@@ -33,11 +33,13 @@ class KelompokController extends Controller
             'kelas_id'     => 'required|exists:kelas,id',
             'periode_id'   => 'required|exists:periode,id',
             'dosen_id'     => 'nullable|exists:dosen,id',
+            'mahasiswa_ids' => 'nullable|array',
+            'mahasiswa_ids.*' => 'exists:mahasiswa,id',
         ]);
 
         $dosenId = $request->filled('dosen_id') ? $request->dosen_id : Dosen::where('is_aktif', true)->value('id');
 
-        Kelompok::create([
+        $kelompok = Kelompok::create([
             'nama_kelompok' => $request->nama_kelompok,
             'judul_proyek'  => $request->judul_proyek ?: $request->nama_kelompok,
             'dosen_id'      => $dosenId,
@@ -48,7 +50,56 @@ class KelompokController extends Controller
             'tanggal_dibuat' => now()->toDateString(),
         ]);
 
+        $mahasiswaIds = collect($request->input('mahasiswa_ids', []))->filter()->unique()->values()->all();
+        if (! empty($mahasiswaIds)) {
+            foreach ($mahasiswaIds as $index => $mahasiswaId) {
+                $kelompok->anggotaKelompok()->create([
+                    'mahasiswa_id' => $mahasiswaId,
+                    'role_label' => $index === 0 ? 'Ketua' : 'Anggota',
+                    'is_ketua' => $index === 0,
+                ]);
+            }
+        }
+
         return redirect()->route('koordinator.kelompok.index')->with('success', 'Kelompok berhasil ditambahkan.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $kelompok = Kelompok::findOrFail($id);
+
+        $request->validate([
+            'nama_kelompok' => 'required|string|max:120',
+            'judul_proyek'  => 'nullable|string|max:255',
+            'kelas_id'     => 'required|exists:kelas,id',
+            'periode_id'   => 'required|exists:periode,id',
+            'dosen_id'     => 'nullable|exists:dosen,id',
+            'mahasiswa_ids' => 'nullable|array',
+            'mahasiswa_ids.*' => 'exists:mahasiswa,id',
+        ]);
+
+        $kelompok->update([
+            'nama_kelompok' => $request->nama_kelompok,
+            'judul_proyek'  => $request->judul_proyek ?: $request->nama_kelompok,
+            'dosen_id'      => $request->dosen_id ?: $kelompok->dosen_id,
+            'kelas_id'      => $request->kelas_id,
+            'periode_id'    => $request->periode_id,
+            'jadwal_bimbingan' => $request->jadwal_bimbingan,
+        ]);
+
+        $selectedMahasiswaIds = collect($request->input('mahasiswa_ids', []))->filter()->unique()->values()->all();
+        $existingMahasiswaIds = $kelompok->anggotaKelompok()->pluck('mahasiswa_id')->all();
+
+        $newMahasiswaIds = array_diff($selectedMahasiswaIds, $existingMahasiswaIds);
+        foreach ($newMahasiswaIds as $index => $mahasiswaId) {
+            $kelompok->anggotaKelompok()->create([
+                'mahasiswa_id' => $mahasiswaId,
+                'role_label' => $index === 0 ? 'Ketua' : 'Anggota',
+                'is_ketua' => $index === 0,
+            ]);
+        }
+
+        return redirect()->route('koordinator.kelompok.index')->with('success', 'Kelompok berhasil diperbarui.');
     }
 
     public function show($id)

@@ -15,6 +15,20 @@ class KoordinatorKelompokAnggotaTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_coordinator_root_redirects_to_dashboard(): void
+    {
+        $koordinator = Koordinator::create([
+            'nama' => 'Koordinator Root',
+            'email' => 'koordinator.root@test.com',
+            'password' => 'password123',
+            'nidn' => '000111225',
+        ]);
+
+        $response = $this->actingAs($koordinator, 'koordinator')->get('/koordinator');
+
+        $response->assertRedirect(route('koordinator.dashboard'));
+    }
+
     public function test_coordinator_can_add_member_to_kelompok(): void
     {
         $koordinator = Koordinator::create([
