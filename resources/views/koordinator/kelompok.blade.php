@@ -377,6 +377,94 @@
         white-space: normal;
     }
 
+    .sim-kelompok-member-search-wrap {
+        position: relative;
+    }
+
+    .sim-kelompok-member-results {
+        margin-top: 8px;
+        border: 1px solid #d7cab9;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.4);
+        max-height: 190px;
+        overflow-y: auto;
+        display: none;
+    }
+
+    .sim-kelompok-member-results.open {
+        display: block;
+    }
+
+    .sim-kelompok-member-result {
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid #e7ddcf;
+        padding: 10px 12px;
+        cursor: pointer;
+        color: #2d2927;
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sim-kelompok-member-result:last-child {
+        border-bottom: none;
+    }
+
+    .sim-kelompok-member-result:hover {
+        background: rgba(120, 92, 70, 0.04);
+    }
+
+    .sim-kelompok-member-result small {
+        color: #6b625d;
+        font-size: 11px;
+    }
+
+    .sim-kelompok-selected-wrap {
+        margin-top: 10px;
+        border: 1px solid #d7cab9;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.28);
+        min-height: 52px;
+        padding: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .sim-kelompok-selected-empty {
+        font-size: 12px;
+        color: #726b65;
+        padding: 8px 4px;
+    }
+
+    .sim-kelompok-selected-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #f0e9e1;
+        border: 1px solid #d8c7b4;
+        border-radius: 999px;
+        padding: 6px 10px;
+        color: #2d2927;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .sim-kelompok-selected-pill button {
+        border: none;
+        background: transparent;
+        color: #6d5b52;
+        cursor: pointer;
+        font-size: 13px;
+        line-height: 1;
+        padding: 0;
+    }
+
     .sim-kelompok-status-backdrop {
         position: fixed;
         inset: 0;
@@ -659,7 +747,7 @@
                             </td>
                             <td>
                                 <div class="sim-kelompok-actions">
-                                    <a class="sim-kelompok-detail" href="{{ route('koordinator.kelompok.show', $item->id) }}">Detail →</a>
+                                    <button type="button" class="sim-kelompok-action-btn" data-edit-kelompok="open" data-kelompok-id="{{ $item->id }}" data-kelompok-name="{{ $item->nama_kelompok }}" data-kelompok-judul="{{ $item->judul_proyek }}" data-kelompok-kelas="{{ $item->kelas_id }}" data-kelompok-periode="{{ $item->periode_id }}" data-kelompok-dosen="{{ $item->dosen_id }}" data-kelompok-jadwal="{{ $item->jadwal_bimbingan }}" data-kelompok-members="{{ $item->anggotaKelompok->pluck('mahasiswa_id')->implode(',') }}" aria-label="Edit {{ $item->nama_kelompok }}">Edit</button>
                                     <button type="button" class="sim-kelompok-action-btn" data-status-toggle="open" data-kelompok-id="{{ $item->id }}" data-kelompok-name="{{ $item->nama_kelompok }}" data-current-status="{{ $status }}" aria-label="Ubah status {{ $item->nama_kelompok }}">Ubah Status</button>
                                     <form method="POST" action="{{ route('koordinator.kelompok.destroy', $item->id) }}" onsubmit="return confirm('Hapus kelompok {{ addslashes($item->nama_kelompok) }}?')" style="display:inline;">
                                         @csrf
@@ -698,8 +786,10 @@
             <button type="button" class="sim-kelompok-modal-close" onclick="closeKelompokModal()" aria-label="Tutup">×</button>
         </div>
 
-        <form method="POST" action="{{ route('koordinator.kelompok.store') }}">
+        <form id="kelompokForm" method="POST" action="{{ route('koordinator.kelompok.store') }}">
             @csrf
+            <input type="hidden" name="_method" id="kelompokMethod" value="POST">
+            <input type="hidden" name="kelompok_id" id="kelompokEditId" value="">
             <div class="sim-kelompok-modal-body">
                 <div class="sim-kelompok-form-grid">
                     <div class="sim-kelompok-form-group full">
@@ -746,12 +836,22 @@
                         <label for="jadwal_bimbingan" class="sim-kelompok-label">Jadwal Bimbingan</label>
                         <textarea id="jadwal_bimbingan" name="jadwal_bimbingan" class="sim-kelompok-textarea" placeholder="Contoh: Senin, 13.00 - 15.00"></textarea>
                     </div>
+
+                    <div class="sim-kelompok-form-group full">
+                        <label for="kelompokMahasiswaSearch" class="sim-kelompok-label">Tambah Anggota</label>
+                        <div class="sim-kelompok-member-search-wrap">
+                            <input id="kelompokMahasiswaSearch" type="text" class="sim-kelompok-input" placeholder="Cari mahasiswa berdasarkan nama atau NIM..." autocomplete="off">
+                            <div id="kelompokMahasiswaResults" class="sim-kelompok-member-results" aria-live="polite"></div>
+                        </div>
+                        <div id="kelompokMahasiswaSelected" class="sim-kelompok-selected-wrap" aria-live="polite"></div>
+                        <small style="color:#6a5f5a; font-size: 11px;">Cari nama mahasiswa lalu klik untuk menambahkannya ke kelompok.</small>
+                    </div>
                 </div>
             </div>
 
             <div class="sim-kelompok-modal-footer">
                 <button type="button" class="sim-kelompok-btn-secondary" onclick="closeKelompokModal()">Batal</button>
-                <button type="submit" class="sim-kelompok-btn-primary">Buat Kelompok</button>
+                <button type="submit" id="kelompokSubmitBtn" class="sim-kelompok-btn-primary">Buat Kelompok</button>
             </div>
         </form>
     </div>
@@ -804,10 +904,169 @@
     </div>
 </div>
 
+@php
+    $kelompokMahasiswaOptions = App\Models\Mahasiswa::where('is_aktif', true)
+        ->with('kelas')
+        ->orderBy('nama')
+        ->get()
+        ->map(function ($mhs) {
+            return [
+                'id' => (int) $mhs->id,
+                'nama' => $mhs->nama,
+                'nim' => $mhs->nim,
+                'kelas' => $mhs->kelas?->nama_kelas ?? 'Tanpa Kelas',
+                'label' => $mhs->nama . ' — ' . $mhs->nim . ' (' . ($mhs->kelas?->nama_kelas ?? 'Tanpa Kelas') . ')',
+            ];
+        })
+        ->values()
+        ->all();
+@endphp
+
 <script>
+    const kelompokMahasiswaOptions = @json($kelompokMahasiswaOptions);
+
+    const kelompokSelectedMembers = new Map();
+
+    function kelompoksSelectedMemberIds() {
+        return [...kelompokSelectedMembers.keys()];
+    }
+
+    function syncKelompokSelectedInputs() {
+        const selectedWrap = document.getElementById('kelompokMahasiswaSelected');
+        if (!selectedWrap) return;
+
+        selectedWrap.innerHTML = '';
+        const ids = kelompoksSelectedMemberIds();
+
+        if (!ids.length) {
+            selectedWrap.innerHTML = '<div class="sim-kelompok-selected-empty">Belum ada anggota yang dipilih.</div>';
+            return;
+        }
+
+        ids.forEach((id) => {
+            const mahasiswa = kelompokMahasiswaOptions.find((item) => String(item.id) === String(id));
+            if (!mahasiswa) return;
+
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'mahasiswa_ids[]';
+            hiddenInput.value = mahasiswa.id;
+            selectedWrap.appendChild(hiddenInput);
+
+            const pill = document.createElement('div');
+            pill.className = 'sim-kelompok-selected-pill';
+            pill.innerHTML = '<span>' + mahasiswa.nama + '</span><button type="button" aria-label="Hapus ' + mahasiswa.nama + '">×</button>';
+            pill.querySelector('button').addEventListener('click', function () {
+                kelompokSelectedMembers.delete(String(mahasiswa.id));
+                syncKelompokSelectedInputs();
+            });
+            selectedWrap.appendChild(pill);
+        });
+    }
+
+    function renderKelompokSearchResults(keyword = '') {
+        const resultsEl = document.getElementById('kelompokMahasiswaResults');
+        if (!resultsEl) return;
+
+        const searchTerm = (keyword || '').trim().toLowerCase();
+        const filtered = !searchTerm
+            ? kelompokMahasiswaOptions.slice(0, 8)
+            : kelompokMahasiswaOptions.filter((item) => {
+                const haystack = `${item.nama} ${item.nim} ${item.kelas}`.toLowerCase();
+                return haystack.includes(searchTerm);
+            }).slice(0, 8);
+
+        if (!filtered.length) {
+            resultsEl.innerHTML = '<div style="padding: 12px; color: #6b625d; font-size: 13px;">Mahasiswa tidak ditemukan.</div>';
+            resultsEl.classList.add('open');
+            return;
+        }
+
+        resultsEl.innerHTML = filtered.map((item) => {
+            const alreadySelected = kelompokSelectedMembers.has(String(item.id));
+            return '<button type="button" class="sim-kelompok-member-result" data-mahasiswa-id="' + item.id + '" ' + (alreadySelected ? 'disabled style="opacity:0.55; cursor:not-allowed;"' : '') + '><span>' + item.label + '</span><small>' + (alreadySelected ? 'Sudah ditambah' : 'Tambah') + '</small></button>';
+        }).join('');
+
+        resultsEl.querySelectorAll('.sim-kelompok-member-result').forEach((button) => {
+            button.addEventListener('click', function () {
+                if (this.disabled) return;
+                const id = this.dataset.mahasiswaId;
+                const mahasiswa = kelompokMahasiswaOptions.find((item) => String(item.id) === String(id));
+                if (!mahasiswa) return;
+                kelompokSelectedMembers.set(String(mahasiswa.id), mahasiswa);
+                syncKelompokSelectedInputs();
+                const search = document.getElementById('kelompokMahasiswaSearch');
+                if (search) search.value = '';
+                renderKelompokSearchResults('');
+            });
+        });
+
+        resultsEl.classList.add('open');
+    }
+
+    function resetKelompokMemberSelection() {
+        kelompokSelectedMembers.clear();
+        const search = document.getElementById('kelompokMahasiswaSearch');
+        if (search) search.value = '';
+        renderKelompokSearchResults('');
+        syncKelompokSelectedInputs();
+    }
+
     function openKelompokModal() {
         const modal = document.getElementById('kelompokModal');
+        const form = document.getElementById('kelompokForm');
         if (modal) modal.classList.add('open');
+        if (form) {
+            form.action = '{{ route('koordinator.kelompok.store') }}';
+            document.getElementById('kelompokMethod').value = 'POST';
+            document.getElementById('kelompokEditId').value = '';
+            document.getElementById('kelompokSubmitBtn').textContent = 'Buat Kelompok';
+            document.getElementById('modal-title-kelompok').textContent = 'Buat Kelompok';
+            form.reset();
+            resetKelompokMemberSelection();
+        }
+    }
+
+    function openKelompokEditModal(button) {
+        const modal = document.getElementById('kelompokModal');
+        const form = document.getElementById('kelompokForm');
+        if (!modal || !button || !form) return;
+
+        const id = button.dataset.kelompokId;
+        const name = button.dataset.kelompokName || '';
+        const judul = button.dataset.kelompokJudul || '';
+        const kelasId = button.dataset.kelompokKelas || '';
+        const periodeId = button.dataset.kelompokPeriode || '';
+        const dosenId = button.dataset.kelompokDosen || '';
+        const jadwal = button.dataset.kelompokJadwal || '';
+        const memberIds = (button.dataset.kelompokMembers || '').split(',').map((value) => value.trim()).filter(Boolean);
+
+        form.action = '/koordinator/kelompok/' + id;
+        document.getElementById('kelompokMethod').value = 'PUT';
+        document.getElementById('kelompokEditId').value = id;
+        document.getElementById('kelompokSubmitBtn').textContent = 'Simpan Perubahan';
+        document.getElementById('modal-title-kelompok').textContent = 'Edit Kelompok';
+
+        document.getElementById('nama_kelompok').value = name;
+        document.getElementById('judul_proyek').value = judul;
+        document.getElementById('kelas_id').value = kelasId;
+        document.getElementById('periode_id').value = periodeId;
+        document.getElementById('dosen_id').value = dosenId;
+        document.getElementById('jadwal_bimbingan').value = jadwal;
+
+        kelompokSelectedMembers.clear();
+        memberIds.forEach((memberId) => {
+            const mahasiswa = kelompokMahasiswaOptions.find((item) => String(item.id) === String(memberId));
+            if (mahasiswa) {
+                kelompokSelectedMembers.set(String(mahasiswa.id), mahasiswa);
+            }
+        });
+
+        const search = document.getElementById('kelompokMahasiswaSearch');
+        if (search) search.value = '';
+        renderKelompokSearchResults('');
+        syncKelompokSelectedInputs();
+        modal.classList.add('open');
     }
 
     function closeKelompokModal() {
@@ -839,11 +1098,39 @@
         if (modal) modal.classList.remove('open');
     }
 
+    document.querySelectorAll('[data-edit-kelompok="open"]').forEach((button) => {
+        button.addEventListener('click', function () {
+            openKelompokEditModal(this);
+        });
+    });
+
     document.querySelectorAll('[data-status-toggle="open"]').forEach((button) => {
         button.addEventListener('click', function () {
             openKelompokStatusModal(this);
         });
     });
+
+    const kelompokMahasiswaSearch = document.getElementById('kelompokMahasiswaSearch');
+    const kelompokMahasiswaResults = document.getElementById('kelompokMahasiswaResults');
+    if (kelompokMahasiswaSearch) {
+        kelompokMahasiswaSearch.addEventListener('focus', function () {
+            renderKelompokSearchResults(this.value);
+        });
+
+        kelompokMahasiswaSearch.addEventListener('input', function () {
+            renderKelompokSearchResults(this.value);
+        });
+
+        document.addEventListener('click', function (event) {
+            const clickedInside = event.target.closest('#kelompokMahasiswaSearch') || event.target.closest('#kelompokMahasiswaResults');
+            if (!clickedInside && kelompokMahasiswaResults) {
+                kelompokMahasiswaResults.classList.remove('open');
+            }
+        });
+    }
+
+    syncKelompokSelectedInputs();
+    renderKelompokSearchResults('');
 
     document.getElementById('confirmKelompokStatus')?.addEventListener('click', function (event) {
         const modal = document.getElementById('kelompokStatusModal');
