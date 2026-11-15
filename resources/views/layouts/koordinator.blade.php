@@ -406,6 +406,7 @@
             color: var(--krd-brown-dark);
             text-decoration: none;
             transition: background 0.15s;
+            position: relative;
         }
         .krd-header-bell:hover {
             background: #F3EDE4;
@@ -721,11 +722,14 @@
                     {{ now()->translatedFormat('d F Y') }}
                 </div>
 
-                <a href="#" class="krd-header-bell" title="Notifikasi" aria-label="Notifikasi">
+                <a href="{{ route('koordinator.notifikasi') }}" class="krd-header-bell" title="Notifikasi" aria-label="Notifikasi">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
+                    @if(!session('all_notif_read', false))
+                        <span style="position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: #C0392B; border-radius: 50%; border: 1.5px solid #FAF8F5;"></span>
+                    @endif
                 </a>
             </div>
         </header>
