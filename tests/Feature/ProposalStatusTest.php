@@ -86,9 +86,7 @@ class ProposalStatusTest extends TestCase
         $payload = [
             'judul' => 'Sistem Informasi Monitoring PBL',
             'deskripsi' => 'Aplikasi web pemantauan proyek PBL mahasiswa.',
-            'latar_belakang' => 'Proses monitoring sebelumnya masih manual.',
             'tujuan' => 'Meningkatkan efisiensi kolaborasi tim.',
-            'metode' => 'Scrum / Agile Methodology.',
             'file_proposal' => $pdf,
         ];
 
