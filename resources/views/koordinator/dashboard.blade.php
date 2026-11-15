@@ -709,7 +709,7 @@
 <div class="krd-rekap-card">
     <div class="krd-rekap-header">
         <h2 class="krd-rekap-title">Rekapitulasi seluruh kelas</h2>
-        <a href="#" class="krd-btn-kelola">
+        <a href="{{ route('koordinator.master-data.kelas') }}" class="krd-btn-kelola">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>
             </svg>
@@ -821,7 +821,7 @@
             <p class="krd-alert-desc">SIB 3B-06 dan SIB 3C-06 belum menyelesaikan proposal. Jadwal global tetap berlaku untuk seluruh kelompok.</p>
         </div>
     </div>
-    <a href="#" class="krd-btn-kelola-milestone">
+    <a href="{{ route('koordinator.milestone-global.index') }}" class="krd-btn-kelola-milestone">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
         </svg>

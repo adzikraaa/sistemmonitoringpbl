@@ -245,7 +245,7 @@
 
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                     <span style="font-size: 11px; color: #A3978A;">Master Data → Pengguna · Dosen penilai PBL</span>
-                    <a href="#" style="font-size: 11.5px; color: #875529; text-decoration: none; font-weight: 600;">Kelola »</a>
+                    <a href="{{ route('koordinator.master-data.pengguna', ['role' => 'dosen']) }}" style="font-size: 11.5px; color: #875529; text-decoration: none; font-weight: 600;">Kelola »</a>
                 </div>
 
                 {{-- Search Box --}}
