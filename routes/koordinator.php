@@ -9,6 +9,7 @@ use App\Http\Controllers\Koordinator\PenugasanDosenController;
 use App\Http\Controllers\Koordinator\PeriodeController;
 use App\Http\Controllers\Koordinator\MilestoneController;
 use App\Http\Controllers\Koordinator\KelompokController;
+use App\Http\Controllers\Koordinator\NotifikasiController;
 
 Route::prefix('koordinator')->name('koordinator.')->group(function () {
     Route::middleware('auth:koordinator')->group(function () {
@@ -19,6 +20,10 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         // Dashboard Koordinator
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('dashboard');
+
+        // Notifikasi Koordinator
+        Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi');
+        Route::post('/notifikasi/mark-all-read', [NotifikasiController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 
         // Master Data Kelas
         Route::get('/kelas', [KelasController::class, 'index'])->name('kelas');
