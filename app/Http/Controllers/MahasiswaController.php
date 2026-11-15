@@ -465,20 +465,19 @@ class MahasiswaController extends Controller
         $validated = $request->validate([
             'judul'          => 'required|string|max:255',
             'deskripsi'      => 'required|string',
-            'latar_belakang' => 'required|string',
             'tujuan'         => 'required|string',
-            'metode'         => 'required|string',
             'file_proposal'  => 'required|file|mimes:pdf|max:20480', // Maks 20 MB PDF
         ], [
             'judul.required'          => 'Judul proyek wajib diisi.',
             'deskripsi.required'      => 'Deskripsi singkat wajib diisi.',
-            'latar_belakang.required' => 'Latar belakang wajib diisi.',
             'tujuan.required'         => 'Tujuan wajib diisi.',
-            'metode.required'         => 'Metode kerja wajib diisi.',
             'file_proposal.required'  => 'Berkas proposal (PDF) wajib diunggah.',
             'file_proposal.mimes'     => 'Format berkas harus berupa PDF.',
             'file_proposal.max'       => 'Ukuran berkas proposal maksimal 20 MB.',
         ]);
+
+        $latarBelakang = $request->input('latar_belakang', '-');
+        $metode = $request->input('metode', '-');
 
         $file = $request->file('file_proposal');
         $originalName = $file->getClientOriginalName();
@@ -497,9 +496,9 @@ class MahasiswaController extends Controller
             $existingProposal->update([
                 'judul'             => $validated['judul'],
                 'deskripsi'         => $validated['deskripsi'],
-                'latar_belakang'    => $validated['latar_belakang'],
+                'latar_belakang'    => $latarBelakang,
                 'tujuan'            => $validated['tujuan'],
-                'metode'            => $validated['metode'],
+                'metode'            => $metode,
                 'file_proposal'     => $filePath,
                 'status'            => 'diajukan',
                 'catatan_revisi'    => null,
@@ -519,9 +518,9 @@ class MahasiswaController extends Controller
                 'kelompok_id'       => $kelompokId,
                 'judul'             => $validated['judul'],
                 'deskripsi'         => $validated['deskripsi'],
-                'latar_belakang'    => $validated['latar_belakang'],
+                'latar_belakang'    => $latarBelakang,
                 'tujuan'            => $validated['tujuan'],
-                'metode'            => $validated['metode'],
+                'metode'            => $metode,
                 'file_proposal'     => $filePath,
                 'status'            => 'diajukan',
                 'catatan_revisi'    => null,

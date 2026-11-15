@@ -183,7 +183,20 @@
                 <p class="sim-form-error" id="err-deskripsi" role="alert"></p>
             </div>
 
-            {{-- Dropzone Upload Berkas Proposal PDF (mengadopsi UI /mahasiswa/milestone/pemrograman-web-lanjut) --}}
+            <div class="sim-form-group">
+                <label class="sim-form-label" for="field-tujuan">Tujuan <span style="color: #e11d48;">*</span></label>
+                <textarea
+                    id="field-tujuan"
+                    name="tujuan"
+                    class="sim-form-textarea"
+                    placeholder="Perubahan apa yang ingin dicapai?"
+                    rows="3"
+                    required
+                >{{ old('tujuan') }}</textarea>
+                <p class="sim-form-error" id="err-tujuan" role="alert"></p>
+            </div>
+
+            {{-- Dropzone Upload Berkas Proposal PDF (Paling Bawah) --}}
             <div class="sim-form-group">
                 <label class="sim-form-label" for="fileProposalInput">
                     Pengumpulan Berkas Proposal <span style="color: #e11d48;">*</span> 
@@ -212,45 +225,6 @@
                     </div>
                 </div>
                 <p class="sim-form-error" id="err-file_proposal" role="alert" style="display: none; color: #e11d48; font-size: 11.5px; margin-top: 4px;"></p>
-            </div>
-
-            <div class="sim-form-group">
-                <label class="sim-form-label" for="field-latar">Latar belakang <span style="color: #e11d48;">*</span></label>
-                <textarea
-                    id="field-latar"
-                    name="latar_belakang"
-                    class="sim-form-textarea"
-                    placeholder="Mengapa masalah ini penting?"
-                    rows="3"
-                    required
-                >{{ old('latar_belakang') }}</textarea>
-                <p class="sim-form-error" id="err-latar" role="alert"></p>
-            </div>
-
-            <div class="sim-form-group">
-                <label class="sim-form-label" for="field-tujuan">Tujuan <span style="color: #e11d48;">*</span></label>
-                <textarea
-                    id="field-tujuan"
-                    name="tujuan"
-                    class="sim-form-textarea"
-                    placeholder="Perubahan apa yang ingin dicapai?"
-                    rows="3"
-                    required
-                >{{ old('tujuan') }}</textarea>
-                <p class="sim-form-error" id="err-tujuan" role="alert"></p>
-            </div>
-
-            <div class="sim-form-group">
-                <label class="sim-form-label" for="field-metode">Metode kerja <span style="color: #e11d48;">*</span></label>
-                <textarea
-                    id="field-metode"
-                    name="metode"
-                    class="sim-form-textarea"
-                    placeholder="Bagaimana kelompokmu akan mengerjakannya?"
-                    rows="3"
-                    required
-                >{{ old('metode') }}</textarea>
-                <p class="sim-form-error" id="err-metode" role="alert"></p>
             </div>
 
             <div class="sim-modal__footer">
@@ -453,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // VALIDATION
 // ============================================================
 function clearAllErrors() {
-    ['judul', 'deskripsi', 'latar', 'tujuan', 'metode', 'file_proposal'].forEach(function(key) {
+    ['judul', 'deskripsi', 'tujuan', 'file_proposal'].forEach(function(key) {
         const errEl = document.getElementById('err-' + key);
         if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
         const inputEl = document.getElementById('field-' + key);
@@ -484,6 +458,10 @@ function validateForm(data) {
         showError('deskripsi', 'Deskripsi singkat wajib diisi.');
         valid = false;
     }
+    if (!data.tujuan.trim()) {
+        showError('tujuan', 'Tujuan wajib diisi.');
+        valid = false;
+    }
 
     const fileInput = document.getElementById('fileProposalInput');
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
@@ -491,18 +469,6 @@ function validateForm(data) {
         valid = false;
     }
 
-    if (!data.latar.trim()) {
-        showError('latar', 'Latar belakang wajib diisi.');
-        valid = false;
-    }
-    if (!data.tujuan.trim()) {
-        showError('tujuan', 'Tujuan wajib diisi.');
-        valid = false;
-    }
-    if (!data.metode.trim()) {
-        showError('metode', 'Metode kerja wajib diisi.');
-        valid = false;
-    }
     return valid;
 }
 
@@ -515,9 +481,7 @@ function submitProposal(event) {
     const data = {
         judul: document.getElementById('field-judul').value,
         deskripsi: document.getElementById('field-deskripsi').value,
-        latar: document.getElementById('field-latar').value,
         tujuan: document.getElementById('field-tujuan').value,
-        metode: document.getElementById('field-metode').value,
     };
 
     if (!validateForm(data)) return;
