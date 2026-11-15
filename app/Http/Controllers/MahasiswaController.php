@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Proposal;
+use App\Models\RiwayatProposal;
+use App\Models\Kelompok;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class MahasiswaController extends Controller
 {
@@ -40,38 +44,108 @@ class MahasiswaController extends Controller
 
     public function proposal()
     {
-        $proposal = [
-            'judul' => 'Pengembangan Sistem Monitoring PBL',
-            'status' => 'Disetujui',
-            'tanggal' => '26 September 2026',
-            'feedback' => 'Struktur proposal sudah baik. Lanjutkan ke implementasi modul logbook.',
-            'timeline' => [
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $kelompok = $mahasiswa ? $mahasiswa->kelompok()->first() : null;
+        $kelompokId = $kelompok ? $kelompok->id : (Kelompok::first()?->id ?? null);
+
+        $dbProposal = $kelompokId ? Proposal::with('riwayatProposal')->where('kelompok_id', $kelompokId)->latest()->first() : null;
+
+        if ($dbProposal) {
+            $latestVersion = $dbProposal->riwayatProposal()->max('versi') ?? 1;
+            $versiLabel = 'VERSI ' . str_pad((string) $latestVersion, 2, '0', STR_PAD_LEFT);
+
+            $statusRaw = strtolower($dbProposal->status);
+            $statusFormatted = match ($statusRaw) {
+                'disetujui' => 'Disetujui',
+                'ditolak'   => 'Ditolak',
+                'revisi'    => 'Revisi',
+                default     => 'Diajukan',
+            };
+
+            $timeline = [
                 [
-                    'event' => 'Draf disusun',
-                    'date' => '02 Mei 2024',
+                    'event' => 'Draf & Proposal diajukan',
+                    'date'  => $dbProposal->tanggal_pengajuan ? $dbProposal->tanggal_pengajuan->translatedFormat('d F Y') : now()->translatedFormat('d F Y'),
                     'state' => 'done',
                 ],
                 [
-                    'event' => 'Dikirim untuk ditinjau',
-                    'date' => '02 Mei 2024',
-                    'state' => 'done',
+                    'event' => 'Pemeriksaan oleh pembimbing',
+                    'date'  => in_array($statusRaw, ['disetujui', 'ditolak', 'revisi']) ? 'Selesai' : 'Sedang ditinjau',
+                    'state' => in_array($statusRaw, ['disetujui', 'ditolak', 'revisi']) ? 'done' : 'current',
                 ],
                 [
-                    'event' => 'Disetujui pembimbing',
-                    'date' => '06 Mei 2024',
-                    'state' => 'done',
+                    'event' => match ($statusRaw) {
+                        'disetujui' => 'Proposal disetujui',
+                        'ditolak'   => 'Proposal ditolak',
+                        'revisi'    => 'Perlu revisi',
+                        default     => 'Menunggu keputusan',
+                    },
+                    'date'  => in_array($statusRaw, ['disetujui', 'ditolak', 'revisi']) ? 'Tercatat' : 'Menunggu',
+                    'state' => in_array($statusRaw, ['disetujui', 'ditolak', 'revisi']) ? 'done' : '',
                 ],
-                [
-                    'event' => 'Mulai pengerjaan',
-                    'date' => 'Berjalan',
-                    'state' => 'current',
+            ];
+
+            $proposalData = [
+                'id'             => $dbProposal->id,
+                'versi'          => $versiLabel,
+                'judul'          => $dbProposal->judul,
+                'deskripsi'      => $dbProposal->deskripsi,
+                'latar_belakang' => $dbProposal->latar_belakang,
+                'tujuan'         => $dbProposal->tujuan,
+                'metode'         => $dbProposal->metode,
+                'file_proposal'  => $dbProposal->file_proposal,
+                'file_name'      => $dbProposal->file_proposal ? basename($dbProposal->file_proposal) : 'proposal-pbl.pdf',
+                'file_url'       => $dbProposal->file_proposal ? route('mahasiswa.proposal.download', $dbProposal->id) : null,
+                'status'         => $statusFormatted,
+                'status_raw'     => $statusRaw,
+                'tanggal'        => $dbProposal->tanggal_pengajuan ? $dbProposal->tanggal_pengajuan->translatedFormat('d F Y') : now()->translatedFormat('d F Y'),
+                'feedback'       => $dbProposal->catatan_revisi ?: 'Belum ada catatan atau revisi dari pembimbing.',
+                'timeline'       => $timeline,
+            ];
+        } else {
+            $proposalData = [
+                'id'             => null,
+                'versi'          => 'VERSI 01',
+                'judul'          => 'Pengembangan Sistem Monitoring PBL',
+                'deskripsi'      => 'Platform web untuk membantu mahasiswa, dosen, dan koordinator memantau progres Project Based Learning secara terstruktur.',
+                'latar_belakang' => 'Proses monitoring saat ini masih tersebar di berbagai kanal sehingga histori dan progres sulit dipantau secara utuh.',
+                'tujuan'         => 'Membangun satu sistem terpusat untuk proposal, logbook, milestone, dan monitoring progres project.',
+                'metode'         => 'Agile dengan iterasi sprint dua mingguan dan validasi bersama dosen pembimbing.',
+                'file_proposal'  => null,
+                'file_name'      => 'proposal-kelompok-01.pdf',
+                'file_url'       => null,
+                'status'         => 'Disetujui',
+                'status_raw'     => 'disetujui',
+                'tanggal'        => '26 September 2026',
+                'feedback'       => 'Struktur proposal sudah baik. Lanjutkan ke implementasi modul logbook.',
+                'timeline'       => [
+                    [
+                        'event' => 'Draf disusun',
+                        'date'  => '02 Mei 2024',
+                        'state' => 'done',
+                    ],
+                    [
+                        'event' => 'Dikirim untuk ditinjau',
+                        'date'  => '02 Mei 2024',
+                        'state' => 'done',
+                    ],
+                    [
+                        'event' => 'Disetujui pembimbing',
+                        'date'  => '06 Mei 2024',
+                        'state' => 'done',
+                    ],
+                    [
+                        'event' => 'Mulai pengerjaan',
+                        'date'  => 'Berjalan',
+                        'state' => 'current',
+                    ],
                 ],
-            ],
-        ];
+            ];
+        }
 
         return view('mahasiswa.proposal', array_merge(
             $this->sharedViewData(),
-            ['proposal' => $proposal]
+            ['proposal' => $proposalData]
         ));
     }
 
@@ -384,27 +458,114 @@ class MahasiswaController extends Controller
     }
 
     /**
-     * Menangani pengajuan proposal (backend stub).
-     * Endpoint ini menerima data dari form modal dan mengembalikan JSON.
+     * Menangani pengajuan proposal proyek PBL beserta unggah berkas PDF ke database & storage.
      */
     public function storeProposal(Request $request)
     {
         $validated = $request->validate([
-            'judul' => 'required|string|max:255',
-            'deskripsi' => 'required|string',
+            'judul'          => 'required|string|max:255',
+            'deskripsi'      => 'required|string',
             'latar_belakang' => 'required|string',
-            'tujuan' => 'required|string',
-            'metode' => 'required|string',
+            'tujuan'         => 'required|string',
+            'metode'         => 'required|string',
+            'file_proposal'  => 'required|file|mimes:pdf|max:20480', // Maks 20 MB PDF
+        ], [
+            'judul.required'          => 'Judul proyek wajib diisi.',
+            'deskripsi.required'      => 'Deskripsi singkat wajib diisi.',
+            'latar_belakang.required' => 'Latar belakang wajib diisi.',
+            'tujuan.required'         => 'Tujuan wajib diisi.',
+            'metode.required'         => 'Metode kerja wajib diisi.',
+            'file_proposal.required'  => 'Berkas proposal (PDF) wajib diunggah.',
+            'file_proposal.mimes'     => 'Format berkas harus berupa PDF.',
+            'file_proposal.max'       => 'Ukuran berkas proposal maksimal 20 MB.',
         ]);
 
-        // TODO: Simpan ke database setelah tabel proposals tersedia.
-        // Proposal::create([...$validated, 'kelompok_id' => ..., 'status' => 'diajukan']);
+        $file = $request->file('file_proposal');
+        $originalName = $file->getClientOriginalName();
+        $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
+        $filePath = $file->storeAs('proposals', $safeName, 'public');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Proposal berhasil diajukan.',
-            'status' => 'diajukan',
-        ]);
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $kelompok = $mahasiswa ? $mahasiswa->kelompok()->first() : null;
+        $kelompokId = $kelompok ? $kelompok->id : (Kelompok::first()?->id ?? 1);
+
+        $existingProposal = Proposal::where('kelompok_id', $kelompokId)->latest()->first();
+
+        if ($existingProposal) {
+            $nextVersion = ($existingProposal->riwayatProposal()->max('versi') ?? 1) + 1;
+
+            $existingProposal->update([
+                'judul'             => $validated['judul'],
+                'deskripsi'         => $validated['deskripsi'],
+                'latar_belakang'    => $validated['latar_belakang'],
+                'tujuan'            => $validated['tujuan'],
+                'metode'            => $validated['metode'],
+                'file_proposal'     => $filePath,
+                'status'            => 'diajukan',
+                'catatan_revisi'    => null,
+                'tanggal_pengajuan' => now()->toDateString(),
+            ]);
+
+            RiwayatProposal::create([
+                'proposal_id'   => $existingProposal->id,
+                'versi'         => $nextVersion,
+                'judul'         => $validated['judul'],
+                'file_proposal' => $filePath,
+                'status'        => 'diajukan',
+                'catatan'       => 'Pengajuan revisi proposal (Versi ' . $nextVersion . ')',
+            ]);
+        } else {
+            $newProposal = Proposal::create([
+                'kelompok_id'       => $kelompokId,
+                'judul'             => $validated['judul'],
+                'deskripsi'         => $validated['deskripsi'],
+                'latar_belakang'    => $validated['latar_belakang'],
+                'tujuan'            => $validated['tujuan'],
+                'metode'            => $validated['metode'],
+                'file_proposal'     => $filePath,
+                'status'            => 'diajukan',
+                'catatan_revisi'    => null,
+                'tanggal_pengajuan' => now()->toDateString(),
+            ]);
+
+            RiwayatProposal::create([
+                'proposal_id'   => $newProposal->id,
+                'versi'         => 1,
+                'judul'         => $validated['judul'],
+                'file_proposal' => $filePath,
+                'status'        => 'diajukan',
+                'catatan'       => 'Pengajuan proposal awal (Versi 01)',
+            ]);
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Proposal berhasil diajukan.',
+                'status'  => 'diajukan',
+            ]);
+        }
+
+        return redirect()->route('mahasiswa.proposal')->with('success', 'Proposal berhasil diajukan dan sedang menunggu review dosen pembimbing!');
+    }
+
+    /**
+     * Mengunduh berkas PDF proposal yang tersimpan di storage.
+     */
+    public function downloadProposal($id = null)
+    {
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $kelompok = $mahasiswa ? $mahasiswa->kelompok()->first() : null;
+
+        $proposal = $id
+            ? Proposal::findOrFail($id)
+            : ($kelompok ? Proposal::where('kelompok_id', $kelompok->id)->latest()->first() : Proposal::latest()->first());
+
+        if (!$proposal || !$proposal->file_proposal || !Storage::disk('public')->exists($proposal->file_proposal)) {
+            abort(404, 'Berkas proposal tidak ditemukan.');
+        }
+
+        return Storage::disk('public')->download($proposal->file_proposal, basename($proposal->file_proposal));
     }
 
     /**
