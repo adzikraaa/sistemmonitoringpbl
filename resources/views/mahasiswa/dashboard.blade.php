@@ -115,15 +115,17 @@
 /* Grid Layout */
 .db-grid {
     display: grid;
-    grid-template-columns: 1.25fr 1fr 0.85fr;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.85fr);
     gap: 14px;
     padding: 16px 28px 0;
+    align-items: stretch;
 }
 .db-grid-bottom {
     display: grid;
-    grid-template-columns: 1.35fr 0.65fr;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.8fr);
     gap: 14px;
     padding: 14px 28px 32px;
+    align-items: stretch;
 }
 /* Card Base */
 .db-card {
@@ -133,6 +135,8 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
 }
 .db-card__header {
     display: flex;
@@ -230,8 +234,8 @@
 .badge-kelompok { background: #FEF3EC; color: #8A3E14; }
 /* Responsive */
 @media (max-width: 1100px) {
-    .db-grid { grid-template-columns: 1fr 1fr; }
-    .db-grid > .db-card:last-child { grid-column: 1 / -1; }
+    .db-grid { grid-template-columns: 1fr; }
+    .db-grid > .db-card:first-child { grid-column: 1 / -1; }
 }
 @media (max-width: 1024px) {
     .db-stats { grid-template-columns: repeat(2, 1fr); }
@@ -338,7 +342,7 @@
     </a>
 </div>
 
-{{-- ROW 2 : 3 KOLOM --}}
+{{-- ROW 2 : 2 KOLOM --}}
 <div class="db-grid">
 
     {{-- Status Proyek Kelompok --}}
@@ -399,41 +403,6 @@
         </div>
     </div>
 
-    {{-- Pengumuman Terbaru --}}
-    <div class="db-card">
-        <div class="db-card__header">
-            <h2 class="db-card__title">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                Pengumuman Terbaru
-            </h2>
-        </div>
-        <div class="db-announce-item">
-            <div class="db-announce-dot" style="background:#4A7C59;"></div>
-            <div>
-                <p class="db-announce-text">Proposal kelompokmu telah disetujui</p>
-                <p class="db-announce-time">2 hari yang lalu</p>
-            </div>
-        </div>
-        <div class="db-announce-item">
-            <div class="db-announce-dot" style="background:#B8934A;"></div>
-            <div>
-                <p class="db-announce-text">Jadwal bimbingan kelompok diperbarui</p>
-                <p class="db-announce-time">4 hari yang lalu</p>
-            </div>
-        </div>
-        <div class="db-announce-item">
-            <div class="db-announce-dot" style="background:#C0C0C0;"></div>
-            <div>
-                <p class="db-announce-text">Pengingat untuk mengisi logbook</p>
-                <p class="db-announce-time">6 hari yang lalu</p>
-            </div>
-        </div>
-        <a href="{{ route('mahasiswa.notifikasi') }}" class="db-card__link" style="margin-top:12px; font-size:12.5px; display:inline-flex; align-items:center; gap:4px;">
-            Lihat semua pengumuman
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </a>
-    </div>
-
     {{-- Notifikasi --}}
     <div class="db-card">
         <div class="db-card__header">
@@ -441,7 +410,6 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Notifikasi
             </h2>
-            <a href="{{ route('mahasiswa.notifikasi') }}" class="db-card__link">Lihat semua</a>
         </div>
         <a href="{{ route('mahasiswa.proposal') }}" class="db-notif-item">
             <div class="db-notif-icon" style="background:#FFF9E6;">
@@ -537,7 +505,6 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Jadwal Mendatang
             </h2>
-            <a href="#" class="db-card__link">Lihat semua</a>
         </div>
         <div class="db-jadwal-item">
             <div class="db-jadwal-date">

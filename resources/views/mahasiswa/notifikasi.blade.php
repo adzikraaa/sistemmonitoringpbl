@@ -24,6 +24,21 @@
 .notif-actions a,
 .notif-actions button { overflow-wrap: anywhere; }
 .notif-time { white-space: nowrap; }
+.notif-markall[disabled],
+.notif-action-btn[disabled] { opacity: 0.7; cursor: not-allowed; }
+.notif-card.is-read {
+    background: #F9F7F5;
+    border-color: var(--sim-border);
+    opacity: 0.78;
+}
+.notif-card.is-read .notif-unread-dot { display: none; }
+.notif-card.is-read .notif-title-row h4,
+.notif-card.is-read .notif-item__main p,
+.notif-card.is-read .notif-time,
+.notif-card.is-read .notif-actions a,
+.notif-card.is-read .notif-actions span {
+    color: #8A8A8A;
+}
 @media (max-width: 900px) {
     .notif-summary { grid-template-columns: 1fr; gap: 12px; }
 }
@@ -65,7 +80,7 @@
         <p class="sim-page-header__desc">Pantau pembaruan proposal, bimbingan, logbook, dan perkembangan proyek kelompokmu.</p>
     </div>
     <div class="sim-page-header__right">
-        <button class="sim-btn-secondary notif-markall" style="border: 1px solid var(--sim-border); border-radius: 20px; padding: 8px 16px; background: #fff; gap: 8px; font-size: 13px; display: inline-flex; align-items: center; cursor: pointer;">
+        <button type="button" class="sim-btn-secondary notif-markall" data-mark-all-read style="border: 1px solid var(--sim-border); border-radius: 20px; padding: 8px 16px; background: #fff; gap: 8px; font-size: 13px; display: inline-flex; align-items: center; cursor: pointer;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             Tandai semua dibaca
         </button>
@@ -75,86 +90,11 @@
 {{-- Main Container --}}
 <div class="notif-shell">
 
-    {{-- Summary Cards (3 Kolom Atas) --}}
-    <div class="notif-summary">
-        
-        {{-- Card 1: Belum Dibaca --}}
-        <div class="notif-sum" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 14px; display: flex; align-items: center; justify-content: space-between;">
-            <div>
-                <p style="font-size: 12.5px; color: var(--sim-text-muted); margin: 0 0 6px; font-weight: 500;">Belum dibaca</p>
-                <h3 style="font-family: 'DM Serif Display', serif; font-size: 32px; font-weight: 400; color: var(--sim-text-dark); margin: 0; line-height: 1;">3</h3>
-            </div>
-            <div style="width: 40px; height: 40px; border-radius: 10px; background: #F7F3EE; display: flex; align-items: center; justify-content: center; color: var(--sim-text-body);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-            </div>
-        </div>
-
-        {{-- Card 2: Notifikasi Hari Ini --}}
-        <div class="notif-sum" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 14px; display: flex; align-items: center; justify-content: space-between;">
-            <div>
-                <p style="font-size: 12.5px; color: var(--sim-text-muted); margin: 0 0 6px; font-weight: 500;">Notifikasi hari ini</p>
-                <h3 style="font-family: 'DM Serif Display', serif; font-size: 32px; font-weight: 400; color: var(--sim-text-dark); margin: 0; line-height: 1;">2</h3>
-            </div>
-            <div style="width: 40px; height: 40px; border-radius: 10px; background: #F7F3EE; display: flex; align-items: center; justify-content: center; color: var(--sim-text-body);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            </div>
-        </div>
-
-        {{-- Card 3: Total Tersimpan (Ikon Layers) --}}
-        <div class="notif-sum" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 14px; display: flex; align-items: center; justify-content: space-between;">
-            <div>
-                <p style="font-size: 12.5px; color: var(--sim-text-muted); margin: 0 0 6px; font-weight: 500;">Total tersimpan</p>
-                <h3 style="font-family: 'DM Serif Display', serif; font-size: 32px; font-weight: 400; color: var(--sim-text-dark); margin: 0; line-height: 1;">6</h3>
-            </div>
-            <div style="width: 40px; height: 40px; border-radius: 10px; background: #F7F3EE; display: flex; align-items: center; justify-content: center; color: var(--sim-text-body);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                    <polyline points="2 17 12 22 22 17"></polyline>
-                    <polyline points="2 12 12 17 22 12"></polyline>
-                </svg>
-            </div>
-        </div>
-
-    </div>
-
-    {{-- Filter Bar & Search --}}
-    <div class="notif-filter" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 16px;">
-        
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-            {{-- Tabs Filter Utama --}}
-            <div class="notif-tabs">
-                <button class="notif-tab" style="padding: 6px 16px; border-radius: 16px; border: none; background: #FFFFFF; color: var(--sim-text-dark); font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">Semua</button>
-                <button class="notif-tab" style="padding: 6px 16px; border-radius: 16px; border: none; background: transparent; color: var(--sim-text-muted); font-size: 13px; font-weight: 500; cursor: pointer;">Belum dibaca <span style="background: #5C3317; color: #fff; padding: 1px 6px; border-radius: 10px; font-size: 11px; margin-left: 4px;">3</span></button>
-                <button class="notif-tab" style="padding: 6px 16px; border-radius: 16px; border: none; background: transparent; color: var(--sim-text-muted); font-size: 13px; font-weight: 500; cursor: pointer;">Dibaca</button>
-            </div>
-
-            {{-- Search Box --}}
-            <div class="notif-search">
-                <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--sim-text-light);">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                </span>
-                <input type="text" placeholder="Cari notifikasi atau kata kunci..." style="width: 100%; padding: 9px 16px 9px 40px; border: 1px solid var(--sim-border); border-radius: 20px; font-size: 13px; background: #FAF7F3; outline: none; color: var(--sim-text-dark);">
-            </div>
-        </div>
-
-        {{-- Category Pills --}}
-        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--sim-border-light);">
-            <span style="font-size: 11px; font-weight: 600; color: var(--sim-text-muted); text-transform: uppercase; margin-right: 4px;">Kategori:</span>
-            <button class="notif-pill" style="padding: 5px 14px; border-radius: 14px; border: none; background: #2C1A0E; color: #FAF7F3; font-size: 12.5px; font-weight: 500; cursor: pointer;">Semua kategori</button>
-            <button class="notif-pill" style="padding: 5px 14px; border-radius: 14px; border: 1px solid var(--sim-border); background: #FAF7F3; color: var(--sim-text-body); font-size: 12.5px; font-weight: 500; cursor: pointer;">Proposal</button>
-            <button class="notif-pill" style="padding: 5px 14px; border-radius: 14px; border: 1px solid var(--sim-border); background: #FAF7F3; color: var(--sim-text-body); font-size: 12.5px; font-weight: 500; cursor: pointer;">Logbook</button>
-            <button class="notif-pill" style="padding: 5px 14px; border-radius: 14px; border: 1px solid var(--sim-border); background: #FAF7F3; color: var(--sim-text-body); font-size: 12.5px; font-weight: 500; cursor: pointer;">Milestone</button>
-            <button class="notif-pill" style="padding: 5px 14px; border-radius: 14px; border: 1px solid var(--sim-border); background: #FAF7F3; color: var(--sim-text-body); font-size: 12.5px; font-weight: 500; cursor: pointer;">Bimbingan</button>
-            <button class="notif-pill" style="padding: 5px 14px; border-radius: 14px; border: 1px solid var(--sim-border); background: #FAF7F3; color: var(--sim-text-body); font-size: 12.5px; font-weight: 500; cursor: pointer;">Sistem</button>
-        </div>
-
-    </div>
-
     {{-- Daftar Notifikasi (List Cards) --}}
     <div style="display: flex; flex-direction: column; gap: 12px;">
 
         {{-- Item 1: Proposal disetujui (Belum dibaca) --}}
-        <div class="notif-card" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="notif-card" data-notif-id="proposal-disetujui" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
             <div class="notif-item__top">
                 <div class="notif-item__main">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #EBF4EC; color: #4A7C59; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
@@ -164,7 +104,7 @@
                         <div class="notif-title-row">
                             <span style="font-size: 10px; font-weight: 700; background: #EBF4EC; color: #4A7C59; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Proposal</span>
                             <h4 style="font-size: 15px; font-weight: 600; color: var(--sim-text-dark); margin: 0; display: inline-flex; align-items: center; gap: 6px;">
-                                Proposal disetujui <span style="width: 6px; height: 6px; background: #C0392B; border-radius: 50%; display: inline-block;"></span>
+                                Proposal disetujui <span class="notif-unread-dot" style="width: 6px; height: 6px; background: #C0392B; border-radius: 50%; display: inline-block;"></span>
                             </h4>
                         </div>
                         <p style="font-size: 13.5px; color: var(--sim-text-body); margin: 0; line-height: 1.5;">
@@ -178,12 +118,12 @@
                 <a href="{{ route('mahasiswa.proposal') }}" style="color: #5C3317; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
                     Buka halaman proposal &rarr;
                 </a>
-                <button style="border: none; background: transparent; color: var(--sim-text-muted); cursor: pointer; font-weight: 500;">Tandai dibaca</button>
+                <button type="button" class="notif-action-btn" data-mark-read style="border: none; background: transparent; color: var(--sim-text-muted); cursor: pointer; font-weight: 500;">Tandai dibaca</button>
             </div>
         </div>
 
         {{-- Item 2: Jadwal bimbingan diperbarui (Belum dibaca) --}}
-        <div class="notif-card" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="notif-card" data-notif-id="jadwal-bimbingan" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
             <div class="notif-item__top">
                 <div class="notif-item__main">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #FFF9E6; color: #8A6A00; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
@@ -193,7 +133,7 @@
                         <div class="notif-title-row">
                             <span style="font-size: 10px; font-weight: 700; background: #FFF9E6; color: #8A6A00; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Bimbingan</span>
                             <h4 style="font-size: 15px; font-weight: 600; color: var(--sim-text-dark); margin: 0; display: inline-flex; align-items: center; gap: 6px;">
-                                Jadwal bimbingan diperbarui <span style="width: 6px; height: 6px; background: #C0392B; border-radius: 50%; display: inline-block;"></span>
+                                Jadwal bimbingan diperbarui <span class="notif-unread-dot" style="width: 6px; height: 6px; background: #C0392B; border-radius: 50%; display: inline-block;"></span>
                             </h4>
                         </div>
                         <p style="font-size: 13.5px; color: var(--sim-text-body); margin: 0; line-height: 1.5;">
@@ -207,12 +147,12 @@
                 <a href="#" style="color: #5C3317; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
                     Lihat detail jadwal bimbingan &rarr;
                 </a>
-                <button style="border: none; background: transparent; color: var(--sim-text-muted); cursor: pointer; font-weight: 500;">Tandai dibaca</button>
+                <button type="button" class="notif-action-btn" data-mark-read style="border: none; background: transparent; color: var(--sim-text-muted); cursor: pointer; font-weight: 500;">Tandai dibaca</button>
             </div>
         </div>
 
         {{-- Item 3: Logbook perlu diperbaiki (Belum dibaca) --}}
-        <div class="notif-card" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="notif-card" data-notif-id="logbook-perlu-diperbaiki" style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
             <div class="notif-item__top">
                 <div class="notif-item__main">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #FDF2F2; color: #C0392B; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
@@ -222,7 +162,7 @@
                         <div class="notif-title-row">
                             <span style="font-size: 10px; font-weight: 700; background: #FDF2F2; color: #C0392B; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Logbook</span>
                             <h4 style="font-size: 15px; font-weight: 600; color: var(--sim-text-dark); margin: 0; display: inline-flex; align-items: center; gap: 6px;">
-                                Logbook perlu diperbaiki <span style="width: 6px; height: 6px; background: #C0392B; border-radius: 50%; display: inline-block;"></span>
+                                Logbook perlu diperbaiki <span class="notif-unread-dot" style="width: 6px; height: 6px; background: #C0392B; border-radius: 50%; display: inline-block;"></span>
                             </h4>
                         </div>
                         <p style="font-size: 13.5px; color: var(--sim-text-body); margin: 0; line-height: 1.5;">
@@ -236,12 +176,12 @@
                 <a href="{{ route('mahasiswa.logbook') }}" style="color: #5C3317; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
                     Buka halaman logbook &rarr;
                 </a>
-                <button style="border: none; background: transparent; color: var(--sim-text-muted); cursor: pointer; font-weight: 500;">Tandai dibaca</button>
+                <button type="button" class="notif-action-btn" data-mark-read style="border: none; background: transparent; color: var(--sim-text-muted); cursor: pointer; font-weight: 500;">Tandai dibaca</button>
             </div>
         </div>
 
         {{-- Item 4: Milestone diperbarui (Sudah dibaca) --}}
-        <div class="notif-card" style="background: #F9F7F5; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="notif-card is-read" data-notif-id="milestone-diperbarui" style="background: #F9F7F5; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
             <div class="notif-item__top">
                 <div class="notif-item__main">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #EBE5DC; color: var(--sim-text-muted); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
@@ -270,7 +210,7 @@
         </div>
 
         {{-- Item 5: Revisi proposal diperlukan --}}
-        <div class="notif-card" style="background: #F9F7F5; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="notif-card is-read" data-notif-id="proposal-revisi" style="background: #F9F7F5; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
             <div class="notif-item__top">
                 <div class="notif-item__main">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #EBE5DC; color: var(--sim-text-muted); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
@@ -299,7 +239,7 @@
         </div>
 
         {{-- Item 6: Pengingat aktivitas sistem --}}
-        <div class="notif-card" style="background: #F9F7F5; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="notif-card is-read" data-notif-id="pengingat-aktivitas" style="background: #F9F7F5; border: 1px solid var(--sim-border); border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
             <div class="notif-item__top">
                 <div class="notif-item__main">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: #EBE5DC; color: var(--sim-text-muted); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
@@ -331,3 +271,98 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const storageKey = 'sim_mahasiswa_notifikasi_read';
+
+    const getSavedReads = () => {
+        try {
+            return JSON.parse(localStorage.getItem(storageKey) || '[]');
+        } catch (error) {
+            return [];
+        }
+    };
+
+    const saveReads = (ids) => {
+        localStorage.setItem(storageKey, JSON.stringify(ids));
+    };
+
+    const applyReadState = (card, isRead) => {
+        if (!card) return;
+
+        const id = card.dataset.notifId;
+        if (!id) return;
+
+        const button = card.querySelector('[data-mark-read]');
+        const actionText = card.querySelector('.notif-actions span');
+
+        if (isRead) {
+            card.classList.add('is-read');
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Sudah dibaca';
+                button.style.color = '#7B7B7B';
+            }
+            if (actionText && actionText.textContent.includes('Tandai belum dibaca')) {
+                actionText.textContent = 'Sudah dibaca';
+                actionText.style.color = '#7B7B7B';
+            }
+        } else {
+            card.classList.remove('is-read');
+            if (button) {
+                button.disabled = false;
+                button.textContent = 'Tandai dibaca';
+                button.style.color = 'var(--sim-text-muted)';
+            }
+            if (actionText && actionText.textContent.includes('Sudah dibaca')) {
+                actionText.textContent = 'Tandai belum dibaca';
+                actionText.style.color = 'var(--sim-text-light)';
+            }
+        }
+    };
+
+    const refreshFromStorage = () => {
+        const readIds = new Set(getSavedReads());
+        document.querySelectorAll('.notif-card').forEach((card) => {
+            const id = card.dataset.notifId;
+            const isInitiallyRead = card.classList.contains('is-read');
+            applyReadState(card, id ? readIds.has(id) || isInitiallyRead : isInitiallyRead);
+        });
+    };
+
+    const setAsRead = (button) => {
+        if (!button) return;
+
+        const card = button.closest('.notif-card');
+        const id = card?.dataset.notifId;
+        if (!id) return;
+
+        const saved = new Set(getSavedReads());
+        saved.add(id);
+        saveReads([...saved]);
+        applyReadState(card, true);
+    };
+
+    document.querySelectorAll('[data-mark-read]').forEach((button) => {
+        button.addEventListener('click', function () {
+            setAsRead(this);
+        });
+    });
+
+    document.querySelectorAll('[data-mark-all-read]').forEach((button) => {
+        button.addEventListener('click', function () {
+            const allIds = Array.from(document.querySelectorAll('.notif-card')).map((card) => card.dataset.notifId).filter(Boolean);
+            saveReads(allIds);
+            document.querySelectorAll('.notif-card').forEach((card) => applyReadState(card, true));
+
+            this.disabled = true;
+            this.textContent = 'Semua sudah dibaca';
+        });
+    });
+
+    refreshFromStorage();
+});
+</script>
+@endpush
