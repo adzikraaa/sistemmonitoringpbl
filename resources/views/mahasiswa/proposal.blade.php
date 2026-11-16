@@ -37,7 +37,6 @@
                     <span class="sim-proposal-card__version">VERSI 02</span>
                     <span class="sim-badge {{ $proposalStatusClass }}">&#9679; {{ $proposalStatus }}</span>
                 </div>
-                <span class="sim-proposal-card__date">{{ $proposalData['tanggal'] ?? '26 September 2026' }}</span>
             </div>
 
             <div class="sim-status-box" style="margin-top: 1rem; margin-bottom: 1rem;">
