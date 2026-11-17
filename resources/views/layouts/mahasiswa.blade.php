@@ -141,10 +141,6 @@
                         </svg>
 
                         Proposal
-
-                        @if(request()->routeIs('mahasiswa.proposal'))
-                            <span class="sim-sidebar__menu-dot"></span>
-                        @endif
                     </a>
                 </li>
 

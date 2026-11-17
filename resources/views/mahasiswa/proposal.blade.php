@@ -352,16 +352,17 @@ document.addEventListener('keydown', function(e) {
 function previewProposalFile(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
+        const errEl = document.getElementById('err-file_proposal');
 
         if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-            alert('Format berkas harus berupa PDF!');
+            if (errEl) { errEl.textContent = 'Format berkas harus berupa PDF.'; errEl.style.display = 'block'; }
             input.value = '';
             resetProposalDropzone();
             return;
         }
 
         if (file.size > 20 * 1024 * 1024) {
-            alert('Ukuran berkas melebihi batas maksimal 20 MB!');
+            if (errEl) { errEl.textContent = 'Ukuran file melebihi batas maksimal yang diperbolehkan (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.'; errEl.style.display = 'block'; }
             input.value = '';
             resetProposalDropzone();
             return;
@@ -466,6 +467,15 @@ function validateForm(data) {
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
         showError('file_proposal', 'Berkas proposal (PDF) wajib diunggah.');
         valid = false;
+    } else {
+        const file = fileInput.files[0];
+        if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+            showError('file_proposal', 'Format berkas harus berupa PDF.');
+            valid = false;
+        } else if (file.size > 20 * 1024 * 1024) {
+            showError('file_proposal', 'Ukuran file melebihi batas maksimal yang diperbolehkan (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.');
+            valid = false;
+        }
     }
 
     return valid;
