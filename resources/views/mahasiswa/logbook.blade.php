@@ -252,6 +252,10 @@
               onsubmit="submitLogbook(event)"
               novalidate>
 
+            {{-- Hidden field: mode edit & id --}}
+            <input type="hidden" id="lb-edit-mode" value="add">
+            <input type="hidden" id="lb-edit-id" value="">
+
             {{-- 1. Tanggal --}}
             <div class="sim-form-group">
                 <label class="sim-form-label" for="lb-tanggal">Tanggal</label>
@@ -436,6 +440,11 @@
 @push('scripts')
 <script>
 // ================================================================
+// DATA LOGBOOK (dari server, untuk keperluan edit)
+// ================================================================
+var lbDataMap = @json(collect($logbooks)->keyBy('id'));
+
+// ================================================================
 // HELPERS
 // ================================================================
 function lbToast(message, type) {
@@ -464,6 +473,12 @@ function openLogbookModal() {
     document.getElementById('logbook-form').reset();
     document.getElementById('lb-tanggal').value = today; // restore after reset
     lbClearAllErrors();
+
+    // Mode tambah
+    document.getElementById('lb-edit-mode').value = 'add';
+    document.getElementById('lb-edit-id').value   = '';
+    document.getElementById('lb-modal-title').textContent = 'Tambah logbook';
+    document.getElementById('btn-lb-simpan').textContent  = 'Simpan';
 }
 
 function closeLogbookModal() {
@@ -580,8 +595,17 @@ function submitLogbook(event) {
     // Baca CSRF token dari meta tag
     var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    fetch('{{ route("mahasiswa.logbook.store") }}', {
-        method : 'POST',
+    var editMode = document.getElementById('lb-edit-mode').value;
+    var editId   = document.getElementById('lb-edit-id').value;
+
+    var isEdit  = editMode === 'edit' && editId;
+    var url     = isEdit
+        ? '{{ route("mahasiswa.logbook.update", ":id") }}'.replace(':id', editId)
+        : '{{ route("mahasiswa.logbook.store") }}';
+    var method  = isEdit ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method : method,
         headers: {
             'Content-Type'    : 'application/json',
             'X-CSRF-TOKEN'    : csrfToken,
@@ -606,8 +630,14 @@ function submitLogbook(event) {
     .then(function (json) {
         if (json.success) {
             closeLogbookModal();
-            lbAddCardToDOM(data);
-            lbToast('Catatan logbook berhasil ditambahkan!', 'success');
+            if (isEdit) {
+                // Update card di DOM
+                lbUpdateCardInDOM(editId, data);
+                lbToast('Catatan logbook berhasil diperbarui!', 'success');
+            } else {
+                lbAddCardToDOM(data);
+                lbToast('Catatan logbook berhasil ditambahkan!', 'success');
+            }
         } else {
             throw new Error(json.message || 'Gagal menyimpan catatan.');
         }
@@ -618,7 +648,7 @@ function submitLogbook(event) {
     })
     .finally(function () {
         btn.disabled    = false;
-        btn.textContent = 'Simpan';
+        btn.textContent = isEdit ? 'Simpan Perubahan' : 'Simpan';
     });
 }
 
@@ -728,6 +758,47 @@ function lbAddCardToDOM(data) {
     listEl.insertAdjacentHTML('beforeend', cardHtml);
 }
 
+function lbUpdateCardInDOM(id, data) {
+    // Cari card: dari id asli (server) atau id DOM (card baru)
+    var card = document.getElementById('lb-card-' + id) || document.getElementById(id);
+    if (!card) return;
+
+    var progress = parseInt(data.progress, 10) || 0;
+    var dateFmt  = lbFormatDate(data.tanggal);
+
+    // Update tanggal di dataset
+    card.dataset.tanggal = data.tanggal;
+
+    // Update date text
+    var dateEl = card.querySelector('.sim-lb-card__date');
+    if (dateEl) dateEl.textContent = dateFmt;
+
+    // Update judul
+    var titleEl = card.querySelector('.sim-lb-card__title');
+    if (titleEl) titleEl.textContent = data.judul;
+
+    // Update deskripsi
+    var descEl = card.querySelector('.sim-lb-card__desc');
+    if (descEl) {
+        descEl.textContent = data.deskripsi || '';
+        descEl.style.display = data.deskripsi ? '' : 'none';
+    }
+
+    // Update progress
+    var pctEl  = card.querySelector('.sim-lb-card__progress-pct');
+    var fillEl = card.querySelector('.sim-lb-card__progress-fill');
+    if (pctEl)  pctEl.textContent = progress + ' %';
+    if (fillEl) fillEl.style.width = progress + '%';
+
+    // Update lbDataMap agar edit berikutnya membaca data terbaru
+    lbDataMap[id] = Object.assign(lbDataMap[id] || {}, data, { id: id });
+
+    // Efek highlight singkat
+    card.style.transition = 'box-shadow 0.4s';
+    card.style.boxShadow  = '0 0 0 2px var(--sim-primary, #4f46e5)';
+    setTimeout(function () { card.style.boxShadow = ''; }, 1200);
+}
+
 function lbEscape(str) {
     if (!str) return '';
     return String(str)
@@ -744,10 +815,57 @@ lbStyle.textContent = '@keyframes lbFadeIn { from { opacity:0; transform:transla
 document.head.appendChild(lbStyle);
 
 // ================================================================
-// EDIT & HAPUS (stub — tampilkan pesan sementara)
+// EDIT & HAPUS
 // ================================================================
 function editLogbook(id) {
-    lbToast('Fitur edit akan tersedia setelah integrasi database.', 'error');
+    // Cari data: dari lbDataMap (server-side) atau dari card DOM (card baru yg ditambah via JS)
+    var lb = lbDataMap[id] || null;
+
+    // Jika tidak ada di map (card baru ditambah via JS di sesi ini), ambil dari DOM
+    if (!lb) {
+        var card = document.getElementById('lb-card-' + id) || document.getElementById(id);
+        if (!card) {
+            lbToast('Data tidak ditemukan.', 'error');
+            return;
+        }
+        lb = {
+            id        : id,
+            tanggal   : card.dataset.tanggal || '',
+            judul     : card.querySelector('.sim-lb-card__title') ? card.querySelector('.sim-lb-card__title').textContent.trim() : '',
+            deskripsi : card.querySelector('.sim-lb-card__desc') ? card.querySelector('.sim-lb-card__desc').textContent.trim() : '',
+            progress  : 0,
+            hasil     : '',
+            kendala   : '',
+            rencana   : '',
+        };
+        // Coba baca progress dari bar
+        var fill = card.querySelector('.sim-lb-card__progress-fill');
+        if (fill) {
+            lb.progress = parseInt(fill.style.width, 10) || 0;
+        }
+    }
+
+    // Set mode edit
+    document.getElementById('lb-edit-mode').value = 'edit';
+    document.getElementById('lb-edit-id').value   = id;
+    document.getElementById('lb-modal-title').textContent = 'Edit logbook';
+    document.getElementById('btn-lb-simpan').textContent  = 'Simpan Perubahan';
+
+    // Isi form dengan data lama
+    document.getElementById('lb-tanggal').value   = lb.tanggal   || '';
+    document.getElementById('lb-judul').value     = lb.judul     || '';
+    document.getElementById('lb-deskripsi').value = lb.deskripsi || '';
+    document.getElementById('lb-progress').value  = lb.progress  !== undefined ? lb.progress : 0;
+    document.getElementById('lb-hasil').value     = lb.hasil     || '';
+    document.getElementById('lb-kendala').value   = lb.kendala   || '';
+    document.getElementById('lb-rencana').value   = lb.rencana   || '';
+
+    lbClearAllErrors();
+
+    // Buka modal
+    var overlay = document.getElementById('logbook-modal-overlay');
+    overlay.classList.add('sim-modal-overlay--visible');
+    document.body.style.overflow = 'hidden';
 }
 
 function hapusLogbook(id) {

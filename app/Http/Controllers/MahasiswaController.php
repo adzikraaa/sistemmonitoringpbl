@@ -594,4 +594,37 @@ class MahasiswaController extends Controller
             'data' => $validated,
         ]);
     }
+
+    /**
+     * Update Logbook Entry (backend stub).
+     *
+     * Menerima data edit dari modal logbook.
+     * Mengembalikan JSON sukses untuk diproses oleh JS.
+     * Implementasi update ke DB dapat ditambahkan
+     * setelah tabel logbook_milestone tersedia.
+     */
+    public function updateLogbook(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'tanggal'  => 'required|date',
+            'judul'    => 'required|string|max:255',
+            'deskripsi'=> 'nullable|string',
+            'progress' => 'required|integer|min:0|max:100',
+            'hasil'    => 'nullable|string',
+            'kendala'  => 'nullable|string',
+            'rencana'  => 'nullable|string',
+        ]);
+
+        // TODO: update ke database setelah tabel logbook_milestone tersedia
+        // $logbook = LogbookMilestone::where('id', $id)
+        //     ->where('mahasiswa_id', auth('mahasiswa')->id())
+        //     ->firstOrFail();
+        // $logbook->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Catatan logbook berhasil diperbarui.',
+            'data'    => array_merge($validated, ['id' => $id]),
+        ]);
+    }
 }

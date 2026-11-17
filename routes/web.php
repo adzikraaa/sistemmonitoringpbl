@@ -26,6 +26,7 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('auth:mahasiswa')->gr
     Route::post('/proposal', [MahasiswaController::class, 'storeProposal'])->name('proposal.store');
     Route::get('/logbook', [MahasiswaController::class, 'logbook'])->name('logbook');
     Route::post('/logbook', [MahasiswaController::class, 'storeLogbook'])->name('logbook.store');
+    Route::put('/logbook/{id}', [MahasiswaController::class, 'updateLogbook'])->name('logbook.update');
 
     Route::get('/milestone', [MahasiswaController::class, 'milestone'])->name('milestone');
     Route::get('/milestone/{id}', [MahasiswaController::class, 'milestoneDetail'])->name('milestone.detail');
