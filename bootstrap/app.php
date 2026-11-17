@@ -24,4 +24,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, Request $request) {
+            $msg = 'Ukuran file melebihi batas maksimal yang diperbolehkan server (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $msg, 'errors' => ['file_proposal' => [$msg]]], 422);
+            }
+            return redirect()->back()->withErrors([
+                'file_proposal' => $msg,
+                'berkas' => $msg,
+            ])->withInput();
+        });
     })->create();
