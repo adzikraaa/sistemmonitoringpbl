@@ -49,8 +49,23 @@ return new class extends Migration
             $table->string('mata_kuliah', 120)->nullable(false)->change();
         });
 
+        // Keep the kelompok_id foreign key backed by its own index before
+        // removing the old composite unique index that MySQL currently uses.
+        $indexes = collect(Schema::getIndexes('pengumpulan_milestone'))
+            ->pluck('name')
+            ->all();
+
+        if (! in_array('pengumpulan_milestone_kelompok_id_index', $indexes, true)) {
+            Schema::table('pengumpulan_milestone', function (Blueprint $table) {
+                $table->index('kelompok_id', 'pengumpulan_milestone_kelompok_id_index');
+            });
+        }
+
         Schema::table('pengumpulan_milestone', function (Blueprint $table) {
             $table->dropUnique('pengumpulan_milestone_kelompok_id_milestone_id_unique');
+        });
+
+        Schema::table('pengumpulan_milestone', function (Blueprint $table) {
             $table->index('mata_kuliah', 'pengumpulan_milestone_mata_kuliah_index');
             $table->foreign('mata_kuliah')
                 ->references('slug')
