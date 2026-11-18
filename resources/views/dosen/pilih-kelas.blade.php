@@ -3,6 +3,42 @@
 @section('title', 'Pilih Kelas')
 @section('meta_description', 'Pilih kelas aktif untuk masuk ke ruang kerja dosen SIM-PBL.')
 
+@push('styles')
+<style>
+/* Animasi dan hover button Ganti Semester selaras dengan Perbarui Data pada Dashboard */
+.sim-dosen-banner__button {
+    border: 1.5px solid #CFC7BC !important;
+    background: #FFFFFF !important;
+    color: #2D2621 !important;
+    border-radius: 10px !important;
+    padding: 9px 18px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    font-family: 'Inter', sans-serif !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.sim-dosen-banner__button:hover {
+    background: #F5EFE6 !important;
+    border-color: #B5AA9C !important;
+    color: #1C1008 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(45, 38, 33, 0.08);
+}
+
+.sim-dosen-banner__button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+</style>
+@endpush
+
 @section('content')
 <div class="sim-page-header" style="padding-top: 28px; padding-bottom: 18px;">
     <div class="sim-page-header__left" style="flex:1; min-width:0;">
@@ -46,7 +82,7 @@
             Total kelas yang ditugaskan: <strong>{{ count($kelasList) }} kelas</strong>
         </div>
     </div>
-    <a href="{{ route('dosen.pilih-semester') }}" class="sim-dosen-banner__button" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Ganti Semester</a>
+    <a href="{{ route('dosen.pilih-semester') }}" class="sim-dosen-banner__button">Ganti Semester</a>
 </div>
 
 <section class="sim-dosen-grid" id="kelas-grid">

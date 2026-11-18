@@ -27,17 +27,27 @@
 .notif-markall[disabled],
 .notif-action-btn[disabled] { opacity: 0.7; cursor: not-allowed; }
 .notif-card.is-read {
-    background: #F9F7F5;
-    border-color: var(--sim-border);
+    background: #F9F7F5 !important;
+    border-color: var(--sim-border) !important;
     opacity: 0.78;
 }
-.notif-card.is-read .notif-unread-dot { display: none; }
+.notif-card.is-read .notif-unread-dot {
+    display: none !important;
+}
 .notif-card.is-read .notif-title-row h4,
 .notif-card.is-read .notif-item__main p,
 .notif-card.is-read .notif-time,
 .notif-card.is-read .notif-actions a,
 .notif-card.is-read .notif-actions span {
-    color: #8A8A8A;
+    color: #8A8A8A !important;
+}
+.notif-card.is-read .notif-item__main > div:first-child {
+    background: #EBE5DC !important;
+    color: var(--sim-text-muted) !important;
+}
+.notif-card.is-read .notif-title-row span:first-child {
+    background: #EBE5DC !important;
+    color: var(--sim-text-muted) !important;
 }
 @media (max-width: 900px) {
     .notif-summary { grid-template-columns: 1fr; gap: 12px; }

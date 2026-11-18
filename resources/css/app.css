@@ -528,14 +528,33 @@ body.sim-body {
 }
 
 .sim-dosen-banner__button {
-    border: 1px solid rgba(43, 34, 29, 0.12);
-    background: rgba(43, 34, 29, 0.04);
-    color: var(--sim-brown-dark);
-    border-radius: 12px;
-    padding: 10px 16px;
-    font-size: 13px;
+    border: 1.5px solid #CFC7BC;
+    background: #FFFFFF;
+    color: #2D2621;
+    border-radius: 10px;
+    padding: 9px 18px;
+    font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sim-dosen-banner__button:hover {
+    background: #F5EFE6;
+    border-color: #B5AA9C;
+    color: #1C1008;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(45, 38, 33, 0.08);
+}
+
+.sim-dosen-banner__button:active {
+    transform: translateY(0);
+    box-shadow: none;
 }
 
 .sim-dosen-grid {

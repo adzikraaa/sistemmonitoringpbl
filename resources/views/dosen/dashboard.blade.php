@@ -475,6 +475,12 @@
     .dd-greeting { font-size: 28px; }
     .dd-peta-header { flex-direction: column; align-items: flex-start; }
 }
+
+@media (max-width: 480px) {
+    .dd-summary-grid { grid-template-columns: 1fr; }
+    .dd-peta-card { padding: 18px 16px; }
+    .dd-tabs { width: 100%; overflow-x: auto; }
+}
 </style>
 @endpush
 
@@ -566,70 +572,72 @@
             </div>
         </div>
 
-        <table class="dd-table">
-            <thead>
-                <tr>
-                    <th>KELOMPOK</th>
-                    <th>PROYEK</th>
-                    <th>PROGRES</th>
-                    <th>STATUS</th>
-                    <th>UPDATE TERAKHIR</th>
-                </tr>
-            </thead>
-            <tbody id="kelompokBody">
-                @forelse($kelompokData ?? [] as $k)
-                @php
-                    $status = strtolower($k['status'] ?? 'berjalan');
-                    $progress = $k['progress'] ?? 0;
-                    $barColor = match($status) {
-                        'berjalan' => '#4A7C59',
-                        'terlambat' => '#B8934A',
-                        'selesai'  => '#5C4B35',
-                        default    => '#4A7C59',
-                    };
-                    $statusLabel = match($status) {
-                        'berjalan' => 'Berjalan',
-                        'terlambat' => 'Terlambat',
-                        'selesai'  => 'Selesai',
-                        default    => ucfirst($status),
-                    };
-                @endphp
-                <tr data-status="{{ $status }}">
-                    <td>
-                        <p class="dd-kelompok-name">{{ $k['nama'] ?? 'Kelompok' }}</p>
-                        <p class="dd-kelompok-kelas">#{{ $k['kelas'] ?? '-' }}</p>
-                    </td>
-                    <td>{{ $k['proyek'] ?? '-' }}</td>
-                    <td>
-                        <div class="dd-progress-wrap">
-                            <span class="dd-progress-pct">{{ $progress }}%</span>
-                            <div class="dd-progress-bar-bg">
-                                <div class="dd-progress-bar-fill"
-                                     style="width: {{ $progress }}%; background: {{ $barColor }};"></div>
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%;">
+            <table class="dd-table" style="min-width: 540px;">
+                <thead>
+                    <tr>
+                        <th>KELOMPOK</th>
+                        <th>PROYEK</th>
+                        <th>PROGRES</th>
+                        <th>STATUS</th>
+                        <th>UPDATE TERAKHIR</th>
+                    </tr>
+                </thead>
+                <tbody id="kelompokBody">
+                    @forelse($kelompokData ?? [] as $k)
+                    @php
+                        $status = strtolower($k['status'] ?? 'berjalan');
+                        $progress = $k['progress'] ?? 0;
+                        $barColor = match($status) {
+                            'berjalan' => '#4A7C59',
+                            'terlambat' => '#B8934A',
+                            'selesai'  => '#5C4B35',
+                            default    => '#4A7C59',
+                        };
+                        $statusLabel = match($status) {
+                            'berjalan' => 'Berjalan',
+                            'terlambat' => 'Terlambat',
+                            'selesai'  => 'Selesai',
+                            default    => ucfirst($status),
+                        };
+                    @endphp
+                    <tr data-status="{{ $status }}">
+                        <td>
+                            <p class="dd-kelompok-name">{{ $k['nama'] ?? 'Kelompok' }}</p>
+                            <p class="dd-kelompok-kelas">#{{ $k['kelas'] ?? '-' }}</p>
+                        </td>
+                        <td>{{ $k['proyek'] ?? '-' }}</td>
+                        <td>
+                            <div class="dd-progress-wrap">
+                                <span class="dd-progress-pct">{{ $progress }}%</span>
+                                <div class="dd-progress-bar-bg">
+                                    <div class="dd-progress-bar-fill"
+                                         style="width: {{ $progress }}%; background: {{ $barColor }};"></div>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="dd-badge dd-badge--{{ $status }}">
-                            <span class="dd-badge-dot"></span>
-                            {{ $statusLabel }}
-                        </span>
-                    </td>
-                    <td class="dd-time">
-                        @if(isset($k['last_update']) && $k['last_update'] instanceof \Carbon\Carbon)
-                            {{ $k['last_update']->diffForHumans() }}
-                        @else
-                            {{ $k['last_update'] ?? '-' }}
-                        @endif
-                    </td>
-                </tr>
-                @empty
-                <tr class="dd-empty-row">
-                    <td colspan="5">Belum ada kelompok bimbingan untuk ditampilkan.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+                        </td>
+                        <td>
+                            <span class="dd-badge dd-badge--{{ $status }}">
+                                <span class="dd-badge-dot"></span>
+                                {{ $statusLabel }}
+                            </span>
+                        </td>
+                        <td class="dd-time">
+                            @if(isset($k['last_update']) && $k['last_update'] instanceof \Carbon\Carbon)
+                                {{ $k['last_update']->diffForHumans() }}
+                            @else
+                                {{ $k['last_update'] ?? '-' }}
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr class="dd-empty-row">
+                        <td colspan="5">Belum ada kelompok bimbingan untuk ditampilkan.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
     </div>
 
