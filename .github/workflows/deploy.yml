@@ -82,7 +82,7 @@ jobs:
 
           sudo install -d -o root -g root -m 700 "$BACKUP_ROOT" "$(dirname "$BACKUP_FILE")"
           echo "[backup] creating $BACKUP_FILE" >&2
-          sudo bash -o pipefail -c 'mysqldump --defaults-extra-file="$1" --single-transaction --quick --no-tablespaces --set-gtid-purged=OFF "$2" | gzip -9 > "$3"' _ "$BACKUP_CNF" "$DB_NAME" "$BACKUP_FILE"
+          sudo bash -o pipefail -c 'mysqldump --defaults-extra-file="$1" --single-transaction --quick --routines --triggers --no-tablespaces --set-gtid-purged=OFF "$2" | gzip -9 > "$3"' _ "$BACKUP_CNF" "$DB_NAME" "$BACKUP_FILE"
 
           sudo test -s "$BACKUP_FILE"
           sudo gzip -t "$BACKUP_FILE"
