@@ -189,8 +189,12 @@
 
     .sim-kelompok-select {
         appearance: none;
-        background-image: linear-gradient(45deg, transparent 50%, #4a4039 50%), linear-gradient(135deg, #4a4039 50%, transparent 50%);
-        background-position: calc(100% - 16px) calc(50% - 2px), calc(100% - 11px) calc(50% - 2px);
+        background-image:
+            linear-gradient(45deg, transparent 50%, #4a4039 50%),
+            linear-gradient(135deg, #4a4039 50%, transparent 50%);
+        background-position:
+            calc(100% - 16px) calc(50% - 2px),
+            calc(100% - 11px) calc(50% - 2px);
         background-size: 5px 5px, 5px 5px;
         background-repeat: no-repeat;
         min-width: 0;
@@ -579,8 +583,12 @@
         font-size: 14px;
         box-sizing: border-box;
         appearance: none;
-        background-image: linear-gradient(45deg, transparent 50%, #4a4039 50%), linear-gradient(135deg, #4a4039 50%, transparent 50%);
-        background-position: calc(100% - 16px) calc(50% - 2px), calc(100% - 11px) calc(50% - 2px);
+        background-image:
+            linear-gradient(45deg, transparent 50%, #4a4039 50%),
+            linear-gradient(135deg, #4a4039 50%, transparent 50%);
+        background-position:
+            calc(100% - 16px) calc(50% - 2px),
+            calc(100% - 11px) calc(50% - 2px);
         background-size: 5px 5px, 5px 5px;
         background-repeat: no-repeat;
     }
@@ -666,17 +674,51 @@
             min-width: 900px;
         }
     }
+
+    @media (max-width: 640px) {
+        .sim-kelompok-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .sim-kelompok-title {
+            font-size: 34px;
+        }
+
+        .sim-kelompok-filters {
+            grid-template-columns: 1fr;
+        }
+
+        .sim-kelompok-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .sim-kelompok-form-group.full {
+            grid-column: auto;
+        }
+
+        .sim-kelompok-status-row {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <div class="sim-kelompok-page">
     <div class="sim-kelompok-panel">
         <div class="sim-kelompok-header">
             <div>
-                <div class="sim-kelompok-subtitle" style="margin:0 0 10px;">SIM-PBL / ADMINISTRASI PROGRAM</div>
+                <div class="sim-kelompok-subtitle" style="margin:0 0 10px;">
+                    SIM-PBL / ADMINISTRASI PROGRAM
+                </div>
                 <h1 class="sim-kelompok-title">Kelompok PBL</h1>
-                <div class="sim-kelompok-subtitle">Kelola proyek, rekan kerja, dan pembimbing kelompok PBL sesuai status aktif.</div>
+                <div class="sim-kelompok-subtitle">
+                    Kelola proyek, rekan kerja, dan pembimbing kelompok PBL sesuai status aktif.
+                </div>
             </div>
-            <button type="button" class="sim-kelompok-create-btn" onclick="openKelompokModal()">+ Buat Kelompok</button>
+
+            <button type="button" class="sim-kelompok-create-btn" onclick="openKelompokModal()">
+                + Buat Kelompok
+            </button>
         </div>
 
         @if(session('success'))
@@ -685,18 +727,47 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div style="margin-bottom: 14px; background: #fff2f2; border: 1px solid #e7b1a8; color: #a33b2c; padding: 10px 12px; border-radius: 8px; font-size: 13px;">
+                <strong>Terjadi kesalahan:</strong>
+                <ul style="margin: 6px 0 0; padding-left: 20px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        {{-- FILTER DAN PENCARIAN --}}
         <div class="sim-kelompok-filter-wrap">
             <div class="sim-kelompok-filters">
-                <select class="sim-kelompok-select" aria-label="Filter kelas">
-                    <option>Kelas: SIB 3C</option>
+                <select id="filterKelasKelompok" class="sim-kelompok-select" aria-label="Filter kelas">
+                    <option value="">Semua kelas</option>
+                    @foreach ($kelasList as $kelas)
+                        <option value="{{ $kelas->id }}">
+                            {{ $kelas->nama_kelas }}
+                        </option>
+                    @endforeach
                 </select>
-                <input type="text" class="sim-kelompok-search sim-kelompok-input" placeholder="Cari kelompok, proyek, mahasiswa..." aria-label="Cari kelompok" />
-                <select class="sim-kelompok-select" aria-label="Filter status">
-                    <option>Semua status</option>
+
+                <input
+                    type="text"
+                    id="searchKelompok"
+                    class="sim-kelompok-search sim-kelompok-input"
+                    placeholder="Cari kelompok, proyek, mahasiswa..."
+                    aria-label="Cari kelompok"
+                >
+
+                <select id="filterStatusKelompok" class="sim-kelompok-select" aria-label="Filter status">
+                    <option value="">Semua status</option>
+                    <option value="Aktif">Aktif</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Ditangguhkan">Ditangguhkan</option>
                 </select>
             </div>
         </div>
 
+        {{-- TABEL KELOMPOK --}}
         <div class="sim-kelompok-table-wrap">
             <table class="sim-kelompok-table">
                 <thead>
@@ -709,14 +780,37 @@
                         <th style="width: 13%;">Tindakan</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @forelse ($kelompokList as $item)
                         @php
-                            $memberNames = $item->anggotaKelompok->take(2)->map(fn($anggota) => $anggota->mahasiswa?->nama ?? 'Mahasiswa')->all();
+                            $memberNames = $item->anggotaKelompok
+                                ->take(2)
+                                ->map(fn($anggota) => $anggota->mahasiswa?->nama ?? 'Mahasiswa')
+                                ->all();
+
                             $memberCount = $item->anggotaKelompok->count();
+
+                            $allMemberNames = $item->anggotaKelompok
+                                ->map(fn($anggota) => $anggota->mahasiswa?->nama ?? '')
+                                ->filter()
+                                ->implode(' ');
+
+                            $searchText = implode(' ', [
+                                $item->nama_kelompok ?? '',
+                                $item->judul_proyek ?? '',
+                                $allMemberNames,
+                                $item->dosen?->nama ?? '',
+                            ]);
+
                             $milestoneCount = $item->milestoneKelompok->count();
-                            $milestonePercent = $milestoneCount > 0 ? min(100, (int) (($milestoneCount / 5) * 100)) : 20;
+
+                            $milestonePercent = $milestoneCount > 0
+                                ? min(100, (int) (($milestoneCount / 5) * 100))
+                                : 20;
+
                             $status = $item->status ?? ($item->dosen ? 'Aktif' : 'Draft');
+
                             $statusClass = match ($status) {
                                 'Aktif' => 'active',
                                 'Draft' => 'draft',
@@ -724,144 +818,306 @@
                                 default => 'active',
                             };
                         @endphp
-                        <tr>
+
+                        <tr
+                            data-kelas-id="{{ $item->kelas_id }}"
+                            data-status="{{ $status }}"
+                            data-search="{{ strtolower($searchText) }}"
+                        >
                             <td>
-                                <span class="sim-kelompok-code">{{ strtoupper($item->kelas?->nama_kelas ?? 'PBL') }} • {{ $item->periode?->nama_periode ?? '2026/2027' }}</span>
-                                <div class="sim-kelompok-name">{{ $item->nama_kelompok }}</div>
-                            </td>
-                            <td>
-                                <div class="sim-kelompok-people">
-                                    {{ $memberCount ?: 0 }} mahasiswa<br>
-                                    <span style="color:#5d5551;">{{ implode(', ', $memberNames) ?: 'Belum ada anggota' }}</span>
+                                <span class="sim-kelompok-code">
+                                    {{ strtoupper($item->kelas?->nama_kelas ?? 'PBL') }}
+                                    •
+                                    {{ $item->periode?->nama_periode ?? '2026/2027' }}
+                                </span>
+
+                                <div class="sim-kelompok-name">
+                                    {{ $item->nama_kelompok }}
                                 </div>
                             </td>
+
                             <td>
-                                <div class="sim-kelompok-dosen">{{ $item->dosen?->nama ?? 'Belum ditugaskan' }}</div>
+                                <div class="sim-kelompok-people">
+                                    {{ $memberCount }} mahasiswa<br>
+                                    <span style="color:#5d5551;">
+                                        {{ implode(', ', $memberNames) ?: 'Belum ada anggota' }}
+                                    </span>
+                                </div>
                             </td>
+
+                            <td>
+                                <div class="sim-kelompok-dosen">
+                                    {{ $item->dosen?->nama ?? 'Belum ditugaskan' }}
+                                </div>
+                            </td>
+
                             <td class="sim-kelompok-milestone">
-                                <div class="sim-kelompok-progress"><span style="width: {{ $milestonePercent }}%"></span></div>
-                                <span class="sim-kelompok-progress-note">{{ $milestoneCount }}/5 selesai • {{ $milestonePercent }}%</span>
+                                <div class="sim-kelompok-progress">
+                                    <span style="width: {{ $milestonePercent }}%"></span>
+                                </div>
+                                <span class="sim-kelompok-progress-note">
+                                    {{ $milestoneCount }}/5 selesai • {{ $milestonePercent }}%
+                                </span>
                             </td>
+
                             <td>
-                                <span class="sim-kelompok-status {{ $statusClass }}" data-status-chip="{{ $item->id }}">{{ $status }}</span>
+                                <span
+                                    class="sim-kelompok-status {{ $statusClass }}"
+                                    data-status-chip="{{ $item->id }}"
+                                >
+                                    {{ $status }}
+                                </span>
                             </td>
+
                             <td>
                                 <div class="sim-kelompok-actions">
-                                    <button type="button" class="sim-kelompok-action-btn" data-edit-kelompok="open" data-kelompok-id="{{ $item->id }}" data-kelompok-name="{{ $item->nama_kelompok }}" data-kelompok-judul="{{ $item->judul_proyek }}" data-kelompok-kelas="{{ $item->kelas_id }}" data-kelompok-periode="{{ $item->periode_id }}" data-kelompok-dosen="{{ $item->dosen_id }}" data-kelompok-jadwal="{{ $item->jadwal_bimbingan }}" data-kelompok-members="{{ $item->anggotaKelompok->pluck('mahasiswa_id')->implode(',') }}" aria-label="Edit {{ $item->nama_kelompok }}">Edit</button>
-                                    <button type="button" class="sim-kelompok-action-btn" data-status-toggle="open" data-kelompok-id="{{ $item->id }}" data-kelompok-name="{{ $item->nama_kelompok }}" data-current-status="{{ $status }}" aria-label="Ubah status {{ $item->nama_kelompok }}">Ubah Status</button>
-                                    <form method="POST" action="{{ route('koordinator.kelompok.destroy', $item->id) }}" onsubmit="return confirm('Hapus kelompok {{ addslashes($item->nama_kelompok) }}?')" style="display:inline;">
+                                    <button
+                                        type="button"
+                                        class="sim-kelompok-action-btn"
+                                        data-edit-kelompok="open"
+                                        data-kelompok-id="{{ $item->id }}"
+                                        data-kelompok-name="{{ $item->nama_kelompok }}"
+                                        data-kelompok-judul="{{ $item->judul_proyek }}"
+                                        data-kelompok-kelas="{{ $item->kelas_id }}"
+                                        data-kelompok-periode="{{ $item->periode_id }}"
+                                        data-kelompok-dosen="{{ $item->dosen_id }}"
+                                        data-kelompok-jadwal="{{ $item->jadwal_bimbingan }}"
+                                        data-kelompok-members="{{ $item->anggotaKelompok->pluck('mahasiswa_id')->implode(',') }}"
+                                        aria-label="Edit {{ $item->nama_kelompok }}"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="sim-kelompok-action-btn"
+                                        data-status-toggle="open"
+                                        data-kelompok-id="{{ $item->id }}"
+                                        data-kelompok-name="{{ $item->nama_kelompok }}"
+                                        data-current-status="{{ $status }}"
+                                        aria-label="Ubah status {{ $item->nama_kelompok }}"
+                                    >
+                                        Ubah Status
+                                    </button>
+
+                                    <form
+                                        method="POST"
+                                        action="{{ route('koordinator.kelompok.destroy', $item->id) }}"
+                                        onsubmit="return confirm('Hapus kelompok {{ addslashes($item->nama_kelompok) }}?')"
+                                        style="display:inline;"
+                                    >
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="sim-kelompok-action-btn" style="background:#fff2f2; color:#a33b2c; border-color:#e7b1a8;">Hapus</button>
+
+                                        <button
+                                            type="submit"
+                                            class="sim-kelompok-action-btn"
+                                            style="background:#fff2f2; color:#a33b2c; border-color:#e7b1a8;"
+                                        >
+                                            Hapus
+                                        </button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="padding: 32px 14px; color: #665f59; text-align: center;">Belum ada kelompok PBL yang ditambahkan.</td>
+                            <td colspan="6" style="padding: 32px 14px; color: #665f59; text-align: center;">
+                                Belum ada kelompok PBL yang ditambahkan.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
+        {{-- FOOTER TABEL --}}
         <div class="sim-kelompok-footer">
-            <div>Menampilkan {{ $kelompokList->count() }} kelompok</div>
-            <div class="sim-kelompok-pagination">
-                <button type="button" class="page-btn">‹</button>
-                <button type="button" class="page-btn current">1</button>
-                <button type="button" class="page-btn">2</button>
-                <button type="button" class="page-btn">3</button>
-                <button type="button" class="page-btn">›</button>
+            <div id="kelompokFooterCount">
+                Menampilkan {{ $kelompokList->count() }} kelompok
             </div>
         </div>
     </div>
 </div>
 
+{{-- MODAL BUAT DAN EDIT KELOMPOK --}}
 <div id="kelompokModal" class="sim-kelompok-modal-backdrop" aria-hidden="true">
     <div class="sim-kelompok-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-kelompok">
         <div class="sim-kelompok-modal-header">
-            <div id="modal-title-kelompok" class="sim-kelompok-modal-title">Buat Kelompok</div>
-            <button type="button" class="sim-kelompok-modal-close" onclick="closeKelompokModal()" aria-label="Tutup">×</button>
+            <div id="modal-title-kelompok" class="sim-kelompok-modal-title">
+                Buat Kelompok
+            </div>
+
+            <button
+                type="button"
+                class="sim-kelompok-modal-close"
+                onclick="closeKelompokModal()"
+                aria-label="Tutup"
+            >
+                ×
+            </button>
         </div>
 
         <form id="kelompokForm" method="POST" action="{{ route('koordinator.kelompok.store') }}">
             @csrf
+
             <input type="hidden" name="_method" id="kelompokMethod" value="POST">
             <input type="hidden" name="kelompok_id" id="kelompokEditId" value="">
+
             <div class="sim-kelompok-modal-body">
                 <div class="sim-kelompok-form-grid">
                     <div class="sim-kelompok-form-group full">
-                        <label for="nama_kelompok" class="sim-kelompok-label">Nama Kelompok</label>
-                        <input id="nama_kelompok" name="nama_kelompok" class="sim-kelompok-input" type="text" placeholder="Kelompok 1" required>
+                        <label for="nama_kelompok" class="sim-kelompok-label">
+                            Nama Kelompok
+                        </label>
+                        <input
+                            id="nama_kelompok"
+                            name="nama_kelompok"
+                            class="sim-kelompok-input"
+                            type="text"
+                            placeholder="Kelompok 1"
+                            required
+                        >
                     </div>
 
                     <div class="sim-kelompok-form-group full">
-                        <label for="judul_proyek" class="sim-kelompok-label">Judul Proyek</label>
-                        <input id="judul_proyek" name="judul_proyek" class="sim-kelompok-input" type="text" placeholder="Sistem Inventaris Laboratorium">
+                        <label for="judul_proyek" class="sim-kelompok-label">
+                            Judul Proyek
+                        </label>
+                        <input
+                            id="judul_proyek"
+                            name="judul_proyek"
+                            class="sim-kelompok-input"
+                            type="text"
+                            placeholder="Sistem Inventaris Laboratorium"
+                        >
                     </div>
 
                     <div class="sim-kelompok-form-group">
-                        <label for="kelas_id" class="sim-kelompok-label">Kelas</label>
+                        <label for="kelas_id" class="sim-kelompok-label">
+                            Kelas
+                        </label>
                         <select id="kelas_id" name="kelas_id" class="sim-kelompok-select" required>
                             <option value="">Pilih kelas</option>
                             @foreach($kelasList as $kelas)
-                                <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
+                                <option value="{{ $kelas->id }}">
+                                    {{ $kelas->nama_kelas }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="sim-kelompok-form-group">
-                        <label for="periode_id" class="sim-kelompok-label">Semester / Periode</label>
+                        <label for="periode_id" class="sim-kelompok-label">
+                            Semester / Periode
+                        </label>
                         <select id="periode_id" name="periode_id" class="sim-kelompok-select" required>
                             <option value="">Pilih periode</option>
                             @foreach($periodeList as $periode)
-                                <option value="{{ $periode->id }}">{{ $periode->nama_periode }}</option>
+                                <option value="{{ $periode->id }}">
+                                    {{ $periode->nama_periode }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="sim-kelompok-form-group full">
-                        <label for="dosen_id" class="sim-kelompok-label">Dosen Pembimbing</label>
+                        <label for="dosen_id" class="sim-kelompok-label">
+                            Dosen Pembimbing
+                        </label>
                         <select id="dosen_id" name="dosen_id" class="sim-kelompok-select">
                             <option value="">Belum ditugaskan</option>
                             @foreach($dosenList as $dosen)
-                                <option value="{{ $dosen->id }}">{{ $dosen->nama }}</option>
+                                <option value="{{ $dosen->id }}">
+                                    {{ $dosen->nama }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="sim-kelompok-form-group full">
-                        <label for="jadwal_bimbingan" class="sim-kelompok-label">Jadwal Bimbingan</label>
-                        <textarea id="jadwal_bimbingan" name="jadwal_bimbingan" class="sim-kelompok-textarea" placeholder="Contoh: Senin, 13.00 - 15.00"></textarea>
+                        <label for="jadwal_bimbingan" class="sim-kelompok-label">
+                            Jadwal Bimbingan
+                        </label>
+                        <textarea
+                            id="jadwal_bimbingan"
+                            name="jadwal_bimbingan"
+                            class="sim-kelompok-textarea"
+                            placeholder="Contoh: Senin, 13.00 - 15.00"
+                        ></textarea>
                     </div>
 
                     <div class="sim-kelompok-form-group full">
-                        <label for="kelompokMahasiswaSearch" class="sim-kelompok-label">Tambah Anggota</label>
+                        <label for="kelompokMahasiswaSearch" class="sim-kelompok-label">
+                            Tambah Anggota
+                        </label>
+
                         <div class="sim-kelompok-member-search-wrap">
-                            <input id="kelompokMahasiswaSearch" type="text" class="sim-kelompok-input" placeholder="Cari mahasiswa berdasarkan nama atau NIM..." autocomplete="off">
-                            <div id="kelompokMahasiswaResults" class="sim-kelompok-member-results" aria-live="polite"></div>
+                            <input
+                                id="kelompokMahasiswaSearch"
+                                type="text"
+                                class="sim-kelompok-input"
+                                placeholder="Cari mahasiswa berdasarkan nama atau NIM..."
+                                autocomplete="off"
+                            >
+
+                            <div
+                                id="kelompokMahasiswaResults"
+                                class="sim-kelompok-member-results"
+                                aria-live="polite"
+                            ></div>
                         </div>
-                        <div id="kelompokMahasiswaSelected" class="sim-kelompok-selected-wrap" aria-live="polite"></div>
-                        <small style="color:#6a5f5a; font-size: 11px;">Cari nama mahasiswa lalu klik untuk menambahkannya ke kelompok.</small>
+
+                        <div
+                            id="kelompokMahasiswaSelected"
+                            class="sim-kelompok-selected-wrap"
+                            aria-live="polite"
+                        ></div>
+
+                        <small style="color:#6a5f5a; font-size: 11px;">
+                            Cari nama mahasiswa lalu klik untuk menambahkannya ke kelompok.
+                        </small>
                     </div>
                 </div>
             </div>
 
             <div class="sim-kelompok-modal-footer">
-                <button type="button" class="sim-kelompok-btn-secondary" onclick="closeKelompokModal()">Batal</button>
-                <button type="submit" id="kelompokSubmitBtn" class="sim-kelompok-btn-primary">Buat Kelompok</button>
+                <button
+                    type="button"
+                    class="sim-kelompok-btn-secondary"
+                    onclick="closeKelompokModal()"
+                >
+                    Batal
+                </button>
+
+                <button
+                    type="submit"
+                    id="kelompokSubmitBtn"
+                    class="sim-kelompok-btn-primary"
+                >
+                    Buat Kelompok
+                </button>
             </div>
         </form>
     </div>
 </div>
 
+{{-- MODAL UBAH STATUS --}}
 <div id="kelompokStatusModal" class="sim-kelompok-status-backdrop" aria-hidden="true">
     <div class="sim-kelompok-status-modal" role="dialog" aria-modal="true" aria-labelledby="statusModalTitleKelompok">
         <div class="sim-kelompok-status-header">
-            <h2 id="statusModalTitleKelompok" class="sim-kelompok-status-title">Konfirmasi Ubah Status</h2>
-            <button type="button" class="sim-kelompok-status-close" onclick="closeKelompokStatusModal()" aria-label="Tutup">×</button>
+            <h2 id="statusModalTitleKelompok" class="sim-kelompok-status-title">
+                Konfirmasi Ubah Status
+            </h2>
+
+            <button
+                type="button"
+                class="sim-kelompok-status-close"
+                onclick="closeKelompokStatusModal()"
+                aria-label="Tutup"
+            >
+                ×
+            </button>
         </div>
 
         <div class="sim-kelompok-status-body">
@@ -871,15 +1127,21 @@
                         <div class="sim-kelompok-status-label">Kelompok</div>
                         <div class="sim-kelompok-status-value" id="statusKelompokName">-</div>
                     </div>
+
                     <div class="sim-kelompok-status-field">
                         <div class="sim-kelompok-status-label">Status saat ini</div>
-                        <div class="sim-kelompok-status-value" id="statusKelompokCurrent">Aktif</div>
+                        <div class="sim-kelompok-status-value" id="statusKelompokCurrent">
+                            Aktif
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="sim-kelompok-status-field">
-                <label for="statusKelompokSelect" class="sim-kelompok-status-label">Ubah status menjadi</label>
+                <label for="statusKelompokSelect" class="sim-kelompok-status-label">
+                    Ubah status menjadi
+                </label>
+
                 <select id="statusKelompokSelect" class="sim-kelompok-status-select">
                     <option value="Aktif">Aktif</option>
                     <option value="Draft">Draft</option>
@@ -888,17 +1150,33 @@
             </div>
 
             <div class="sim-kelompok-status-note">
-                Periksa kembali perubahan status sebelum menyimpannya. Status yang diubah akan langsung terlihat di daftar kelompok.
+                Periksa kembali perubahan status sebelum menyimpannya.
+                Status yang diubah akan langsung terlihat di daftar kelompok.
             </div>
         </div>
 
         <form id="kelompokStatusForm" method="POST" action="">
             @csrf
             @method('PATCH')
+
             <input type="hidden" name="status" id="statusKelompokHidden" value="Aktif">
+
             <div class="sim-kelompok-status-footer">
-                <button type="button" class="sim-kelompok-status-btn sim-kelompok-status-btn--secondary" onclick="closeKelompokStatusModal()">Batal</button>
-                <button type="submit" id="confirmKelompokStatus" class="sim-kelompok-status-btn sim-kelompok-status-btn--primary">Ubah Status</button>
+                <button
+                    type="button"
+                    class="sim-kelompok-status-btn sim-kelompok-status-btn--secondary"
+                    onclick="closeKelompokStatusModal()"
+                >
+                    Batal
+                </button>
+
+                <button
+                    type="button"
+                    id="confirmKelompokStatus"
+                    class="sim-kelompok-status-btn sim-kelompok-status-btn--primary"
+                >
+                    Ubah Status
+                </button>
             </div>
         </form>
     </div>
@@ -924,7 +1202,6 @@
 
 <script>
     const kelompokMahasiswaOptions = @json($kelompokMahasiswaOptions);
-
     const kelompokSelectedMembers = new Map();
 
     function kelompoksSelectedMemberIds() {
@@ -936,15 +1213,20 @@
         if (!selectedWrap) return;
 
         selectedWrap.innerHTML = '';
+
         const ids = kelompoksSelectedMemberIds();
 
         if (!ids.length) {
-            selectedWrap.innerHTML = '<div class="sim-kelompok-selected-empty">Belum ada anggota yang dipilih.</div>';
+            selectedWrap.innerHTML =
+                '<div class="sim-kelompok-selected-empty">Belum ada anggota yang dipilih.</div>';
             return;
         }
 
         ids.forEach((id) => {
-            const mahasiswa = kelompokMahasiswaOptions.find((item) => String(item.id) === String(id));
+            const mahasiswa = kelompokMahasiswaOptions.find(
+                (item) => String(item.id) === String(id)
+            );
+
             if (!mahasiswa) return;
 
             const hiddenInput = document.createElement('input');
@@ -955,11 +1237,22 @@
 
             const pill = document.createElement('div');
             pill.className = 'sim-kelompok-selected-pill';
-            pill.innerHTML = '<span>' + mahasiswa.nama + '</span><button type="button" aria-label="Hapus ' + mahasiswa.nama + '">×</button>';
-            pill.querySelector('button').addEventListener('click', function () {
+
+            const name = document.createElement('span');
+            name.textContent = mahasiswa.nama;
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.textContent = '×';
+            removeButton.setAttribute('aria-label', 'Hapus ' + mahasiswa.nama);
+
+            removeButton.addEventListener('click', function () {
                 kelompokSelectedMembers.delete(String(mahasiswa.id));
                 syncKelompokSelectedInputs();
             });
+
+            pill.appendChild(name);
+            pill.appendChild(removeButton);
             selectedWrap.appendChild(pill);
         });
     }
@@ -969,6 +1262,7 @@
         if (!resultsEl) return;
 
         const searchTerm = (keyword || '').trim().toLowerCase();
+
         const filtered = !searchTerm
             ? kelompokMahasiswaOptions.slice(0, 8)
             : kelompokMahasiswaOptions.filter((item) => {
@@ -977,26 +1271,51 @@
             }).slice(0, 8);
 
         if (!filtered.length) {
-            resultsEl.innerHTML = '<div style="padding: 12px; color: #6b625d; font-size: 13px;">Mahasiswa tidak ditemukan.</div>';
+            resultsEl.innerHTML =
+                '<div style="padding: 12px; color: #6b625d; font-size: 13px;">Mahasiswa tidak ditemukan.</div>';
+
             resultsEl.classList.add('open');
             return;
         }
 
         resultsEl.innerHTML = filtered.map((item) => {
             const alreadySelected = kelompokSelectedMembers.has(String(item.id));
-            return '<button type="button" class="sim-kelompok-member-result" data-mahasiswa-id="' + item.id + '" ' + (alreadySelected ? 'disabled style="opacity:0.55; cursor:not-allowed;"' : '') + '><span>' + item.label + '</span><small>' + (alreadySelected ? 'Sudah ditambah' : 'Tambah') + '</small></button>';
+
+            return `
+                <button
+                    type="button"
+                    class="sim-kelompok-member-result"
+                    data-mahasiswa-id="${item.id}"
+                    ${alreadySelected ? 'disabled style="opacity:0.55; cursor:not-allowed;"' : ''}
+                >
+                    <span>${escapeKelompokHtml(item.label)}</span>
+                    <small>${alreadySelected ? 'Sudah ditambah' : 'Tambah'}</small>
+                </button>
+            `;
         }).join('');
 
         resultsEl.querySelectorAll('.sim-kelompok-member-result').forEach((button) => {
             button.addEventListener('click', function () {
                 if (this.disabled) return;
+
                 const id = this.dataset.mahasiswaId;
-                const mahasiswa = kelompokMahasiswaOptions.find((item) => String(item.id) === String(id));
+
+                const mahasiswa = kelompokMahasiswaOptions.find(
+                    (item) => String(item.id) === String(id)
+                );
+
                 if (!mahasiswa) return;
+
                 kelompokSelectedMembers.set(String(mahasiswa.id), mahasiswa);
+
                 syncKelompokSelectedInputs();
+
                 const search = document.getElementById('kelompokMahasiswaSearch');
-                if (search) search.value = '';
+
+                if (search) {
+                    search.value = '';
+                }
+
                 renderKelompokSearchResults('');
             });
         });
@@ -1004,10 +1323,29 @@
         resultsEl.classList.add('open');
     }
 
+    function escapeKelompokHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function (character) {
+            const entities = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;',
+            };
+
+            return entities[character];
+        });
+    }
+
     function resetKelompokMemberSelection() {
         kelompokSelectedMembers.clear();
+
         const search = document.getElementById('kelompokMahasiswaSearch');
-        if (search) search.value = '';
+
+        if (search) {
+            search.value = '';
+        }
+
         renderKelompokSearchResults('');
         syncKelompokSelectedInputs();
     }
@@ -1015,21 +1353,29 @@
     function openKelompokModal() {
         const modal = document.getElementById('kelompokModal');
         const form = document.getElementById('kelompokForm');
-        if (modal) modal.classList.add('open');
-        if (form) {
-            form.action = '{{ route('koordinator.kelompok.store') }}';
-            document.getElementById('kelompokMethod').value = 'POST';
-            document.getElementById('kelompokEditId').value = '';
-            document.getElementById('kelompokSubmitBtn').textContent = 'Buat Kelompok';
-            document.getElementById('modal-title-kelompok').textContent = 'Buat Kelompok';
-            form.reset();
-            resetKelompokMemberSelection();
+
+        if (modal) {
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
         }
+
+        if (!form) return;
+
+        form.action = @json(route('koordinator.kelompok.store'));
+
+        document.getElementById('kelompokMethod').value = 'POST';
+        document.getElementById('kelompokEditId').value = '';
+        document.getElementById('kelompokSubmitBtn').textContent = 'Buat Kelompok';
+        document.getElementById('modal-title-kelompok').textContent = 'Buat Kelompok';
+
+        form.reset();
+        resetKelompokMemberSelection();
     }
 
     function openKelompokEditModal(button) {
         const modal = document.getElementById('kelompokModal');
         const form = document.getElementById('kelompokForm');
+
         if (!modal || !button || !form) return;
 
         const id = button.dataset.kelompokId;
@@ -1039,9 +1385,14 @@
         const periodeId = button.dataset.kelompokPeriode || '';
         const dosenId = button.dataset.kelompokDosen || '';
         const jadwal = button.dataset.kelompokJadwal || '';
-        const memberIds = (button.dataset.kelompokMembers || '').split(',').map((value) => value.trim()).filter(Boolean);
 
-        form.action = '/koordinator/kelompok/' + id;
+        const memberIds = (button.dataset.kelompokMembers || '')
+            .split(',')
+            .map((value) => value.trim())
+            .filter(Boolean);
+
+        form.action = @json(url('/koordinator/kelompok')) + '/' + encodeURIComponent(id);
+
         document.getElementById('kelompokMethod').value = 'PUT';
         document.getElementById('kelompokEditId').value = id;
         document.getElementById('kelompokSubmitBtn').textContent = 'Simpan Perubahan';
@@ -1055,23 +1406,37 @@
         document.getElementById('jadwal_bimbingan').value = jadwal;
 
         kelompokSelectedMembers.clear();
+
         memberIds.forEach((memberId) => {
-            const mahasiswa = kelompokMahasiswaOptions.find((item) => String(item.id) === String(memberId));
+            const mahasiswa = kelompokMahasiswaOptions.find(
+                (item) => String(item.id) === String(memberId)
+            );
+
             if (mahasiswa) {
                 kelompokSelectedMembers.set(String(mahasiswa.id), mahasiswa);
             }
         });
 
         const search = document.getElementById('kelompokMahasiswaSearch');
-        if (search) search.value = '';
+
+        if (search) {
+            search.value = '';
+        }
+
         renderKelompokSearchResults('');
         syncKelompokSelectedInputs();
+
         modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
     }
 
     function closeKelompokModal() {
         const modal = document.getElementById('kelompokModal');
-        if (modal) modal.classList.remove('open');
+
+        if (modal) {
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+        }
     }
 
     function openKelompokStatusModal(button) {
@@ -1089,29 +1454,39 @@
         nameEl.textContent = groupName;
         currentEl.textContent = currentStatus;
         selectEl.value = currentStatus;
+
         modal.dataset.kelompokId = groupId;
         modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
     }
 
     function closeKelompokStatusModal() {
         const modal = document.getElementById('kelompokStatusModal');
-        if (modal) modal.classList.remove('open');
+
+        if (modal) {
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+        }
     }
 
+    // EVENT EDIT KELOMPOK
     document.querySelectorAll('[data-edit-kelompok="open"]').forEach((button) => {
         button.addEventListener('click', function () {
             openKelompokEditModal(this);
         });
     });
 
+    // EVENT UBAH STATUS
     document.querySelectorAll('[data-status-toggle="open"]').forEach((button) => {
         button.addEventListener('click', function () {
             openKelompokStatusModal(this);
         });
     });
 
+    // PENCARIAN MAHASISWA UNTUK MODAL
     const kelompokMahasiswaSearch = document.getElementById('kelompokMahasiswaSearch');
     const kelompokMahasiswaResults = document.getElementById('kelompokMahasiswaResults');
+
     if (kelompokMahasiswaSearch) {
         kelompokMahasiswaSearch.addEventListener('focus', function () {
             renderKelompokSearchResults(this.value);
@@ -1122,17 +1497,22 @@
         });
 
         document.addEventListener('click', function (event) {
-            const clickedInside = event.target.closest('#kelompokMahasiswaSearch') || event.target.closest('#kelompokMahasiswaResults');
+            const clickedInside =
+                event.target.closest('#kelompokMahasiswaSearch') ||
+                event.target.closest('#kelompokMahasiswaResults');
+
             if (!clickedInside && kelompokMahasiswaResults) {
                 kelompokMahasiswaResults.classList.remove('open');
             }
         });
     }
 
+    // INISIALISASI PILIHAN ANGGOTA
     syncKelompokSelectedInputs();
     renderKelompokSearchResults('');
 
-    document.getElementById('confirmKelompokStatus')?.addEventListener('click', function (event) {
+    // SUBMIT PERUBAHAN STATUS
+    document.getElementById('confirmKelompokStatus')?.addEventListener('click', function () {
         const modal = document.getElementById('kelompokStatusModal');
         const form = document.getElementById('kelompokStatusForm');
         const selectEl = document.getElementById('statusKelompokSelect');
@@ -1146,20 +1526,98 @@
         }
 
         hiddenStatusEl.value = status;
-        form.action = '/koordinator/kelompok/' + groupId + '/status';
+
+        form.action =
+            @json(url('/koordinator/kelompok')) +
+            '/' + encodeURIComponent(groupId) +
+            '/status';
+
         form.submit();
     });
 
+    // TUTUP MODAL JIKA KLIK AREA LUAR
     document.addEventListener('click', function (event) {
         const modal = document.getElementById('kelompokModal');
+
         if (event.target === modal) {
             closeKelompokModal();
         }
 
         const statusModal = document.getElementById('kelompokStatusModal');
+
         if (event.target === statusModal) {
             closeKelompokStatusModal();
         }
     });
+
+    // ========================================
+    // FILTER DAN PENCARIAN KELOMPOK PBL
+    // ========================================
+
+    const filterKelas = document.getElementById('filterKelasKelompok');
+    const filterStatus = document.getElementById('filterStatusKelompok');
+    const searchKelompok = document.getElementById('searchKelompok');
+
+    const kelompokTableBody = document.querySelector('.sim-kelompok-table tbody');
+    const kelompokFooterCount = document.getElementById('kelompokFooterCount');
+
+    function filterDaftarKelompok() {
+        if (!kelompokTableBody) return;
+
+        const kelasTerpilih = filterKelas?.value || '';
+        const statusTerpilih = filterStatus?.value || '';
+        const kataKunci = (searchKelompok?.value || '').trim().toLowerCase();
+
+        const rows = kelompokTableBody.querySelectorAll('tr[data-kelas-id]');
+
+        let jumlahTampil = 0;
+
+        rows.forEach((row) => {
+            const cocokKelas =
+                !kelasTerpilih || row.dataset.kelasId === kelasTerpilih;
+
+            const cocokStatus =
+                !statusTerpilih || row.dataset.status === statusTerpilih;
+
+            const cocokPencarian =
+                !kataKunci || (row.dataset.search || '').includes(kataKunci);
+
+            const tampil = cocokKelas && cocokStatus && cocokPencarian;
+
+            row.hidden = !tampil;
+
+            if (tampil) {
+                jumlahTampil++;
+            }
+        });
+
+        let emptyRow = document.getElementById('kelompokFilterEmpty');
+
+        if (!emptyRow) {
+            emptyRow = document.createElement('tr');
+            emptyRow.id = 'kelompokFilterEmpty';
+
+            emptyRow.innerHTML = `
+                <td colspan="6" style="padding:32px 14px;color:#665f59;text-align:center;">
+                    Tidak ada kelompok yang sesuai dengan filter.
+                </td>
+            `;
+
+            kelompokTableBody.appendChild(emptyRow);
+        }
+
+        emptyRow.hidden = jumlahTampil > 0 || rows.length === 0;
+
+        if (kelompokFooterCount) {
+            kelompokFooterCount.textContent =
+                `Menampilkan ${jumlahTampil} dari ${rows.length} kelompok`;
+        }
+    }
+
+    filterKelas?.addEventListener('change', filterDaftarKelompok);
+    filterStatus?.addEventListener('change', filterDaftarKelompok);
+    searchKelompok?.addEventListener('input', filterDaftarKelompok);
+
+    filterDaftarKelompok();
 </script>
 @endsection

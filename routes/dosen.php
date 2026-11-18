@@ -1,9 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Dosen\DosenController;
 use App\Http\Controllers\Dosen\DashboardController;
+use App\Http\Controllers\Dosen\DosenController;
 use App\Http\Controllers\Dosen\KelompokController;
+use App\Http\Controllers\Dosen\PenyelesaianMilestoneController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('dosen')->name('dosen.')->group(function () {
     Route::middleware('auth:dosen')->group(function () {
@@ -19,7 +20,12 @@ Route::prefix('dosen')->name('dosen.')->group(function () {
         // Halaman Detail Kelompok Bimbingan
         Route::get('/kelompok/{id}', [KelompokController::class, 'show'])->name('kelompok.show');
 
+        Route::get('/penyelesaian-milestone', [PenyelesaianMilestoneController::class, 'index'])
+            ->name('penyelesaian-milestone.index');
+        Route::patch('/penyelesaian-milestone/{kelompok}/{milestone}/{mataKuliah}', [PenyelesaianMilestoneController::class, 'update'])
+            ->name('penyelesaian-milestone.update');
+
         Route::get('/laporan-aktivitas', [DashboardController::class, 'laporanAktivitas'])->name('laporan-aktivitas');
-        Route::get('/notifikasi', [DashboardController::class, 'index'])->name('notifikasi');
+        Route::get('/notifikasi', [DosenController::class, 'notifikasi'])->name('notifikasi');
     });
 });

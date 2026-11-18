@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Kelompok extends Model
 {
@@ -49,6 +51,69 @@ class Kelompok extends Model
         return $this->hasMany(AnggotaKelompok::class);
     }
 
+    public function scopePeriodeAktif(Builder $query): Builder
+    {
+        $periodeId = Periode::query()
+            ->where('is_aktif', true)
+            ->orderByDesc('tanggal_mulai')
+            ->orderByDesc('id')
+            ->value('id');
+
+        if ($periodeId === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where('periode_id', $periodeId);
+    }
+
+    public function scopeWithIdentitas(Builder $query): Builder
+    {
+        return $query->with([
+            'anggotaKelompok' => fn ($anggota) => $anggota
+                ->with('mahasiswa')
+                ->orderByDesc('is_ketua')
+                ->orderBy('id'),
+        ]);
+    }
+
+    public function ketua(): ?AnggotaKelompok
+    {
+        if ($this->relationLoaded('anggotaKelompok')) {
+            return $this->anggotaKelompok
+                ->where('is_ketua', true)
+                ->sortBy('id')
+                ->first();
+        }
+
+        return $this->anggotaKelompok()
+            ->where('is_ketua', true)
+            ->orderBy('id')
+            ->first();
+    }
+
+    public function nimKetua(): ?string
+    {
+        return $this->ketua()?->mahasiswa?->nim;
+    }
+
+    public function anggotaTerurut(): Collection
+    {
+        if ($this->relationLoaded('anggotaKelompok')) {
+            return $this->anggotaKelompok
+                ->sortBy([
+                    ['is_ketua', 'desc'],
+                    ['id', 'asc'],
+                ])
+                ->values();
+        }
+
+        return $this->anggotaKelompok()
+            ->with('mahasiswa')
+            ->orderByDesc('is_ketua')
+            ->orderBy('id')
+            ->get();
+    }
+
     public function mahasiswa(): BelongsToMany
     {
         return $this->belongsToMany(Mahasiswa::class, 'anggota_kelompok')
@@ -69,6 +134,11 @@ class Kelompok extends Model
     public function milestoneKelompok(): HasMany
     {
         return $this->hasMany(MilestoneKelompok::class);
+    }
+
+    public function penyelesaianMilestone(): HasMany
+    {
+        return $this->hasMany(PenyelesaianMilestone::class);
     }
 
     public function pengumpulanDeliverable(): HasMany

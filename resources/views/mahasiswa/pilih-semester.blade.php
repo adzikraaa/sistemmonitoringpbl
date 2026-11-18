@@ -56,12 +56,19 @@
             </div>
             <div class="sim-ps-card__progress-wrap">
                 <div class="sim-ps-card__progress-row">
-                    <span class="sim-ps-card__phase">Fase: Implementasi &amp; Pengujian</span>
-                    <span class="sim-ps-card__pct">65%</span>
+                    <span class="sim-ps-card__phase">Progres PBL</span>
+                    <span class="sim-ps-card__pct">
+                        {{ $progres['punya_data'] ? $progres['persen'].'%' : 'Belum ada data' }}
+                    </span>
                 </div>
                 <div class="sim-ps-card__progress-bar">
-                    <div class="sim-ps-card__progress-fill" style="width: 65%"></div>
+                    <div class="sim-ps-card__progress-fill" style="width: {{ $progres['persen'] }}%"></div>
                 </div>
+                @if(! $progres['punya_data'])
+                    <p style="font-size: 11px; color: var(--sim-text-muted); margin: 8px 0 0;">
+                        Progres belum tersedia untuk kelompok/periode ini.
+                    </p>
+                @endif
             </div>
         </div>
         <div class="sim-ps-card__foot">

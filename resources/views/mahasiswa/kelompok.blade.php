@@ -43,23 +43,13 @@
 
 @section('content')
 
-@php
-    $anggota = [
-        ['inisial' => 'AP', 'nama' => 'Adzikra', 'peran' => 'Ketua'],
-        ['inisial' => 'BS', 'nama' => 'Tanggaq', 'peran' => 'Anggota'],
-        ['inisial' => 'RM', 'nama' => 'Dina',    'peran' => 'Anggota'],
-        ['inisial' => 'AS', 'nama' => 'Niky',    'peran' => 'Anggota'],
-        ['inisial' => 'AS', 'nama' => 'Ayu',     'peran' => 'Anggota'],
-    ];
-@endphp
-
 <div style="font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;">
 
 {{-- Page Header Section --}}
 <div class="sim-page-header">
     <div class="sim-page-header__left">
         <p class="sim-page-header__eyebrow">KELOMPOK SAYA</p>
-        <h1 class="sim-page-header__title">Kelompok 01</h1>
+        <h1 class="sim-page-header__title">{{ $kelompok?->nama_kelompok ?? 'Belum ada kelompok' }}</h1>
         <p class="sim-page-header__desc">Ruang kolaborasi untuk menjaga proyek tetap bergerak.</p>
     </div>
 </div>
@@ -71,11 +61,11 @@
     <div class="klp-banner" style="background: linear-gradient(135deg, #3A291F 0%, #34241A 100%); border-radius: 24px; color: #FAF7F3; box-shadow: 0 18px 40px rgba(58,38,26,0.20);">
 
         <p style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #A08C7D; margin: 0 0 8px;">
-            JADWAL MILESTONE SELANJUTNYA
+            MILESTONE PERIODE
         </p>
 
         <h2 class="klp-banner__title" style="font-family: 'DM Serif Display', serif; font-weight: 400; margin: 0 0 20px; color: #FAF7F3; line-height: 1.2;">
-            Milestone 2 - Implementasi Project
+            {{ $nextMilestone ? $nextMilestone->kode.' - '.$nextMilestone->judul : 'Belum ada milestone' }}
         </h2>
 
         <div class="klp-banner-meta" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px;">
@@ -84,7 +74,7 @@
                     JADWAL MILESTONE
                 </p>
                 <p style="font-size: 14px; font-weight: 500; margin: 0; color: #FAF7F3;">
-                    Selasa, 29 September 2026
+                    {{ $nextMilestone?->deadline?->translatedFormat('l, d F Y') ?? 'Belum ditetapkan' }}
                 </p>
             </div>
 
@@ -93,7 +83,7 @@
                     PROGRES PROJECT
                 </p>
                 <p style="font-size: 14px; font-weight: 500; margin: 0; color: #FAF7F3;">
-                    65%
+                    {{ $progres['persen'] }}%
                 </p>
             </div>
         </div>
@@ -129,7 +119,7 @@
 
             {{-- List Anggota --}}
             <div style="display: flex; flex-direction: column; padding-top: 0;">
-                @foreach ($anggota as $a)
+                @forelse ($anggota as $a)
                     <div class="klp-member {{ $loop->last ? '' : 'klp-member--bordered' }}">
                         <div class="klp-member__id">
                             <div class="klp-avatar" style="width: 38px; height: 38px; border-radius: 50%; background: #EBE1CC; color: #6E5B3E; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">
@@ -137,10 +127,10 @@
                             </div>
                             <div class="klp-member__txt">
                                 <p style="font-size: 14px; font-weight: 600; color: var(--sim-text-dark); margin: 0 0 1px;">
-                                    {{ $a['nama'] }}
+                                    Anggota {{ $loop->iteration }} &mdash; {{ $a['nama'] }}
                                 </p>
                                 <p style="font-size: 12px; color: var(--sim-text-muted); margin: 0;">
-                                    {{ $a['peran'] }}
+                                    {{ $a['peran'] }} &bull; {{ $a['nim'] }}
                                 </p>
                             </div>
                         </div>
@@ -155,7 +145,9 @@
                             </svg>
                         </button>
                     </div>
-                @endforeach
+                @empty
+                    <p class="text-sm text-[#7D746D] py-4">Belum ada anggota kelompok.</p>
+                @endforelse
             </div>
         </div>
 
@@ -177,13 +169,19 @@
             {{-- Progress Bar --}}
             <div style="margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--sim-text-muted); margin-bottom: 8px;">
-                    <span>Progress</span>
-                    <span style="font-weight: 500;">65%</span>
+                    <span>Progress keseluruhan</span>
+                    <span style="font-weight: 500;">
+                        {{ $progres['persen'] }}%
+                        ({{ $progres['selesai'] }}/{{ $progres['total'] }})
+                    </span>
                 </div>
 
                 <div style="width: 100%; height: 8px; background: #E8E2D9; border-radius: 999px; overflow: hidden;">
-                    <div style="width: 65%; height: 100%; background: #3F6B4E; border-radius: 999px;"></div>
+                    <div style="width: {{ $progres['persen'] }}%; height: 100%; background: #3F6B4E; border-radius: 999px;"></div>
                 </div>
+                @if(! $progres['punya_data'])
+                    <p style="font-size: 11px; color: var(--sim-text-muted); margin: 8px 0 0;">Belum ada data</p>
+                @endif
             </div>
 
             {{-- Aktivitas Tercatat --}}
@@ -193,7 +191,7 @@
                     stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
-                <span>4 aktivitas tercatat</span>
+                <span>{{ $logbookStats['total'] }} aktivitas tercatat</span>
             </div>
 
             {{-- Link Buka Catatan Proses --}}

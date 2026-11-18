@@ -1,11 +1,56 @@
-
 name: Deploy SIM-PBL to EC2
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+    inputs:
+      phase:
+        description: 'Deployment phase'
+        required: true
+        type: choice
+        options:
+          - prepare
+          - activate
+        default: prepare
+      target_commit:
+        description: 'Full commit SHA from main to deploy'
+        required: true
+        type: string
+      backup_cnf_path:
+        description: 'Path to a read-only MySQL client config with backup credentials'
+        required: false
+        type: string
+        default: /etc/sim-pbl/backup.cnf
+      backup_path:
+        description: 'Backup .sql.gz path produced by the prepare phase (required for activate)'
+        required: false
+        type: string
+        default: ''
+      php_fpm_service:
+        description: 'PHP-FPM systemd service name (required for activate)'
+        required: false
+        type: string
+        default: ''
+      production_url:
+        description: 'Production base URL for smoke testing'
+        required: false
+        type: string
+        default: https://sim-pbl.web.id
+      migration_approved:
+        description: 'Explicit approval to run migrations in prepare'
+        required: true
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+        default: 'no'
+      offsite_backup_confirmed:
+        description: 'Confirm the pre-migration backup was copied off-instance'
+        required: true
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+        default: 'no'
 
 permissions:
   contents: read
@@ -15,114 +60,258 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy to AWS EC2
+  prepare:
+    name: Phase 1 - Prepare and migrate
+    if: inputs.phase == 'prepare'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
-
+    environment: production
+    timeout-minutes: 45
     steps:
-      - name: Deploy application
+      - name: Prepare and migrate
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
           DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
-
+          TARGET_COMMIT: ${{ inputs.target_commit }}
+          BACKUP_CNF: ${{ inputs.backup_cnf_path }}
+          BACKUP_ROOT: /var/backups/sim-pbl
+          MIGRATION_APPROVED: ${{ inputs.migration_approved }}
+          OFFSITE_BACKUP_CONFIRMED: ${{ inputs.offsite_backup_confirmed }}
         run: |
-          set -e
+          set -euo pipefail
 
-          echo "[1] Checking GitHub Secrets..."
-
-          test -n "$SSH_PRIVATE_KEY" || {
-            echo "ERROR: EC2_SSH_KEY kosong"
-            exit 1
-          }
-
-          test -n "$EC2_HOST" || {
-            echo "ERROR: EC2_HOST kosong"
-            exit 1
-          }
-
-          test -n "$EC2_USER" || {
-            echo "ERROR: EC2_USER kosong"
-            exit 1
-          }
-
-          test -n "$DEPLOY_PATH" || {
-            echo "ERROR: EC2_DEPLOY_PATH kosong"
-            exit 1
-          }
-
-          echo "[2] Preparing SSH..."
+          test -n "${SSH_PRIVATE_KEY}" || { echo "ERROR: EC2_SSH_KEY kosong"; exit 1; }
+          test -n "${EC2_HOST}" || { echo "ERROR: EC2_HOST kosong"; exit 1; }
+          test -n "${EC2_USER}" || { echo "ERROR: EC2_USER kosong"; exit 1; }
+          test -n "${DEPLOY_PATH}" || { echo "ERROR: EC2_DEPLOY_PATH kosong"; exit 1; }
 
           mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -T 10 -H "${EC2_HOST}" >> ~/.ssh/known_hosts
 
-          echo "[3] Scanning EC2 host..."
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/id_ed25519 \
+            "${EC2_USER}@${EC2_HOST}" \
+            "DEPLOY_PATH='${DEPLOY_PATH}' TARGET_COMMIT='${TARGET_COMMIT}' BACKUP_CNF='${BACKUP_CNF}' BACKUP_ROOT='${BACKUP_ROOT}' MIGRATION_APPROVED='${MIGRATION_APPROVED}' OFFSITE_BACKUP_CONFIRMED='${OFFSITE_BACKUP_CONFIRMED}' bash -s" <<'ENDSSH'
 
-          if ! ssh-keyscan -T 10 -H "$EC2_HOST" >> ~/.ssh/known_hosts; then
-            echo "ERROR: Gagal mendapatkan SSH host key dari EC2."
+          set -euo pipefail
+          umask 0002
+          cd "$DEPLOY_PATH"
+
+          if ! printf '%s' "$TARGET_COMMIT" | grep -Eq '^[0-9a-fA-F]{7,40}$'; then
+            echo "ERROR: target_commit harus berupa SHA commit."
             exit 1
           fi
 
-          echo "[4] Connecting to EC2..."
+          if [ "$MIGRATION_APPROVED" != "yes" ]; then
+            echo "ERROR: migration_approved harus 'yes'."
+            exit 1
+          fi
 
-          ssh -v \
-            -o BatchMode=yes \
-            -o ConnectTimeout=15 \
-            -i ~/.ssh/id_ed25519 \
-            "$EC2_USER@$EC2_HOST" \
-            "DEPLOY_PATH='$DEPLOY_PATH' bash -s" <<'ENDSSH'
+          if [ "$OFFSITE_BACKUP_CONFIRMED" != "yes" ]; then
+            echo "ERROR: offsite_backup_confirmed harus 'yes'."
+            exit 1
+          fi
 
-            set -e
-            umask 0002
+          if [ ! -r "$BACKUP_CNF" ]; then
+            echo "ERROR: backup client config tidak dapat dibaca: $BACKUP_CNF"
+            exit 1
+          fi
 
-            echo "[5] Connected to EC2"
+          case "$BACKUP_ROOT" in
+            "$DEPLOY_PATH/public"*|"$DEPLOY_PATH/storage/app/public"*)
+              echo "ERROR: backup root tidak boleh berada di webroot/public storage."
+              exit 1
+              ;;
+          esac
 
-            cd "$DEPLOY_PATH"
+          command -v mysqldump >/dev/null 2>&1 || { echo "ERROR: mysqldump tidak tersedia."; exit 1; }
 
-            echo "[6] Updating Git repository..."
+          PREVIOUS_COMMIT="$(git rev-parse HEAD)"
+          git fetch origin main
+          git cat-file -e "${TARGET_COMMIT}^{commit}"
+          git merge-base --is-ancestor "$TARGET_COMMIT" origin/main || {
+            echo "ERROR: target commit bukan bagian dari origin/main."
+            exit 1
+          }
+          git merge-base --is-ancestor "$PREVIOUS_COMMIT" "$TARGET_COMMIT" || {
+            echo "ERROR: target commit bukan fast-forward dari HEAD saat ini."
+            exit 1
+          }
 
-            git fetch origin main
-            git merge --ff-only origin/main
+          DB_NAME="$(php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo config("database.connections.".config("database.default").".database");')"
+          test -n "$DB_NAME" || { echo "ERROR: nama database tidak ditemukan."; exit 1; }
 
-            echo "[7] Preparing Laravel permissions..."
+          STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+          BACKUP_DIR="$BACKUP_ROOT/$STAMP"
+          BACKUP_FILE="$BACKUP_DIR/database.sql.gz"
+          mkdir -p "$BACKUP_DIR"
+          chmod 700 "$BACKUP_ROOT" "$BACKUP_DIR"
 
-            sudo chown -R www-data:www-data storage bootstrap/cache
-            sudo find storage bootstrap/cache -type d -exec chmod 2775 {} \;
-            sudo find storage bootstrap/cache -type f -exec chmod 664 {} \;
+          echo "[backup] creating $BACKUP_FILE"
+          mysqldump \
+            --defaults-extra-file="$BACKUP_CNF" \
+            --single-transaction --quick --routines --triggers \
+            "$DB_NAME" | gzip -9 > "$BACKUP_FILE"
 
-            echo "[8] Installing Composer dependencies..."
+          test -s "$BACKUP_FILE" || { echo "ERROR: backup kosong."; exit 1; }
+          gzip -t "$BACKUP_FILE"
+          if ! grep -q "CREATE TABLE" <(zcat "$BACKUP_FILE"); then
+            echo "ERROR: backup tidak tampak seperti dump SQL."
+            exit 1
+          fi
+          sha256sum "$BACKUP_FILE" > "$BACKUP_FILE.sha256"
+          chmod 600 "$BACKUP_FILE" "$BACKUP_FILE.sha256"
 
-            composer install \
-              --no-dev \
-              --optimize-autoloader \
-              --no-interaction
+          printf 'previous_commit=%s\ntarget_commit=%s\nbackup=%s\ncreated_at=%s\n' \
+            "$PREVIOUS_COMMIT" "$TARGET_COMMIT" "$BACKUP_FILE" "$STAMP" \
+            > "$BACKUP_DIR/deploy-meta.txt"
+          chmod 600 "$BACKUP_DIR/deploy-meta.txt"
 
-            echo "[9] Building frontend..."
+          echo "[maintenance] enabling"
+          php artisan down --retry=60
 
-            npm ci
-            npm run build
+          echo "[code] fast-forward to $TARGET_COMMIT"
+          git merge --ff-only "$TARGET_COMMIT"
 
-            echo "[10] Running database migrations and seeding..."
+          echo "[dependencies]"
+          composer install --no-dev --optimize-autoloader --no-interaction
+          npm ci
+          npm run build
 
-            php artisan migrate --force
-            php artisan db:seed --force
+          echo "[migration]"
+          php artisan migrate --force
 
-            echo "[11] Clearing and rebuilding Laravel cache..."
+          MIGRATION_STATUS="$(php artisan migrate:status 2>/dev/null || true)"
+          if grep -qi 'pending' <<< "$MIGRATION_STATUS"; then
+            echo "ERROR: masih ada migration pending setelah migrate."
+            exit 1
+          fi
 
-            php artisan optimize:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
+          php scripts/deploy-verify-schema.php
 
-            echo "[12] Normalizing Laravel permissions..."
+          php artisan optimize:clear
 
-            sudo chown -R www-data:www-data storage bootstrap/cache
-            sudo find storage bootstrap/cache -type d -exec chmod 2775 {} \;
-            sudo find storage bootstrap/cache -type f -exec chmod 664 {} \;
-
-            echo "Deployment completed successfully!"
-
+          echo "PREPARE_OK backup=$BACKUP_FILE target=$TARGET_COMMIT"
+          echo "Aplikasi TETAP maintenance. Jalankan phase=activate setelah verifikasi."
           ENDSSH
+
+      - name: Recovery guidance
+        if: failure()
+        run: |
+          echo "Deployment prepare gagal atau dibatalkan."
+          echo "Jangan jalankan migrate:rollback, git reset --hard, atau restore otomatis."
+          echo "Aplikasi tetap maintenance jika php artisan down sudah dieksekusi."
+          echo "Gunakan deploy-meta.txt dan backup .sql.gz dari log untuk pemulihan manual yang disetujui."
+
+  activate:
+    name: Phase 2 - Activate application
+    if: inputs.phase == 'activate'
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 20
+    steps:
+      - name: Activate application
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
+          TARGET_COMMIT: ${{ inputs.target_commit }}
+          BACKUP_PATH: ${{ inputs.backup_path }}
+          PHP_FPM_SERVICE: ${{ inputs.php_fpm_service }}
+          PRODUCTION_URL: ${{ inputs.production_url }}
+        run: |
+          set -euo pipefail
+
+          test -n "${SSH_PRIVATE_KEY}" || { echo "ERROR: EC2_SSH_KEY kosong"; exit 1; }
+          test -n "${EC2_HOST}" || { echo "ERROR: EC2_HOST kosong"; exit 1; }
+          test -n "${EC2_USER}" || { echo "ERROR: EC2_USER kosong"; exit 1; }
+          test -n "${DEPLOY_PATH}" || { echo "ERROR: EC2_DEPLOY_PATH kosong"; exit 1; }
+          test -n "${BACKUP_PATH}" || { echo "ERROR: backup_path wajib untuk activate."; exit 1; }
+          test -n "${PHP_FPM_SERVICE}" || { echo "ERROR: php_fpm_service wajib untuk activate."; exit 1; }
+
+          mkdir -p ~/.ssh
+          printf '%s\n' "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -T 10 -H "${EC2_HOST}" >> ~/.ssh/known_hosts
+
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/id_ed25519 \
+            "${EC2_USER}@${EC2_HOST}" \
+            "DEPLOY_PATH='${DEPLOY_PATH}' TARGET_COMMIT='${TARGET_COMMIT}' BACKUP_PATH='${BACKUP_PATH}' PHP_FPM_SERVICE='${PHP_FPM_SERVICE}' PRODUCTION_URL='${PRODUCTION_URL}' bash -s" <<'ENDSSH'
+
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+
+          CURRENT_COMMIT="$(git rev-parse HEAD)"
+          TARGET_FULL="$(git rev-parse "${TARGET_COMMIT}^{commit}")"
+          if [ "$CURRENT_COMMIT" != "$TARGET_FULL" ]; then
+            echo "ERROR: HEAD server tidak sama dengan target_commit."
+            exit 1
+          fi
+
+          if [ ! -f "$BACKUP_PATH" ] || [ ! -f "$BACKUP_PATH.sha256" ]; then
+            echo "ERROR: backup atau checksum tidak ditemukan."
+            exit 1
+          fi
+          sha256sum -c "$BACKUP_PATH.sha256"
+          gzip -t "$BACKUP_PATH"
+
+          if [ ! -f storage/framework/down ]; then
+            echo "ERROR: maintenance mode tidak aktif; prepare belum berhasil."
+            exit 1
+          fi
+
+          MIGRATION_STATUS="$(php artisan migrate:status 2>/dev/null || true)"
+          if grep -qi 'pending' <<< "$MIGRATION_STATUS"; then
+            echo "ERROR: masih ada migration pending."
+            exit 1
+          fi
+
+          php scripts/deploy-verify-schema.php
+
+          echo "[cache]"
+          php artisan optimize:clear
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+          if ! command -v systemctl >/dev/null 2>&1; then
+            echo "ERROR: systemctl tidak tersedia."
+            exit 1
+          fi
+          echo "[php-fpm] reload $PHP_FPM_SERVICE"
+          sudo systemctl reload "$PHP_FPM_SERVICE"
+
+          sleep 2
+          HTTP_CODE="$(curl -sS -o /dev/null -w '%{http_code}' "$PRODUCTION_URL/login" || echo 000)"
+          case "$HTTP_CODE" in
+            2*|3*) ;;
+            *) echo "ERROR: smoke test /login menghasilkan HTTP $HTTP_CODE"; exit 1 ;;
+          esac
+
+          if [ -f storage/logs/laravel.log ]; then
+            RECENT_ERRORS="$(tail -n 200 storage/logs/laravel.log | grep -cE 'production\.(ERROR|CRITICAL)|CRITICAL' || true)"
+            echo "[log] recent error lines: $RECENT_ERRORS"
+          fi
+
+          echo "[maintenance] disabling"
+          php artisan up
+
+          FINAL_CODE="$(curl -sS -o /dev/null -w '%{http_code}' "$PRODUCTION_URL/login" || echo 000)"
+          case "$FINAL_CODE" in
+            2*|3*) ;;
+            *) php artisan down --retry=60; echo "ERROR: smoke test setelah up gagal."; exit 1 ;;
+          esac
+
+          echo "ACTIVATE_OK target=$TARGET_COMMIT"
+          ENDSSH
+
+      - name: Recovery guidance
+        if: failure()
+        run: |
+          echo "Deployment activate gagal atau dibatalkan."
+          echo "Aplikasi tetap maintenance jika php artisan up belum dieksekusi."
+          echo "Jangan jalankan migrate:rollback, git reset --hard, atau restore otomatis."
+          echo "Pulihkan hanya dengan commit sebelumnya dan backup tervalidasi, setelah persetujuan."

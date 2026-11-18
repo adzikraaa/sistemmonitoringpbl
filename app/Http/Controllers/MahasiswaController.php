@@ -2,15 +2,47 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DosenPengampu;
+use App\Models\Kelompok;
+use App\Models\LogbookMilestone;
+use App\Models\Mahasiswa;
+use App\Models\MataKuliah;
+use App\Models\Milestone;
+use App\Models\PengumpulanMilestone;
 use App\Models\Proposal;
 use App\Models\RiwayatProposal;
-use App\Models\Kelompok;
+use App\Services\ProgressService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class MahasiswaController extends Controller
 {
+    private const MATA_KULIAH_SIM_PBL = [
+        'Pemrograman Web Lanjut',
+        'Manajemen Proyek Sistem Informasi',
+        'Penjaminan Mutu Perangkat Lunak',
+    ];
+
+    private function kelompokAktif(): ?Kelompok
+    {
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+
+        if (! $mahasiswa) {
+            return null;
+        }
+
+        return Kelompok::query()
+            ->periodeAktif()
+            ->whereHas('mahasiswa', fn ($query) => $query->where('mahasiswa.id', $mahasiswa->id))
+            ->orderBy('id')
+            ->first();
+    }
+
     /**
      * Data kelompok dan user (hardcoded untuk prototype).
      * Saat backend lengkap, data ini diambil dari database/session.
@@ -20,8 +52,8 @@ class MahasiswaController extends Controller
         $mahasiswa = Auth::guard('mahasiswa')->user();
 
         return [
-            'userName'  => $mahasiswa?->nama ?? 'Mahasiswa',
-            'userNim'   => $mahasiswa?->nim ?? '-',
+            'userName' => $mahasiswa?->nama ?? 'Mahasiswa',
+            'userNim' => $mahasiswa?->nim ?? '-',
             'userKelas' => $mahasiswa?->kelas_id ?? '-',
             'userProdi' => 'Teknologi Informasi',
         ];
@@ -29,117 +61,246 @@ class MahasiswaController extends Controller
 
     public function pilihSemester()
     {
-        return view('mahasiswa.pilih-semester', $this->sharedViewData());
+        $kelompok = $this->kelompokAktif();
+        $progres = $kelompok
+            ? app(ProgressService::class)->untukKelompok($kelompok)
+            : $this->kosongProgres();
+
+        return view('mahasiswa.pilih-semester', array_merge($this->sharedViewData(), [
+            'kelompok' => $kelompok,
+            'progres' => $progres,
+        ]));
     }
 
     public function dashboard()
     {
-        return view('mahasiswa.dashboard', $this->sharedViewData());
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $kelompok = $this->kelompokAktif();
+        $progres = $kelompok
+            ? app(ProgressService::class)->untukKelompok($kelompok)
+            : $this->kosongProgres();
+        $proposal = $kelompok
+            ? Proposal::where('kelompok_id', $kelompok->id)->latest()->first()
+            : null;
+        $logbookStats = $kelompok ? $this->logbookStats($kelompok) : $this->kosongLogbookStats();
+        $anggota = $this->anggotaView($kelompok);
+
+        $aktivitasTerbaru = ($mahasiswa && $kelompok)
+            ? LogbookMilestone::query()
+                ->where('mahasiswa_id', $mahasiswa->id)
+                ->where('kelompok_id', $kelompok->id)
+                ->orderByDesc('tanggal')
+                ->orderByDesc('id')
+                ->limit(5)
+                ->get()
+            : collect();
+
+        return view('mahasiswa.dashboard', array_merge($this->sharedViewData(), [
+            'kelompok' => $kelompok,
+            'progres' => $progres,
+            'proposal' => $proposal,
+            'logbookStats' => $logbookStats,
+            'anggota' => $anggota,
+            'tahapan' => $this->tahapanDashboard($proposal),
+            'aktivitasTerbaru' => $aktivitasTerbaru,
+        ]));
     }
 
     public function kelompok()
     {
-        return view('mahasiswa.kelompok', $this->sharedViewData());
+        $kelompok = $this->kelompokAktif();
+        $progres = $kelompok
+            ? app(ProgressService::class)->untukKelompok($kelompok)
+            : $this->kosongProgres();
+        $logbookStats = $kelompok ? $this->logbookStats($kelompok) : $this->kosongLogbookStats();
+        $nextMilestone = $kelompok
+            ? Milestone::where('periode_id', $kelompok->periode_id)->orderBy('urutan')->first()
+            : null;
+
+        return view('mahasiswa.kelompok', array_merge($this->sharedViewData(), [
+            'kelompok' => $kelompok,
+            'progres' => $progres,
+            'anggota' => $this->anggotaView($kelompok),
+            'logbookStats' => $logbookStats,
+            'nextMilestone' => $nextMilestone,
+        ]));
+    }
+
+    private function kosongProgres(): array
+    {
+        return ['persen' => 0.0, 'selesai' => 0, 'total' => 0, 'punya_data' => false];
+    }
+
+    private function kosongLogbookStats(): array
+    {
+        return [
+            'total' => 0,
+            'menunggu' => 0,
+            'disetujui' => 0,
+            'revisi' => 0,
+            'terbaru' => null,
+        ];
+    }
+
+    private function anggotaView(?Kelompok $kelompok): array
+    {
+        if (! $kelompok) {
+            return [];
+        }
+
+        return $kelompok->anggotaTerurut()->map(function ($anggota) {
+            $nama = $anggota->mahasiswa?->nama ?? 'Mahasiswa';
+            $parts = preg_split('/\s+/', trim($nama)) ?: [];
+            $awal = $parts[0] ?? 'M';
+            $inisial = strtoupper(
+                substr($awal, 0, 1).(isset($parts[1]) ? substr($parts[1], 0, 1) : substr($awal, 1, 1))
+            );
+
+            return [
+                'nama' => $nama,
+                'nim' => $anggota->mahasiswa?->nim ?? '-',
+                'peran' => $anggota->is_ketua ? 'Ketua' : 'Anggota',
+                'role' => $anggota->is_ketua ? 'Ketua' : 'Anggota',
+                'inisial' => $inisial,
+                'avatar' => $inisial,
+            ];
+        })->values()->all();
+    }
+
+    private function statusProgres(array $progres): string
+    {
+        $total = (int) ($progres['total'] ?? 0);
+        $selesai = (int) ($progres['selesai'] ?? 0);
+
+        if ($total === 0) {
+            return 'Belum ada data';
+        }
+
+        if ($selesai >= $total) {
+            return 'Selesai';
+        }
+
+        return $selesai > 0 ? 'Berjalan' : 'Belum dimulai';
+    }
+
+    private function logbookStats(Kelompok $kelompok): array
+    {
+        $records = LogbookMilestone::where('kelompok_id', $kelompok->id)->get();
+
+        $status = fn ($record) => strtolower(trim((string) $record->status));
+
+        return [
+            'total' => $records->count(),
+            'menunggu' => $records->filter(
+                fn ($record) => in_array($status($record), ['diajukan', 'menunggu review', 'menunggu'], true)
+            )->count(),
+            'disetujui' => $records->filter(fn ($record) => $status($record) === 'disetujui')->count(),
+            'revisi' => $records->filter(fn ($record) => $status($record) === 'revisi')->count(),
+            'terbaru' => $records->sortByDesc('tanggal')->first(),
+        ];
+    }
+
+    private function tahapanDashboard(?Proposal $proposal): array
+    {
+        $proposalState = 'todo';
+        $proposalStatus = 'Belum ada proposal';
+
+        if ($proposal) {
+            $raw = strtolower((string) $proposal->status);
+
+            [$proposalState, $proposalStatus] = match ($raw) {
+                'disetujui' => ['done', 'Disetujui'],
+                'revisi' => ['active', 'Revisi'],
+                'ditolak' => ['todo', 'Ditolak'],
+                default => ['active', 'Dalam Proses'],
+            };
+        }
+
+        return [
+            ['label' => 'Proposal', 'state' => $proposalState, 'status' => $proposalStatus],
+            ['label' => 'Analisis', 'state' => 'todo', 'status' => 'Belum tersedia'],
+            ['label' => 'Perancangan', 'state' => 'todo', 'status' => 'Belum tersedia'],
+            ['label' => 'Implementasi', 'state' => 'todo', 'status' => 'Belum tersedia'],
+        ];
     }
 
     public function proposal()
     {
-        $mahasiswa = Auth::guard('mahasiswa')->user();
-        $kelompok = $mahasiswa ? $mahasiswa->kelompok()->first() : null;
-        $kelompokId = $kelompok ? $kelompok->id : (Kelompok::first()?->id ?? null);
+        $kelompok = $this->kelompokAktif();
 
-        $dbProposal = $kelompokId ? Proposal::with('riwayatProposal')->where('kelompok_id', $kelompokId)->latest()->first() : null;
+        $dbProposal = $kelompok
+            ? Proposal::with('riwayatProposal')->where('kelompok_id', $kelompok->id)->latest()->first()
+            : null;
 
         if ($dbProposal) {
             $latestVersion = $dbProposal->riwayatProposal()->max('versi') ?? 1;
-            $versiLabel = 'VERSI ' . str_pad((string) $latestVersion, 2, '0', STR_PAD_LEFT);
+            $versiLabel = 'VERSI '.str_pad((string) $latestVersion, 2, '0', STR_PAD_LEFT);
 
             $statusRaw = strtolower($dbProposal->status);
             $statusFormatted = match ($statusRaw) {
                 'disetujui' => 'Disetujui',
-                'ditolak'   => 'Ditolak',
-                'revisi'    => 'Revisi',
-                default     => 'Diajukan',
+                'ditolak' => 'Ditolak',
+                'revisi' => 'Revisi',
+                default => 'Diajukan',
             };
 
             $timeline = [
                 [
                     'event' => 'Draf & Proposal diajukan',
-                    'date'  => $dbProposal->tanggal_pengajuan ? $dbProposal->tanggal_pengajuan->translatedFormat('d F Y') : now()->translatedFormat('d F Y'),
+                    'date' => $dbProposal->tanggal_pengajuan ? $dbProposal->tanggal_pengajuan->translatedFormat('d F Y') : now()->translatedFormat('d F Y'),
                     'state' => 'done',
                 ],
                 [
                     'event' => 'Pemeriksaan oleh pembimbing',
-                    'date'  => in_array($statusRaw, ['disetujui', 'ditolak', 'revisi']) ? 'Selesai' : 'Sedang ditinjau',
+                    'date' => in_array($statusRaw, ['disetujui', 'ditolak', 'revisi']) ? 'Selesai' : 'Sedang ditinjau',
                     'state' => in_array($statusRaw, ['disetujui', 'ditolak', 'revisi']) ? 'done' : 'current',
                 ],
                 [
                     'event' => match ($statusRaw) {
                         'disetujui' => 'Proposal disetujui',
-                        'ditolak'   => 'Proposal ditolak',
-                        'revisi'    => 'Perlu revisi',
-                        default     => 'Menunggu keputusan',
+                        'ditolak' => 'Proposal ditolak',
+                        'revisi' => 'Perlu revisi',
+                        default => 'Menunggu keputusan',
                     },
-                    'date'  => in_array($statusRaw, ['disetujui', 'ditolak', 'revisi']) ? 'Tercatat' : 'Menunggu',
+                    'date' => in_array($statusRaw, ['disetujui', 'ditolak', 'revisi']) ? 'Tercatat' : 'Menunggu',
                     'state' => in_array($statusRaw, ['disetujui', 'ditolak', 'revisi']) ? 'done' : '',
                 ],
             ];
 
             $proposalData = [
-                'id'             => $dbProposal->id,
-                'versi'          => $versiLabel,
-                'judul'          => $dbProposal->judul,
-                'deskripsi'      => $dbProposal->deskripsi,
+                'id' => $dbProposal->id,
+                'versi' => $versiLabel,
+                'judul' => $dbProposal->judul,
+                'deskripsi' => $dbProposal->deskripsi,
                 'latar_belakang' => $dbProposal->latar_belakang,
-                'tujuan'         => $dbProposal->tujuan,
-                'metode'         => $dbProposal->metode,
-                'file_proposal'  => $dbProposal->file_proposal,
-                'file_name'      => $dbProposal->file_proposal ? basename($dbProposal->file_proposal) : 'proposal-pbl.pdf',
-                'file_url'       => $dbProposal->file_proposal ? route('mahasiswa.proposal.download', $dbProposal->id) : null,
-                'status'         => $statusFormatted,
-                'status_raw'     => $statusRaw,
-                'tanggal'        => $dbProposal->tanggal_pengajuan ? $dbProposal->tanggal_pengajuan->translatedFormat('d F Y') : now()->translatedFormat('d F Y'),
-                'feedback'       => $dbProposal->catatan_revisi ?: 'Belum ada catatan atau revisi dari pembimbing.',
-                'timeline'       => $timeline,
+                'tujuan' => $dbProposal->tujuan,
+                'metode' => $dbProposal->metode,
+                'file_proposal' => $dbProposal->file_proposal,
+                'file_name' => $dbProposal->file_proposal ? 'proposal-'.$dbProposal->id.'.pdf' : 'proposal-pbl.pdf',
+                'file_url' => $dbProposal->file_proposal ? route('mahasiswa.proposal.download', $dbProposal->id) : null,
+                'status' => $statusFormatted,
+                'status_raw' => $statusRaw,
+                'tanggal' => $dbProposal->tanggal_pengajuan ? $dbProposal->tanggal_pengajuan->translatedFormat('d F Y') : now()->translatedFormat('d F Y'),
+                'feedback' => $dbProposal->catatan_revisi ?: 'Belum ada catatan atau revisi dari pembimbing.',
+                'timeline' => $timeline,
             ];
         } else {
             $proposalData = [
-                'id'             => null,
-                'versi'          => 'VERSI 01',
-                'judul'          => 'Pengembangan Sistem Monitoring PBL',
-                'deskripsi'      => 'Platform web untuk membantu mahasiswa, dosen, dan koordinator memantau progres Project Based Learning secara terstruktur.',
-                'latar_belakang' => 'Proses monitoring saat ini masih tersebar di berbagai kanal sehingga histori dan progres sulit dipantau secara utuh.',
-                'tujuan'         => 'Membangun satu sistem terpusat untuk proposal, logbook, milestone, dan monitoring progres project.',
-                'metode'         => 'Agile dengan iterasi sprint dua mingguan dan validasi bersama dosen pembimbing.',
-                'file_proposal'  => null,
-                'file_name'      => 'proposal-kelompok-01.pdf',
-                'file_url'       => null,
-                'status'         => 'Disetujui',
-                'status_raw'     => 'disetujui',
-                'tanggal'        => '26 September 2026',
-                'feedback'       => 'Struktur proposal sudah baik. Lanjutkan ke implementasi modul logbook.',
-                'timeline'       => [
-                    [
-                        'event' => 'Draf disusun',
-                        'date'  => '02 Mei 2024',
-                        'state' => 'done',
-                    ],
-                    [
-                        'event' => 'Dikirim untuk ditinjau',
-                        'date'  => '02 Mei 2024',
-                        'state' => 'done',
-                    ],
-                    [
-                        'event' => 'Disetujui pembimbing',
-                        'date'  => '06 Mei 2024',
-                        'state' => 'done',
-                    ],
-                    [
-                        'event' => 'Mulai pengerjaan',
-                        'date'  => 'Berjalan',
-                        'state' => 'current',
-                    ],
-                ],
+                'id' => null,
+                'versi' => 'VERSI -',
+                'judul' => 'Belum ada proposal',
+                'deskripsi' => 'Ajukan proposal pertama untuk kelompok ini.',
+                'latar_belakang' => 'Belum ada data.',
+                'tujuan' => 'Belum ada data.',
+                'metode' => 'Belum ada data.',
+                'file_proposal' => null,
+                'file_name' => '',
+                'file_url' => null,
+                'status' => 'Belum diajukan',
+                'status_raw' => 'belum diajukan',
+                'tanggal' => '',
+                'feedback' => 'Belum ada catatan dari pembimbing.',
+                'timeline' => [],
             ];
         }
 
@@ -151,46 +312,53 @@ class MahasiswaController extends Controller
 
     public function logbook()
     {
-        $logbooks = [
-            [
-                'id' => 'lb1',
-                'tanggal' => '2026-04-28',
-                'judul' => 'Analisis kebutuhan',
-                'deskripsi' => 'Wawancara singkat dengan mahasiswa dan dosen pembimbing.',
-                'progress' => 0,
-                'hasil' => 'Daftar kebutuhan prioritas dan alur utama terdokumentasi.',
-                'rencana' => 'Validasi hasil analisis dan susun backlog sprint.',
-                'kendala' => 'Jadwal wawancara dengan koordinator berubah.',
-                'status' => 'Disetujui',
-                'feedback' => null,
-            ],
-            [
-                'id' => 'lb2',
-                'tanggal' => '2026-05-05',
-                'judul' => 'Perancangan database',
-                'deskripsi' => 'Menyusun relasi kelompok, proposal, logbook, milestone, dan penilaian.',
-                'progress' => 0,
-                'hasil' => 'ERD dan struktur tabel awal selesai.',
-                'rencana' => 'Finalisasi schema dan mulai implementasi API.',
-                'kendala' => 'Beberapa istilah perlu disepakati dengan koordinator.',
-                'status' => 'Revisi',
-                'feedback' => 'Tambahkan relasi histori aktivitas dan status publikasi nilai.',
-            ],
-            [
-                'id' => 'lb3',
-                'tanggal' => '2026-05-12',
-                'judul' => 'Implementasi autentikasi',
-                'deskripsi' => 'Menyelesaikan alur login dan pembagian akses berdasarkan role pengguna.',
-                'progress' => 0,
-                'hasil' => 'Alur login mahasiswa dan dosen sudah dapat diuji.',
-                'rencana' => 'Merapikan validasi form dan melanjutkan modul proposal.',
-                'kendala' => 'Penyesuaian middleware untuk role coordinator.',
-                'status' => 'Disetujui',
-                'feedback' => 'Dokumentasi cukup lengkap. Pastikan pesan error mudah dipahami pengguna.',
-            ],
+        /** @var Mahasiswa|null $mahasiswa */
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $kelompok = $this->kelompokAktif();
+
+        $records = ($mahasiswa && $kelompok)
+            ? LogbookMilestone::query()
+                ->where('mahasiswa_id', $mahasiswa->id)
+                ->where('kelompok_id', $kelompok->id)
+                ->orderBy('tanggal')
+                ->orderBy('id')
+                ->get()
+            : collect();
+
+        $normalize = fn ($value) => strtolower(trim((string) $value));
+
+        $logbookStats = [
+            'total' => $records->count(),
+            'menunggu' => $records->filter(
+                fn ($record) => in_array($normalize($record->status), ['diajukan', 'menunggu review', 'menunggu'], true)
+            )->count(),
+            'disetujui' => $records->filter(fn ($record) => $normalize($record->status) === 'disetujui')->count(),
+            'revisi' => $records->filter(fn ($record) => $normalize($record->status) === 'revisi')->count(),
+            'terbaru' => $records->sortByDesc('tanggal')->first(),
         ];
 
-        // Hitung nomor minggu berdasarkan tanggal paling awal.
+        $logbooks = $records->map(function (LogbookMilestone $logbook) {
+            $status = match (strtolower((string) $logbook->status)) {
+                'disetujui' => 'Disetujui',
+                'revisi' => 'Revisi',
+                'ditolak' => 'Ditolak',
+                default => 'Menunggu Review',
+            };
+
+            return [
+                'id' => (string) $logbook->id,
+                'tanggal' => $logbook->tanggal->toDateString(),
+                'judul' => $logbook->judul ?: $logbook->kegiatan,
+                'deskripsi' => $logbook->deskripsi,
+                'progress' => (int) $logbook->progress,
+                'hasil' => $logbook->hasil,
+                'rencana' => $logbook->rencana,
+                'kendala' => $logbook->kendala,
+                'status' => $status,
+                'feedback' => $logbook->feedback,
+            ];
+        })->all();
+
         $earliest = null;
 
         foreach ($logbooks as $logbook) {
@@ -212,6 +380,8 @@ class MahasiswaController extends Controller
         return view('mahasiswa.logbook', array_merge($this->sharedViewData(), [
             'logbooks' => $logbooks,
             'earliestTimestamp' => $earliest ?? time(),
+            'kelompok' => $kelompok,
+            'logbookStats' => $logbookStats,
         ]));
     }
 
@@ -223,74 +393,54 @@ class MahasiswaController extends Controller
     /** Halaman daftar Milestone per Mata Kuliah */
     public function milestone()
     {
-        $milestones = [
-            [
-                'id'    => 1,
-                'kode'  => 'M1',
-                'slug'  => 'pemrograman-web-lanjut',
-                'judul' => 'Pemrograman Web Lanjut',
-                'dosen' => 'Dian Hanifudin Subhi, S.Kom., M.Kom.',
-                'progress' => 45,
-                'status'   => 'Berjalan',
-                'badge'    => 'sim-badge--warning',
-                'tenggat'  => '30 Nov 2026',
-                'deskripsi' => 'Implementasi modul utama sistem dan integrasi API backend.',
-                'catatan'   => null,
-                'deliverables' => [
-                    ['nama' => 'Laporan Perencanaan Sprint', 'status' => 'Disetujui'],
-                    ['nama' => 'ERD & Skema Database', 'status' => 'Disetujui'],
-                    ['nama' => 'Implementasi Autentikasi', 'status' => 'Perlu Revisi'],
-                    ['nama' => 'Modul Dashboard Mahasiswa', 'status' => 'Belum'],
-                ],
-            ],
-            [
-                'id'    => 2,
-                'kode'  => 'M2',
-                'slug'  => 'manajemen-proyek-sistem-informasi',
-                'judul' => 'Manajemen Proyek Sistem Informasi',
-                'dosen' => 'Ir. Rudy Ariyanto, S.T., M.Cs.',
-                'progress' => 30,
-                'status'   => 'Berjalan',
-                'badge'    => 'sim-badge--warning',
-                'tenggat'  => '15 Des 2026',
-                'deskripsi' => 'Penyusunan WBS, Gantt Chart, dan dokumentasi manajemen proyek.',
-                'catatan'   => 'Pastikan timeline realistis dan sesuai kapasitas tim.',
-                'deliverables' => [
-                    ['nama' => 'WBS & Gantt Chart', 'status' => 'Disetujui'],
-                    ['nama' => 'Risk Register', 'status' => 'Belum'],
-                    ['nama' => 'Sprint Review Report', 'status' => 'Belum'],
-                ],
-            ],
-            [
-                'id'    => 3,
-                'kode'  => 'M3',
-                'slug'  => 'penjaminan-mutu-perangkat-lunak',
-                'judul' => 'Penjaminan Mutu Perangkat Lunak',
-                'dosen' => 'Usman Nurhasan, S.Kom., M.T.',
-                'progress' => 0,
-                'status'   => 'Belum dimulai',
-                'badge'    => 'sim-badge--default',
-                'tenggat'  => '10 Jan 2027',
-                'deskripsi' => 'Penyusunan test plan, test case, dan laporan hasil pengujian.',
-                'catatan'   => null,
-                'deliverables' => [],
-            ],
-        ];
+        $kelompok = $this->kelompokAktif();
 
-        $mataKuliahList = array_map(function ($item) {
+        $mataKuliahModels = MataKuliah::query()
+            ->where('is_aktif', true)
+            ->whereIn('nama_matkul', self::MATA_KULIAH_SIM_PBL)
+            ->get()
+            ->sortBy(fn (MataKuliah $mataKuliah) => array_search(
+                $mataKuliah->nama_matkul,
+                self::MATA_KULIAH_SIM_PBL,
+                true
+            ))
+            ->values();
+
+        $mataKuliahIds = $mataKuliahModels->pluck('id')->all();
+        $progresMap = $kelompok
+            ? app(ProgressService::class)->untukDaftarMataKuliah($kelompok, $mataKuliahModels)
+            : [];
+
+        $dosenMap = $kelompok
+            ? DosenPengampu::query()
+                ->with('dosen')
+                ->where('kelas_id', $kelompok->kelas_id)
+                ->whereIn('mata_kuliah_id', $mataKuliahIds)
+                ->get()
+                ->keyBy('mata_kuliah_id')
+            : collect();
+
+        $mataKuliahList = $mataKuliahModels->map(function (MataKuliah $mataKuliah) use ($progresMap, $dosenMap) {
+            $progres = $progresMap[$mataKuliah->id] ?? $this->kosongProgres();
+            $status = $this->statusProgres($progres);
+
             return [
-                'id'       => $item['id'],
-                'kode'     => $item['kode'],
-                'slug'     => $item['slug'],
-                'nama'     => $item['judul'],
-                'dosen'    => $item['dosen'],
-                'progress' => $item['progress'],
-                'status'   => $item['status'],
+                'id' => $mataKuliah->id,
+                'kode' => $mataKuliah->kode ?? 'MK-'.$mataKuliah->id,
+                'slug' => $mataKuliah->slug ?: Str::slug((string) $mataKuliah->nama_matkul),
+                'nama' => $mataKuliah->nama_matkul,
+                'judul' => $mataKuliah->nama_matkul,
+                'dosen' => $dosenMap->get($mataKuliah->id)?->dosen?->nama ?? 'Belum ditugaskan',
+                'progress' => $progres['persen'],
+                'selesai' => $progres['selesai'],
+                'total' => $progres['total'],
+                'punya_data' => $progres['punya_data'],
+                'status' => $status,
             ];
-        }, $milestones);
+        })->values()->all();
 
         return view('mahasiswa.milestone', array_merge($this->sharedViewData(), [
-            'milestones'     => $milestones,
+            'milestones' => $mataKuliahList,
             'mataKuliahList' => $mataKuliahList,
         ]));
     }
@@ -298,164 +448,237 @@ class MahasiswaController extends Controller
     /** Halaman Level 2: Detail Milestone per Mata Kuliah */
     public function milestoneDetail($id)
     {
-        $slug = $id;
+        $slug = (string) $id;
 
-        $matkulNames = [
-            'pemrograman-web-lanjut' => 'Pemrograman Web Lanjut',
-            'manajemen-proyek-sistem-informasi' => 'Manajemen Proyek Sistem Informasi',
-            'penjaminan-mutu-perangkat-lunak' => 'Penjaminan Mutu Perangkat Lunak',
-        ];
+        $mataKuliah = MataKuliah::query()
+            ->where('slug', $slug)
+            ->where('is_aktif', true)
+            ->first();
 
-        $namaMatkul = $matkulNames[$slug] ?? 'Pemrograman Web Lanjut';
-
-        $anggotaKelompok = [
-            ['nama' => 'Muhammad Adzikra', 'nim' => '244107060044', 'role' => 'Ketua', 'avatar' => 'MA'],
-            ['nama' => 'Mochammad Tanggaq', 'nim' => '244107060126', 'role' => 'Anggota', 'avatar' => 'MT'],
-            ['nama' => 'Niky Tania', 'nim' => '244107060053', 'role' => 'Anggota', 'avatar' => 'NT'],
-            ['nama' => 'Dina Mei', 'nim' => '244107060105', 'role' => 'Anggota', 'avatar' => 'DM'],
-            ['nama' => 'Fernanda Ayu', 'nim' => '244107060123', 'role' => 'Anggota', 'avatar' => 'FA'],
-        ];
-
-        $prefixMatkul = match ($slug) {
-            'pemrograman-web-lanjut' => 'PWL',
-            'manajemen-proyek-sistem-informasi' => 'MPSI',
-            default => 'PMPL',
-        };
-
-        // Ambil riwayat tambahan dari session (simulasi sebelum DB disambungkan)
-        $uploadedSession = session("uploaded_milestones_{$slug}", []);
-
-        if ($slug === 'penjaminan-mutu-perangkat-lunak' && empty($uploadedSession)) {
-            return view('mahasiswa.milestone-detail', array_merge($this->sharedViewData(), [
-                'slug' => $slug,
-                'namaMatkul' => $namaMatkul,
-                'anggotaKelompok' => $anggotaKelompok,
-                'berkasTerkumpul' => false,
-                'milestones' => [],
-            ]));
+        if (! $mataKuliah) {
+            abort(404);
         }
 
-        $defaultMilestones = ($slug === 'penjaminan-mutu-perangkat-lunak') ? [] : [
-            [
-                'id' => 2,
-                'judul' => 'Milestone 2 – Laporan ' . $namaMatkul,
-                'status' => 'Menunggu Review',
-                'ringkasan' => 'Fokus pada arsitektur REST full API backend, implementasi otentikasi JWT, middleware Role-Based Access Control (RBAC), dan skema relasi database inventaris terintegrasi dengan ORM.',
-                'waktu' => '18 Oktober 2026, 14:20 WIB',
-                'pengunggah' => 'Muhammad Adzikra',
-                'dokumen' => [
-                    ['tipe' => 'pdf', 'nama' => 'Laporan-M2-' . $prefixMatkul . '-Kel02.pdf', 'sub' => 'Dokumen PDF • 3.8 MB', 'action' => 'download', 'url' => '#'],
-                    ['tipe' => 'image', 'nama' => 'Skema-relasi-db-erd.png', 'sub' => 'Diagram ERD & Arsitektur • 1.6 MB', 'action' => 'download', 'url' => '#'],
-                    ['tipe' => 'github', 'nama' => 'GitHub Repository (branch)', 'sub' => 'github.com/sim-pbl/inventaris', 'action' => 'open', 'url' => 'https://github.com/adzikraaa/sistemmonitoringpbl'],
-                    ['tipe' => 'postman', 'nama' => 'Postman Collection Docs', 'sub' => 'api.sim-pbl.ac.id/docs', 'action' => 'open', 'url' => '#'],
-                ],
-            ],
-            [
-                'id' => 1,
-                'judul' => 'Milestone 1 – Laporan ' . $namaMatkul,
-                'status' => 'Disetujui',
-                'ringkasan' => 'Penyusunan Work Breakdown Structure (WBS) Sprint 1–4, estimasi beban kerja tim (man-hour), Gantt Chart timeline rilis fitur, dan pemetaan alokasi resource anggota kelompok sesuai pembagian peran.',
-                'waktu' => '18 September 2026, 15:05 WIB',
-                'pengunggah' => 'Niky Tania',
-                'dokumen' => [
-                    ['tipe' => 'pdf', 'nama' => 'Laporan-M1-' . $prefixMatkul . '-Kel02.pdf', 'sub' => 'Dokumen PDF • 2.4 MB', 'action' => 'download', 'url' => '#'],
-                    ['tipe' => 'docs', 'nama' => 'Pembagian Tugas PBL Kel 02', 'sub' => 'Lembar Kerja Analisis • 940 KB', 'action' => 'open', 'url' => '#'],
-                    ['tipe' => 'notion', 'nama' => 'Kanban Sprint Backlog & Roadmapping', 'sub' => 'notion.so/pbl-kelompok01/sprint-m1', 'action' => 'open', 'url' => '#', 'full_width' => true],
-                ],
-            ],
-        ];
+        $namaMatkul = $mataKuliah->nama_matkul;
+        $kelompok = $this->kelompokAktif();
 
-        $milestones = array_merge($uploadedSession, $defaultMilestones);
+        $submissions = $kelompok
+            ? PengumpulanMilestone::with(['milestone', 'pengunggah'])
+                ->where('kelompok_id', $kelompok->id)
+                ->where('mata_kuliah', $mataKuliah->slug)
+                ->latest()
+                ->get()
+            : collect();
+
+        $anggotaKelompok = $this->anggotaView($kelompok);
+        $progresMatkul = $kelompok
+            ? app(ProgressService::class)->untukMataKuliah($kelompok, $mataKuliah)
+            : $this->kosongProgres();
+        $statusMilestone = $this->statusProgres($progresMatkul);
+        $milestoneOptions = $kelompok
+            ? Milestone::query()
+                ->where('periode_id', $kelompok->periode_id)
+                ->whereHas('mataKuliah', fn ($query) => $query->where('mata_kuliah.id', $mataKuliah->id))
+                ->orderBy('urutan')
+                ->get()
+            : collect();
+
+        $milestones = $submissions->map(function (PengumpulanMilestone $submission) {
+            $milestone = $submission->milestone;
+            $extension = strtolower(pathinfo($submission->file_name, PATHINFO_EXTENSION));
+
+            $dokumen = [
+                [
+                    'tipe' => $extension === 'pdf' ? 'pdf' : ($extension === 'zip' ? 'zip' : 'file'),
+                    'nama' => $submission->file_name,
+                    'sub' => 'Dokumen '.strtoupper($extension ?: 'FILE'),
+                    'action' => 'download',
+                    'url' => route('mahasiswa.milestone.berkas.download', $submission->id),
+                ],
+            ];
+
+            if ($submission->link_bukti) {
+                $dokumen[] = [
+                    'tipe' => 'github',
+                    'nama' => 'Tautan Repositori / Demo',
+                    'sub' => preg_replace('#^https?://#', '', $submission->link_bukti),
+                    'action' => 'open',
+                    'url' => $submission->link_bukti,
+                ];
+            }
+
+            return [
+                'id' => $submission->milestone_id,
+                'judul' => $milestone
+                    ? 'Milestone '.$milestone->urutan.' – '.$milestone->judul
+                    : 'Milestone',
+                'status' => strtolower((string) $submission->status) === 'diajukan'
+                    ? 'Menunggu Review'
+                    : ucfirst((string) $submission->status),
+                'ringkasan' => $submission->catatan ?? '',
+                'waktu' => $submission->created_at
+                    ? $submission->created_at->translatedFormat('d F Y, H:i').' WIB'
+                    : '',
+                'pengunggah' => $submission->pengunggah?->nama ?? 'Mahasiswa',
+                'dokumen' => $dokumen,
+            ];
+        })->all();
 
         return view('mahasiswa.milestone-detail', array_merge($this->sharedViewData(), [
             'slug' => $slug,
             'namaMatkul' => $namaMatkul,
+            'kelompok' => $kelompok,
             'anggotaKelompok' => $anggotaKelompok,
-            'berkasTerkumpul' => !empty($milestones),
+            'berkasTerkumpul' => ! empty($milestones),
             'milestones' => $milestones,
+            'milestoneOptions' => $milestoneOptions,
+            'progresMatkul' => $progresMatkul,
+            'statusMilestone' => $statusMilestone,
         ]));
     }
 
     /** Menyimpan pengumpulan milestone & berkas pendukung (Pertemuan 6: Validasi & File Storage) */
     public function storeMilestoneUpload(Request $request, $id)
     {
-        $validated = $request->validate([
-            'mata_kuliah'  => ['required', 'string'],
-            'milestone_id' => ['required', 'in:1,2,3'],
-            'catatan'      => ['required', 'string', 'max:2000'],
-            'berkas'       => ['required', 'file', 'mimes:pdf,zip', 'max:20480'], // Maks 20 MB
-            'link_bukti'   => ['nullable', 'url', 'max:255'],
-        ], [
-            'milestone_id.required' => 'Tahapan milestone wajib dipilih.',
-            'catatan.required'      => 'Ringkasan capaian milestone wajib diisi.',
-            'berkas.required'       => 'Berkas laporan (PDF/ZIP) wajib diunggah.',
-            'berkas.file'           => 'Berkas laporan yang diunggah tidak valid atau melebihi batas upload server.',
-            'berkas.mimes'          => 'Format berkas harus berupa PDF atau ZIP.',
-            'berkas.max'            => 'Ukuran file melebihi batas maksimal yang diperbolehkan (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.',
-            'link_bukti.url'        => 'Format tautan repositori/demo tidak valid (harus diawali http:// atau https://).',
-        ]);
+        $slug = (string) $id;
 
-        $slug = $validated['mata_kuliah'] ?: $id;
+        $mataKuliah = MataKuliah::query()
+            ->where('slug', $slug)
+            ->where('is_aktif', true)
+            ->first();
 
-        $matkulNames = [
-            'pemrograman-web-lanjut' => 'Pemrograman Web Lanjut',
-            'manajemen-proyek-sistem-informasi' => 'Manajemen Proyek Sistem Informasi',
-            'penjaminan-mutu-perangkat-lunak' => 'Penjaminan Mutu Perangkat Lunak',
-        ];
-        $namaMatkul = $matkulNames[$slug] ?? 'Mata Kuliah PBL';
-
-        $tahapanLabels = [
-            '1' => 'Milestone 1',
-            '2' => 'Milestone 2',
-            '3' => 'Milestone 3',
-        ];
-
-        // Simpan file fisik ke storage/app/public/milestones
-        $file = $request->file('berkas');
-        $originalName = $file->getClientOriginalName();
-        $sizeInMb = number_format($file->getSize() / (1024 * 1024), 2) . ' MB';
-        $storedPath = $file->store('milestones/' . $slug, 'public');
-        $fileUrl = asset('storage/' . $storedPath);
-
-        $dokumenList = [
-            [
-                'tipe'   => strtolower($file->getClientOriginalExtension()) === 'pdf' ? 'pdf' : 'zip',
-                'nama'   => $originalName,
-                'sub'    => 'Dokumen ' . strtoupper($file->getClientOriginalExtension()) . ' • ' . $sizeInMb,
-                'action' => 'download',
-                'url'    => $fileUrl,
-            ],
-        ];
-
-        if (!empty($validated['link_bukti'])) {
-            $dokumenList[] = [
-                'tipe'   => 'github',
-                'nama'   => 'Tautan Repositori / Demo',
-                'sub'    => preg_replace('#^https?://#', '', $validated['link_bukti']),
-                'action' => 'open',
-                'url'    => $validated['link_bukti'],
-            ];
+        if (! $mataKuliah) {
+            abort(404);
         }
 
+        /** @var Mahasiswa|null $mahasiswa */
         $mahasiswa = Auth::guard('mahasiswa')->user();
-        $pengunggah = $mahasiswa?->nama ?? 'Niky Tania';
+        $kelompok = $this->kelompokAktif();
 
-        // Simpan entri baru ke session agar langsung muncul di halaman detail
-        $existing = session("uploaded_milestones_{$slug}", []);
-        array_unshift($existing, [
-            'id'         => (int) $validated['milestone_id'],
-            'judul'      => ($tahapanLabels[$validated['milestone_id']] ?? 'Milestone') . ' – Laporan ' . $namaMatkul,
-            'status'     => 'Menunggu Review',
-            'ringkasan'  => $validated['catatan'],
-            'waktu'      => now()->translatedFormat('d F Y, H:i') . ' WIB',
-            'pengunggah' => $pengunggah,
-            'dokumen'    => $dokumenList,
+        if (! $mahasiswa || ! $kelompok) {
+            return redirect()
+                ->route('mahasiswa.milestone.detail', $mataKuliah->slug)
+                ->withErrors(['berkas' => 'Anda belum tergabung dalam kelompok pada periode aktif.']);
+        }
+
+        $validated = $request->validate([
+            'milestone_id' => [
+                'required',
+                'integer',
+                Rule::exists('milestone', 'id')->where(
+                    fn ($query) => $query->where('periode_id', $kelompok->periode_id)
+                ),
+                Rule::exists('milestone_mata_kuliah', 'milestone_id')
+                    ->where('mata_kuliah_id', $mataKuliah->id),
+            ],
+            'catatan' => ['required', 'string', 'max:2000'],
+            'berkas' => ['required', 'file', 'mimes:pdf,zip', 'max:20480'],
+            'link_bukti' => ['nullable', 'url', 'max:255'],
+        ], [
+            'milestone_id.required' => 'Tahapan milestone wajib dipilih.',
+            'milestone_id.exists' => 'Milestone tidak terdaftar untuk mata kuliah ini pada periode kelompok Anda.',
+            'catatan.required' => 'Ringkasan capaian milestone wajib diisi.',
+            'berkas.required' => 'Berkas laporan (PDF/ZIP) wajib diunggah.',
+            'berkas.file'           => 'Berkas laporan yang diunggah tidak valid atau melebihi batas upload server.',
+            'berkas.mimes' => 'Format berkas harus berupa PDF atau ZIP.',
+            'berkas.max' => 'Ukuran file melebihi batas maksimal yang diperbolehkan (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.',
+            'link_bukti.url' => 'Format tautan repositori/demo tidak valid (harus diawali http:// atau https://).',
         ]);
-        session(["uploaded_milestones_{$slug}" => $existing]);
+
+        $file = $request->file('berkas');
+        $originalName = $file->getClientOriginalName();
+        $storedPath = $file->store(
+            'milestone-submissions/'.$kelompok->id.'/'.$validated['milestone_id'].'/'.$mataKuliah->slug,
+            'local'
+        );
+
+        $oldPath = null;
+
+        try {
+            $submission = DB::transaction(function () use (
+                $validated,
+                $mataKuliah,
+                $kelompok,
+                $mahasiswa,
+                $originalName,
+                $storedPath,
+                &$oldPath
+            ) {
+                $existing = PengumpulanMilestone::query()
+                    ->where('kelompok_id', $kelompok->id)
+                    ->where('milestone_id', $validated['milestone_id'])
+                    ->where('mata_kuliah', $mataKuliah->slug)
+                    ->lockForUpdate()
+                    ->first();
+
+                $oldPath = $existing?->file_path;
+
+                $data = [
+                    'kelompok_id' => $kelompok->id,
+                    'milestone_id' => $validated['milestone_id'],
+                    'diunggah_oleh' => $mahasiswa->id,
+                    'mata_kuliah' => $mataKuliah->slug,
+                    'file_name' => $originalName,
+                    'file_path' => $storedPath,
+                    'link_bukti' => $validated['link_bukti'] ?? null,
+                    'catatan' => $validated['catatan'],
+                    'status' => 'diajukan',
+                ];
+
+                if ($existing) {
+                    $existing->update($data);
+
+                    return $existing;
+                }
+
+                return PengumpulanMilestone::create($data);
+            });
+        } catch (UniqueConstraintViolationException $exception) {
+            Storage::disk('local')->delete($storedPath);
+
+            $tripleExists = PengumpulanMilestone::query()
+                ->where('kelompok_id', $kelompok->id)
+                ->where('milestone_id', $validated['milestone_id'])
+                ->where('mata_kuliah', $mataKuliah->slug)
+                ->exists();
+
+            if (! $tripleExists) {
+                throw $exception;
+            }
+
+            return redirect()
+                ->route('mahasiswa.milestone.detail', $mataKuliah->slug)
+                ->withErrors([
+                    'berkas' => 'Submission untuk milestone dan mata kuliah ini sudah ada. '
+                        .'Muat ulang halaman lalu coba lagi.',
+                ]);
+        } catch (\Throwable $exception) {
+            Storage::disk('local')->delete($storedPath);
+
+            throw $exception;
+        }
+
+        if ($oldPath && $oldPath !== $storedPath) {
+            Storage::disk('local')->delete($oldPath);
+        }
 
         return redirect()
-            ->route('mahasiswa.milestone.detail', $slug)
+            ->route('mahasiswa.milestone.detail', $mataKuliah->slug)
             ->with('success', 'Laporan milestone berhasil dikumpulkan dan menunggu review dosen!');
+    }
+
+    public function downloadMilestoneSubmission(PengumpulanMilestone $pengumpulan)
+    {
+        $kelompok = $this->kelompokAktif();
+
+        abort_unless($kelompok && $pengumpulan->kelompok_id === $kelompok->id, 404);
+
+        abort_unless(
+            $pengumpulan->file_path && Storage::disk('local')->exists($pengumpulan->file_path),
+            404
+        );
+
+        return Storage::disk('local')->download($pengumpulan->file_path, $pengumpulan->file_name);
     }
 
     /**
@@ -463,87 +686,110 @@ class MahasiswaController extends Controller
      */
     public function storeProposal(Request $request)
     {
+        $kelompok = $this->kelompokAktif();
+
+        if (! $kelompok) {
+            return redirect()
+                ->route('mahasiswa.proposal')
+                ->withErrors(['file_proposal' => 'Anda belum tergabung dalam kelompok pada periode aktif.']);
+        }
+
         $validated = $request->validate([
-            'judul'          => 'required|string|max:255',
-            'deskripsi'      => 'required|string',
-            'tujuan'         => 'required|string',
-            'file_proposal'  => 'required|file|mimes:pdf|max:20480', // Maks 20 MB PDF
+            'judul' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'tujuan' => 'required|string',
+            'latar_belakang' => 'nullable|string',
+            'metode' => 'nullable|string',
+            'file_proposal' => 'required|file|mimes:pdf|max:20480',
         ], [
             'judul.required'          => 'Judul proyek wajib diisi.',
             'deskripsi.required'      => 'Deskripsi singkat wajib diisi.',
             'tujuan.required'         => 'Tujuan wajib diisi.',
             'file_proposal.required'  => 'Berkas proposal (PDF) wajib diunggah.',
-            'file_proposal.file'      => 'Berkas proposal yang diunggah tidak valid atau melebihi batas upload server.',
             'file_proposal.mimes'     => 'Format berkas harus berupa PDF.',
-            'file_proposal.max'       => 'Ukuran file melebihi batas maksimal yang diperbolehkan (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.',
+            'file_proposal.max'       => 'Ukuran berkas proposal maksimal 20 MB.',
         ]);
 
-        $latarBelakang = $request->input('latar_belakang', '-');
-        $metode = $request->input('metode', '-');
+        $latarBelakang = $validated['latar_belakang'] ?? '-';
+        $metode = $validated['metode'] ?? '-';
 
         $file = $request->file('file_proposal');
-        $originalName = $file->getClientOriginalName();
-        $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
-        $filePath = $file->storeAs('proposals', $safeName, 'public');
+        $filePath = $file->storeAs('proposals', Str::random(40).'.pdf', 'local');
 
-        $mahasiswa = Auth::guard('mahasiswa')->user();
-        $kelompok = $mahasiswa ? $mahasiswa->kelompok()->first() : null;
-        $kelompokId = $kelompok ? $kelompok->id : (Kelompok::first()?->id ?? 1);
+        try {
+            DB::transaction(function () use (
+                $validated,
+                $kelompok,
+                $latarBelakang,
+                $metode,
+                $filePath
+            ) {
+                $existingProposal = Proposal::query()
+                    ->where('kelompok_id', $kelompok->id)
+                    ->lockForUpdate()
+                    ->latest()
+                    ->first();
 
-        $existingProposal = Proposal::where('kelompok_id', $kelompokId)->latest()->first();
+                if ($existingProposal) {
+                    $nextVersion = ($existingProposal->riwayatProposal()->max('versi') ?? 0) + 1;
 
-        if ($existingProposal) {
-            $nextVersion = ($existingProposal->riwayatProposal()->max('versi') ?? 1) + 1;
+                    $existingProposal->update([
+                        'judul' => $validated['judul'],
+                        'deskripsi' => $validated['deskripsi'],
+                        'latar_belakang' => $latarBelakang,
+                        'tujuan' => $validated['tujuan'],
+                        'metode' => $metode,
+                        'file_proposal' => $filePath,
+                        'status' => 'diajukan',
+                        'catatan_revisi' => null,
+                        'tanggal_pengajuan' => now()->toDateString(),
+                    ]);
 
-            $existingProposal->update([
-                'judul'             => $validated['judul'],
-                'deskripsi'         => $validated['deskripsi'],
-                'latar_belakang'    => $latarBelakang,
-                'tujuan'            => $validated['tujuan'],
-                'metode'            => $metode,
-                'file_proposal'     => $filePath,
-                'status'            => 'diajukan',
-                'catatan_revisi'    => null,
-                'tanggal_pengajuan' => now()->toDateString(),
-            ]);
+                    RiwayatProposal::create([
+                        'proposal_id' => $existingProposal->id,
+                        'versi' => $nextVersion,
+                        'judul' => $validated['judul'],
+                        'file_proposal' => $filePath,
+                        'status' => 'diajukan',
+                        'catatan' => 'Pengajuan revisi proposal (Versi '.$nextVersion.')',
+                    ]);
 
-            RiwayatProposal::create([
-                'proposal_id'   => $existingProposal->id,
-                'versi'         => $nextVersion,
-                'judul'         => $validated['judul'],
-                'file_proposal' => $filePath,
-                'status'        => 'diajukan',
-                'catatan'       => 'Pengajuan revisi proposal (Versi ' . $nextVersion . ')',
-            ]);
-        } else {
-            $newProposal = Proposal::create([
-                'kelompok_id'       => $kelompokId,
-                'judul'             => $validated['judul'],
-                'deskripsi'         => $validated['deskripsi'],
-                'latar_belakang'    => $latarBelakang,
-                'tujuan'            => $validated['tujuan'],
-                'metode'            => $metode,
-                'file_proposal'     => $filePath,
-                'status'            => 'diajukan',
-                'catatan_revisi'    => null,
-                'tanggal_pengajuan' => now()->toDateString(),
-            ]);
+                    return;
+                }
 
-            RiwayatProposal::create([
-                'proposal_id'   => $newProposal->id,
-                'versi'         => 1,
-                'judul'         => $validated['judul'],
-                'file_proposal' => $filePath,
-                'status'        => 'diajukan',
-                'catatan'       => 'Pengajuan proposal awal (Versi 01)',
-            ]);
+                $newProposal = Proposal::create([
+                    'kelompok_id' => $kelompok->id,
+                    'judul' => $validated['judul'],
+                    'deskripsi' => $validated['deskripsi'],
+                    'latar_belakang' => $latarBelakang,
+                    'tujuan' => $validated['tujuan'],
+                    'metode' => $metode,
+                    'file_proposal' => $filePath,
+                    'status' => 'diajukan',
+                    'catatan_revisi' => null,
+                    'tanggal_pengajuan' => now()->toDateString(),
+                ]);
+
+                RiwayatProposal::create([
+                    'proposal_id' => $newProposal->id,
+                    'versi' => 1,
+                    'judul' => $validated['judul'],
+                    'file_proposal' => $filePath,
+                    'status' => 'diajukan',
+                    'catatan' => 'Pengajuan proposal awal (Versi 01)',
+                ]);
+            });
+        } catch (\Throwable $exception) {
+            Storage::disk('local')->delete($filePath);
+
+            throw $exception;
         }
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Proposal berhasil diajukan.',
-                'status'  => 'diajukan',
+                'status' => 'diajukan',
             ]);
         }
 
@@ -555,18 +801,29 @@ class MahasiswaController extends Controller
      */
     public function downloadProposal($id = null)
     {
-        $mahasiswa = Auth::guard('mahasiswa')->user();
-        $kelompok = $mahasiswa ? $mahasiswa->kelompok()->first() : null;
+        $kelompok = $this->kelompokAktif();
+
+        abort_unless($kelompok, 404);
 
         $proposal = $id
-            ? Proposal::findOrFail($id)
-            : ($kelompok ? Proposal::where('kelompok_id', $kelompok->id)->latest()->first() : Proposal::latest()->first());
+            ? Proposal::query()->where('kelompok_id', $kelompok->id)->findOrFail($id)
+            : Proposal::where('kelompok_id', $kelompok->id)->latest()->first();
 
-        if (!$proposal || !$proposal->file_proposal || !Storage::disk('public')->exists($proposal->file_proposal)) {
+        if (! $proposal || ! $proposal->file_proposal) {
             abort(404, 'Berkas proposal tidak ditemukan.');
         }
 
-        return Storage::disk('public')->download($proposal->file_proposal, basename($proposal->file_proposal));
+        $downloadName = 'proposal-'.$proposal->id.'.pdf';
+
+        if (Storage::disk('local')->exists($proposal->file_proposal)) {
+            return Storage::disk('local')->download($proposal->file_proposal, $downloadName);
+        }
+
+        if (Storage::disk('public')->exists($proposal->file_proposal)) {
+            return Storage::disk('public')->download($proposal->file_proposal, $downloadName);
+        }
+
+        abort(404, 'Berkas proposal tidak ditemukan.');
     }
 
     /**
@@ -575,6 +832,17 @@ class MahasiswaController extends Controller
      */
     public function storeLogbook(Request $request)
     {
+        /** @var Mahasiswa|null $mahasiswa */
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $kelompok = $this->kelompokAktif();
+
+        if (! $mahasiswa || ! $kelompok) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda belum tergabung dalam kelompok pada periode aktif.',
+            ], 422);
+        }
+
         $validated = $request->validate([
             'tanggal' => 'required|date',
             'judul' => 'required|string|max:255',
@@ -585,13 +853,39 @@ class MahasiswaController extends Controller
             'rencana' => 'nullable|string',
         ]);
 
-        // TODO: Simpan ke database setelah tabel logbook_milestone tersedia.
-        // LogbookMilestone::create([...$validated, 'mahasiswa_id' => auth('mahasiswa')->id()]);
+        $logbook = LogbookMilestone::create([
+            'milestone_id' => null,
+            'kelompok_id' => $kelompok->id,
+            'mahasiswa_id' => $mahasiswa->id,
+            'tanggal' => $validated['tanggal'],
+            'judul' => $validated['judul'],
+            'deskripsi' => $validated['deskripsi'] ?? null,
+            'kegiatan' => filled($validated['deskripsi'] ?? null)
+                ? $validated['deskripsi']
+                : $validated['judul'],
+            'progress' => $validated['progress'],
+            'hasil' => $validated['hasil'] ?? null,
+            'kendala' => $validated['kendala'] ?? null,
+            'rencana' => $validated['rencana'] ?? null,
+            'status' => 'diajukan',
+            'feedback' => null,
+        ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Catatan logbook berhasil ditambahkan.',
-            'data' => $validated,
+            'data' => [
+                'id' => (string) $logbook->id,
+                'tanggal' => $logbook->tanggal->toDateString(),
+                'judul' => $logbook->judul,
+                'deskripsi' => $logbook->deskripsi,
+                'progress' => (int) $logbook->progress,
+                'hasil' => $logbook->hasil,
+                'rencana' => $logbook->rencana,
+                'kendala' => $logbook->kendala,
+                'status' => 'Menunggu Review',
+                'feedback' => null,
+            ],
         ]);
     }
 

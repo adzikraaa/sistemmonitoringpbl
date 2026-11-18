@@ -465,8 +465,10 @@
             <h2 class="sim-form-title" id="formTitle">{{ $selectedMilestone ? 'Edit milestone' : 'Tambah milestone' }}</h2>
 
             @if (session('success'))
-                <div class="sim-alert">{{ session('success') }}</div>
-            @endif
+    <div id="milestoneSuccessAlert" class="sim-alert">
+        {{ session('success') }}
+    </div>
+@endif
 
             @if ($errors->any())
                 <div class="sim-alert sim-alert--error">
@@ -538,13 +540,27 @@
         const submitBtn = form.querySelector('button[type="submit"]');
         const createUrl = '{{ route('koordinator.milestone-global.store') }}';
 
-        function resetToCreateMode() {
-            form.action = createUrl;
-            methodField.value = 'POST';
-            formTitle.textContent = 'Tambah milestone';
-            form.reset();
-            document.getElementById('periode_id').value = '{{ optional($periodeAktif)->id ?? optional($periodeOptions->first())->id ?? '' }}';
-        }
+   function resetToCreateMode() {
+    form.action = createUrl;
+    methodField.value = 'POST';
+    formTitle.textContent = 'Tambah milestone';
+    form.reset();
+
+    document.getElementById('judul').value = '';
+    document.getElementById('deskripsi').value = '';
+    document.getElementById('deadline').value = '';
+    document.getElementById('urutan').value = '{{ $milestones->count() + 1 }}';
+    document.getElementById('periode_id').value = '{{ optional($periodeAktif)->id ?? optional($periodeOptions->first())->id ?? '' }}';
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Simpan perubahan';
+
+    // Hilangkan notifikasi sukses dari proses sebelumnya
+    const successAlert = document.getElementById('milestoneSuccessAlert');
+    if (successAlert) {
+        successAlert.remove();
+    }
+}
 
         form.addEventListener('submit', function () {
             submitBtn.disabled = true;

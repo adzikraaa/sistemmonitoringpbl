@@ -39,6 +39,16 @@ class Dosen extends Authenticatable
         return $this->hasMany(Kelompok::class);
     }
 
+    public function penyelesaianMilestone(): HasMany
+    {
+        return $this->hasMany(PenyelesaianMilestone::class, 'diverifikasi_oleh');
+    }
+
+    public function riwayatPenyelesaianMilestone(): HasMany
+    {
+        return $this->hasMany(RiwayatPenyelesaianMilestone::class);
+    }
+
     public function notifikasi(): MorphMany
     {
         return $this->morphMany(Notifikasi::class, 'penerima');

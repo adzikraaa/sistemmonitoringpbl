@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\MahasiswaController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -31,6 +31,7 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('auth:mahasiswa')->gr
     Route::get('/milestone', [MahasiswaController::class, 'milestone'])->name('milestone');
     Route::get('/milestone/{id}', [MahasiswaController::class, 'milestoneDetail'])->name('milestone.detail');
     Route::post('/milestone/{id}/upload', [MahasiswaController::class, 'storeMilestoneUpload'])->name('milestone.upload');
+    Route::get('/milestone-berkas/{pengumpulan}', [MahasiswaController::class, 'downloadMilestoneSubmission'])->name('milestone.berkas.download');
     Route::get('/notifikasi', [MahasiswaController::class, 'notifikasi'])->name('notifikasi');
 });
 
