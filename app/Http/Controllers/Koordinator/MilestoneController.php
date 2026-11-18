@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Koordinator;
 
+
 use App\Http\Controllers\Controller;
 use App\Models\Milestone;
 use App\Models\Periode;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MilestoneController extends Controller
 {
@@ -31,34 +33,55 @@ class MilestoneController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'judul' => ['required', 'string', 'max:255'],
-            'deskripsi' => ['nullable', 'string'],
-            'deadline' => ['nullable', 'date'],
-            'urutan' => ['required', 'integer', 'min:1'],
-            'periode_id' => ['nullable', 'exists:periode,id'],
-        ]);
+{
+    $validated = $request->validate([
+        'judul' => ['required', 'string', 'max:255'],
+        'deskripsi' => ['nullable', 'string'],
+        'deadline' => ['nullable', 'date'],
+        'urutan' => ['required', 'integer', 'min:1'],
+        'periode_id' => ['nullable', 'exists:periode,id'],
+    ]);
 
-        $periodeId = $validated['periode_id'] ?? $this->activePeriodeId();
+    $periodeId = $validated['periode_id'] ?? $this->activePeriodeId();
 
-        if (empty($periodeId)) {
-            abort(422, 'Semester aktif belum tersedia. Tambahkan periode terlebih dahulu.');
+    if (empty($periodeId)) {
+        abort(422, 'Semester aktif belum tersedia. Tambahkan periode terlebih dahulu.');
+    }
+
+    DB::transaction(function () use ($validated, $periodeId) {
+        $urutanBaru = $validated['urutan'];
+
+        // Ambil milestone yang perlu digeser
+        $milestones = Milestone::query()
+            ->where('periode_id', $periodeId)
+            ->where('urutan', '>=', $urutanBaru)
+            ->orderByDesc('urutan')
+            ->lockForUpdate()
+            ->get();
+
+        // Geser dari urutan paling bawah agar tidak bentrok
+        foreach ($milestones as $milestone) {
+            $milestone->update([
+                'urutan' => $milestone->urutan + 1,
+                'kode' => $this->buildKode($milestone->urutan + 1),
+            ]);
         }
 
-        $resolvedUrutan = $this->resolveUrutan($periodeId, $validated['urutan']);
-
+        // Masukkan milestone baru pada urutan yang dipilih
         Milestone::create([
             'periode_id' => $periodeId,
-            'kode' => $this->buildKode($resolvedUrutan),
+            'kode' => $this->buildKode($urutanBaru),
             'judul' => $validated['judul'],
             'deskripsi' => $validated['deskripsi'] ?? null,
-            'urutan' => $resolvedUrutan,
+            'urutan' => $urutanBaru,
             'deadline' => $validated['deadline'] ?? null,
         ]);
+    });
 
-        return redirect()->route('koordinator.milestone-global.index')->with('success', 'Milestone berhasil ditambahkan.');
-    }
+    return redirect()
+        ->route('koordinator.milestone-global.index')
+        ->with('success', 'Milestone berhasil ditambahkan.');
+}
 
     public function update(Request $request, Milestone $milestone)
     {

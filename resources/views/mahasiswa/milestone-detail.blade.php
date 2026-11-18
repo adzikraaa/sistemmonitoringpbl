@@ -15,7 +15,16 @@
         </a>
         <h1 class="sim-page-header__title">Milestone : {{ $namaMatkul }}</h1>
         <p class="sim-page-header__desc">
-            Pengembangan Sistem Monitoring PBL &bull; SIB 3B
+            {{ $kelompok?->judul_proyek ?? 'Belum ada proyek' }}
+            &bull; {{ $kelompok?->kelas?->nama_kelas ?? 'Kelas belum tersedia' }}
+        </p>
+        <p class="text-xs text-[#7D746D] mt-1">
+            Status penyelesaian milestone:
+            <strong class="text-[#1F1F1F]">{{ $statusMilestone }}</strong>
+            ({{ $progresMatkul['selesai'] }}/{{ $progresMatkul['total'] }})
+            @if(! $progresMatkul['punya_data'])
+                &mdash; Belum ada data
+            @endif
         </p>
     </div>
     
@@ -76,6 +85,7 @@
                         <!-- Card Header & Badge Status -->
                         <div class="pb-3 border-b border-[#E4DED5]">
                             <h3 class="font-serif font-bold text-[#1F1F1F] text-xl mb-2">{{ $ms['judul'] }}</h3>
+                            <span class="text-[10px] font-bold text-[#7D746D] uppercase tracking-wider block mb-1.5">Status pengumpulan dokumen</span>
                             
                             @if(($ms['status'] ?? '') == 'Disetujui')
                                 <span class="bg-[#EAF3EC] text-[#2F5C4A] border border-[#D8E6D8] text-[11px] font-medium px-3 py-1 rounded-md inline-block">
@@ -155,25 +165,29 @@
             @endif
         </div>
 
-        <!-- Sidebar: Anggota Kelompok 02 -->
+        <!-- Sidebar: Anggota Kelompok -->
         <div>
             <div class="bg-white border border-[#CFC7BC] rounded-2xl p-5 shadow-sm">
-                <p class="text-[10px] font-bold text-[#7D746D] uppercase tracking-wider mb-4">ANGGOTA KELOMPOK 02</p>
+                <p class="text-[10px] font-bold text-[#7D746D] uppercase tracking-wider mb-4">
+                    ANGGOTA {{ $kelompok?->nama_kelompok ?? 'KELOMPOK' }}
+                </p>
                 <div class="space-y-3.5">
-                    @foreach($anggotaKelompok as $member)
+                    @forelse($anggotaKelompok as $member)
                         <div class="flex items-center justify-between text-xs pb-2.5 {{ !$loop->last ? 'border-b border-[#E4DED5]' : '' }}">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-[#EBE1CC] text-[#6E5B3E] flex items-center justify-center font-bold text-xs">
                                     {{ $member['avatar'] }}
                                 </div>
                                 <div>
-                                    <h4 class="font-bold text-[#1F1F1F]">{{ $member['nama'] }}</h4>
+                                    <h4 class="font-bold text-[#1F1F1F]">Anggota {{ $loop->iteration }} &mdash; {{ $member['nama'] }}</h4>
                                     <span class="text-[#7D746D] text-[11px]">{{ $member['role'] }}</span>
                                 </div>
                             </div>
                             <span class="text-[#7D746D] font-mono text-[11px]">{{ $member['nim'] }}</span>
                         </div>
-                    @endforeach
+                    @empty
+                        <p class="text-xs text-[#7D746D]">Belum ada anggota kelompok.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -203,9 +217,11 @@
                     <label class="block font-bold text-[#1F1F1F] mb-1.5">Tahapan Milestone <span class="text-rose-500">*</span></label>
                     <select name="milestone_id" required class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">
                         <option value="">Pilih tahapan milestone...</option>
-                        <option value="1">Milestone 1 - Laporan Awalan</option>
-                        <option value="2">Milestone 2 - Implementasi Utama</option>
-                        <option value="3">Milestone 3 - Finalisasi & Pengujian</option>
+                        @forelse($milestoneOptions as $option)
+                            <option value="{{ $option->id }}">{{ $option->kode }} - {{ $option->judul }}</option>
+                        @empty
+                            <option value="" disabled>Belum ada milestone untuk mata kuliah ini</option>
+                        @endforelse
                     </select>
                 </div>
             </div>

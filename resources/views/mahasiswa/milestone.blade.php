@@ -5,6 +5,29 @@
 
 @section('content')
 
+@php
+    $statusTone = function (array $item, bool $isFirst): string {
+        return match ($item['status']) {
+            'Selesai' => 'green',
+            'Berjalan' => $isFirst ? 'green' : 'gold',
+            'Belum dimulai', 'Belum ada data' => 'gray',
+            default => 'gray',
+        };
+    };
+
+    $circleToneClass = fn (string $tone): string => match ($tone) {
+        'green' => 'bg-[#2F5C4A]',
+        'gold' => 'bg-[#C28A3A]',
+        default => 'bg-[#9C9188]',
+    };
+
+    $badgeToneClass = fn (string $tone): string => match ($tone) {
+        'green' => 'sim-badge--approved',
+        'gold' => 'sim-badge--pending',
+        default => 'sim-badge--warning',
+    };
+@endphp
+
 {{-- ─── Page Header (Standar SIM-PBL) ────────────────────────────────────── --}}
 <div class="sim-page-header">
     <div class="sim-page-header__left">
@@ -20,10 +43,11 @@
 <div style="padding: 0 32px 40px;">
     <!-- Timeline List Mata Kuliah -->
     <div class="relative pl-8 space-y-6 before:absolute before:left-3.5 before:top-4 before:bottom-4 before:w-0.5 before:bg-[#CFC7BC] before:pointer-events-none">
-        @foreach($mataKuliahList as $item)
+        @forelse($mataKuliahList as $item)
             <div class="relative flex items-start gap-4">
                 <!-- Badge Bulat M1, M2, M3 -->
-                <span class="pointer-events-none absolute -left-8 top-3.5 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm ring-4 ring-[#F6F4F1] z-10 {{ $item['status'] == 'Berjalan' ? ($loop->first ? 'bg-[#2F5C4A]' : 'bg-[#D7B268]') : 'bg-[#A77E62]' }}">
+                @php($tone = $statusTone($item, $loop->first))
+                <span class="pointer-events-none absolute -left-8 top-3.5 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm ring-4 ring-[#F6F4F1] z-10 {{ $circleToneClass($tone) }}">
                     {{ $item['kode'] }}
                 </span>
 
@@ -36,7 +60,7 @@
                         <h2 class="text-xl font-serif font-normal text-[#1F1F1F] group-hover:text-[#7A5C4A] transition-colors">
                             {{ $item['nama'] }}
                         </h2>
-                        <span class="sim-badge {{ $item['status'] == 'Berjalan' ? 'sim-badge--approved' : 'sim-badge--warning' }}">
+                        <span class="sim-badge {{ $badgeToneClass($tone) }}">
                             &#9679; {{ $item['status'] }}
                         </span>
                     </div>
@@ -45,11 +69,17 @@
                     <div class="mb-4 space-y-1.5">
                         <div class="flex justify-between items-center text-xs">
                             <span class="text-[#7D746D] font-medium">Progres Mata Kuliah</span>
-                            <span class="text-[#1F1F1F] font-semibold">{{ $item['progress'] }}%</span>
+                            <span class="text-[#1F1F1F] font-semibold">
+                                {{ $item['progress'] }}%
+                                ({{ $item['selesai'] }}/{{ $item['total'] }})
+                            </span>
                         </div>
                         <div class="w-full bg-[#E9E1D5] rounded-full h-2 overflow-hidden">
                             <div class="h-2 rounded-full {{ $loop->first ? 'bg-[#2F5C4A]' : 'bg-[#7A5C4A]' }}" style="width: {{ $item['progress'] }}%"></div>
                         </div>
+                        @if(! $item['punya_data'])
+                            <p class="text-[11px] text-[#7D746D]">Belum ada data mapping milestone.</p>
+                        @endif
                     </div>
 
                     <!-- Footer Card -->
@@ -64,7 +94,12 @@
 
                 </a>
             </div>
-        @endforeach
+        @empty
+            <div class="bg-white border border-dashed border-[#CFC7BC] rounded-2xl p-8 text-center">
+                <h2 class="font-serif text-lg font-bold text-[#1F1F1F] mb-1">Belum ada mata kuliah</h2>
+                <p class="text-xs text-[#7D746D]">Belum ada mata kuliah aktif dengan milestone pada periode kelompok.</p>
+            </div>
+        @endforelse
     </div>
 </div>
 

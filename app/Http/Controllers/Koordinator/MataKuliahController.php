@@ -3,49 +3,55 @@
 namespace App\Http\Controllers\Koordinator;
 
 use App\Http\Controllers\Controller;
-use App\Models\MataKuliah;
-use App\Models\Kelas;
 use App\Models\DosenPengampu;
+use App\Models\Kelas;
+use App\Models\MataKuliah;
+use App\Models\PengumpulanMilestone;
+use App\Models\PenyelesaianMilestone;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class MataKuliahController extends Controller
 {
     /**
-     * Tampilkan daftar mata kuliah dengan pencarian, filter status, dan filter semester.
+     * Tampilkan daftar mata kuliah.
      */
     public function index(Request $request)
     {
         $query = MataKuliah::with(['dosenPengampu.kelas']);
 
-        // Filter pencarian berdasarkan kode atau nama mata kuliah
         if ($request->filled('search')) {
             $search = $request->search;
+
             $query->where(function ($q) use ($search) {
                 $q->where('kode', 'like', "%{$search}%")
-                  ->orWhere('nama_matkul', 'like', "%{$search}%");
+                    ->orWhere('nama_matkul', 'like', "%{$search}%");
             });
         }
 
-        // Filter status aktif/nonaktif
         if ($request->filled('status')) {
             $query->where('is_aktif', $request->status === 'aktif');
         }
 
-        // Filter semester
         if ($request->filled('semester')) {
             $query->where('semester', $request->semester);
         }
 
         $mataKuliahList = $query->orderBy('kode')->paginate(10)->withQueryString();
 
-        // Data untuk form tambah/edit dan filter semester
-        $kelasList      = Kelas::where('is_aktif', true)->orderBy('nama_kelas')->get();
-        $semesterList   = MataKuliah::whereNotNull('semester')->distinct()->orderBy('semester')->pluck('semester');
+        $kelasList = Kelas::where('is_aktif', true)
+            ->orderBy('nama_kelas')
+            ->get();
 
-        // Hitung statistik
-        $totalMk  = $mataKuliahList->total();
-        $totalSks = $mataKuliahList->sum(fn($mk) => (int) $mk->sks);
+        $semesterList = MataKuliah::whereNotNull('semester')
+            ->distinct()
+            ->orderBy('semester')
+            ->pluck('semester');
+
+        $totalMk = $mataKuliahList->total();
+        $totalSks = $mataKuliahList->sum(fn ($mk) => (int) $mk->sks);
 
         return view('koordinator.master-data.mata kuliah.index', compact(
             'mataKuliahList',
@@ -58,76 +64,55 @@ class MataKuliahController extends Controller
 
     /**
      * Simpan mata kuliah baru.
+     * Penugasan dosen dikelola melalui menu Penugasan Dosen.
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'kode'        => 'required|string|max:20|unique:mata_kuliah,kode',
+        $validated = $request->validate([
+            'kode' => 'required|string|max:20|unique:mata_kuliah,kode',
             'nama_matkul' => 'required|string|max:100',
-            'sks'         => 'required|integer|min:1|max:6',
-            'semester'    => 'required|integer|min:1|max:8',
-            'is_aktif'    => 'nullable|boolean',
-            'kelas_id'    => 'nullable|array',
-            'kelas_id.*'  => 'exists:kelas,id',
+            'sks' => 'required|integer|min:1|max:6',
+            'semester' => 'required|integer|min:1|max:8',
+            'is_aktif' => 'nullable|boolean',
         ]);
 
-        $mataKuliah = MataKuliah::create([
-            'kode'        => strtoupper($request->kode),
-            'nama_matkul' => $request->nama_matkul,
-            'sks'         => $request->sks,
-            'semester'    => $request->semester,
-            'is_aktif'    => $request->boolean('is_aktif', true),
-        ]);
-
-        // Simpan relasi mata kuliah ke kelas yang dipilih
-        if ($request->filled('kelas_id')) {
-            foreach ($request->kelas_id as $kelasId) {
-                DosenPengampu::updateOrCreate(
-                    ['mata_kuliah_id' => $mataKuliah->id, 'kelas_id' => $kelasId],
-                    ['dosen_id' => null]
-                );
-            }
-        }
+        $mataKuliah = DB::transaction(fn () => MataKuliah::create([
+            'kode' => strtoupper($validated['kode']),
+            'nama_matkul' => $validated['nama_matkul'],
+            'sks' => $validated['sks'],
+            'semester' => $validated['semester'],
+            'is_aktif' => $request->boolean('is_aktif', true),
+        ]));
 
         return redirect()->route('koordinator.master-data.mata-kuliah')
             ->with('success', "Mata kuliah {$mataKuliah->kode} berhasil ditambahkan.");
     }
 
     /**
-     * Update data mata kuliah.
+     * Perbarui data mata kuliah tanpa mengubah penugasan dosen.
      */
     public function update(Request $request, MataKuliah $mataKuliah)
     {
-        $request->validate([
-            'kode'        => 'required|string|max:20|unique:mata_kuliah,kode,' . $mataKuliah->id,
+        $validated = $request->validate([
+            'kode' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('mata_kuliah', 'kode')->ignore($mataKuliah->id),
+            ],
             'nama_matkul' => 'required|string|max:100',
-            'sks'         => 'required|integer|min:1|max:6',
-            'semester'    => 'required|integer|min:1|max:8',
-            'is_aktif'    => 'nullable|boolean',
-            'kelas_id'    => 'nullable|array',
-            'kelas_id.*'  => 'exists:kelas,id',
+            'sks' => 'required|integer|min:1|max:6',
+            'semester' => 'required|integer|min:1|max:8',
+            'is_aktif' => 'nullable|boolean',
         ]);
 
-        $mataKuliah->update([
-            'kode'        => strtoupper($request->kode),
-            'nama_matkul' => $request->nama_matkul,
-            'sks'         => $request->sks,
-            'semester'    => $request->semester,
-            'is_aktif'    => $request->boolean('is_aktif', true),
-        ]);
-
-        // Sinkronkan relasi mata kuliah ke kelas
-        if ($request->filled('kelas_id')) {
-            DosenPengampu::where('mata_kuliah_id', $mataKuliah->id)->delete();
-            foreach ($request->kelas_id as $kelasId) {
-                DosenPengampu::updateOrCreate(
-                    ['mata_kuliah_id' => $mataKuliah->id, 'kelas_id' => $kelasId],
-                    ['dosen_id' => null]
-                );
-            }
-        } else {
-            DosenPengampu::where('mata_kuliah_id', $mataKuliah->id)->delete();
-        }
+        DB::transaction(fn () => $mataKuliah->update([
+            'kode' => strtoupper($validated['kode']),
+            'nama_matkul' => $validated['nama_matkul'],
+            'sks' => $validated['sks'],
+            'semester' => $validated['semester'],
+            'is_aktif' => $request->boolean('is_aktif', true),
+        ]));
 
         return redirect()->route('koordinator.master-data.mata-kuliah')
             ->with('success', "Data mata kuliah {$mataKuliah->kode} berhasil diperbarui.");
@@ -138,29 +123,81 @@ class MataKuliahController extends Controller
      */
     public function toggleStatus(MataKuliah $mataKuliah)
     {
-        $mataKuliah->update(['is_aktif' => !$mataKuliah->is_aktif]);
+        DB::transaction(fn () => $mataKuliah->update([
+            'is_aktif' => ! $mataKuliah->is_aktif,
+        ]));
 
         $status = $mataKuliah->is_aktif ? 'diaktifkan' : 'dinonaktifkan';
+
         return redirect()->route('koordinator.master-data.mata-kuliah')
             ->with('success', "Mata kuliah {$mataKuliah->kode} berhasil {$status}.");
     }
 
     /**
-     * Hapus mata kuliah (hanya jika tidak memiliki penugasan dosen).
+     * Hapus mata kuliah hanya jika tidak memiliki penugasan dosen.
      */
     public function destroy(MataKuliah $mataKuliah)
     {
-        $penugasanCount = DosenPengampu::where('mata_kuliah_id', $mataKuliah->id)->count();
+        $penugasanCount = DosenPengampu::where(
+            'mata_kuliah_id',
+            $mataKuliah->id
+        )->count();
 
         if ($penugasanCount > 0) {
             return redirect()->route('koordinator.master-data.mata-kuliah')
-                ->with('error', "Mata kuliah {$mataKuliah->kode} tidak dapat dihapus karena masih memiliki {$penugasanCount} data penugasan dosen.");
+                ->with(
+                    'error',
+                    "Mata kuliah {$mataKuliah->kode} tidak dapat dihapus karena masih memiliki {$penugasanCount} data penugasan dosen."
+                );
+        }
+
+        $submissionCount = PengumpulanMilestone::where('mata_kuliah', $mataKuliah->slug)->count();
+
+        if ($submissionCount > 0) {
+            return redirect()->route('koordinator.master-data.mata-kuliah')
+                ->with(
+                    'error',
+                    "Mata kuliah {$mataKuliah->kode} tidak dapat dihapus karena sudah memiliki {$submissionCount} submission mahasiswa."
+                );
+        }
+
+        $penyelesaianCount = PenyelesaianMilestone::where('mata_kuliah_id', $mataKuliah->id)->count();
+
+        if ($penyelesaianCount > 0) {
+            return redirect()->route('koordinator.master-data.mata-kuliah')
+                ->with(
+                    'error',
+                    "Mata kuliah {$mataKuliah->kode} tidak dapat dihapus karena sudah memiliki {$penyelesaianCount} data penyelesaian milestone."
+                );
         }
 
         $kode = $mataKuliah->kode;
-        $mataKuliah->delete();
+
+        try {
+            $mataKuliah->delete();
+        } catch (QueryException $exception) {
+            if (! $this->merupakanPelanggaranForeignKey($exception)) {
+                throw $exception;
+            }
+
+            return redirect()->route('koordinator.master-data.mata-kuliah')
+                ->with(
+                    'error',
+                    "Mata kuliah {$kode} tidak dapat dihapus karena masih memiliki submission atau relasi data lain."
+                );
+        }
 
         return redirect()->route('koordinator.master-data.mata-kuliah')
             ->with('success', "Mata kuliah {$kode} berhasil dihapus.");
+    }
+
+    private function merupakanPelanggaranForeignKey(QueryException $exception): bool
+    {
+        $message = strtolower($exception->getMessage());
+        $driverCode = (int) ($exception->errorInfo[1] ?? 0);
+
+        return $driverCode === 1451
+            || str_contains($message, 'foreign key constraint fails')
+            || str_contains($message, 'foreign key constraint failed');
     }
 }

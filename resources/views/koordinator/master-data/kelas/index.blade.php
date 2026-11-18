@@ -544,7 +544,7 @@
 
 {{-- ═══════════ 3. Tab Navigasi Sesuai Desain Figma ═══════════ --}}
 <div class="figma-subtabs">
-    <a href="#" class="figma-subtab">Mata Kuliah</a>
+    <a href="{{ route('koordinator.master-data.mata-kuliah') }}" class="figma-subtab">Mata Kuliah</a>
     <a href="{{ route('koordinator.master-data.kelas') }}" class="figma-subtab figma-subtab--active">Kelas</a>
     <a href="{{ route('koordinator.master-data.pengguna') }}" class="figma-subtab">Pengguna</a>
 </div>

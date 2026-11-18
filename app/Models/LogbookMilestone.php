@@ -10,17 +10,22 @@ class LogbookMilestone extends Model
     protected $table = 'logbook_milestone';
 
     protected $fillable = [
-        'milestone_id',
-        'kelompok_id',
-        'mahasiswa_id',
-        'tanggal',
-        'kegiatan',
-        'kendala',
-        'link_bukti',
-        'file_bukti',
-        'status',
-        'feedback',
-    ];
+    'milestone_id',
+    'kelompok_id',
+    'mahasiswa_id',
+    'tanggal',
+    'judul',
+    'deskripsi',
+    'kegiatan',
+    'progress',
+    'hasil',
+    'kendala',
+    'rencana',
+    'link_bukti',
+    'file_bukti',
+    'status',
+    'feedback',
+];
 
     protected function casts(): array
     {

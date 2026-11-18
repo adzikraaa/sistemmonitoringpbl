@@ -102,30 +102,41 @@ class CoordinatorMilestoneGlobalTest extends TestCase
         ]);
     }
 
-    public function test_duplicate_urutan_is_auto_assigned_to_next_available_slot(): void
-    {
-        Milestone::create([
-            'periode_id' => $this->periode->id,
-            'kode' => 'M1',
-            'judul' => 'Prototype awal',
-            'deskripsi' => 'Deskripsi lama',
-            'urutan' => 1,
-            'deadline' => '2026-11-06',
-        ]);
+   public function test_new_milestone_is_inserted_at_selected_order_and_existing_milestones_are_shifted(): void
+{
+    $milestoneLama = Milestone::create([
+        'periode_id' => $this->periode->id,
+        'kode' => 'M01',
+        'judul' => 'Prototype awal',
+        'deskripsi' => 'Deskripsi lama',
+        'urutan' => 1,
+        'deadline' => '2026-11-06',
+    ]);
 
-        $response = $this->actingAs($this->koordinator, 'koordinator')
-            ->post(route('koordinator.milestone-global.store'), [
-                'judul' => 'Tambah milestone baru',
-                'deskripsi' => 'Jadwal dari form tambah.',
-                'deadline' => '2026-11-20',
-                'urutan' => 1,
-            ]);
-
-        $response->assertRedirect(route('koordinator.milestone-global.index'));
-        $this->assertDatabaseHas('milestone', [
-            'periode_id' => $this->periode->id,
+    $response = $this->actingAs($this->koordinator, 'koordinator')
+        ->post(route('koordinator.milestone-global.store'), [
             'judul' => 'Tambah milestone baru',
-            'urutan' => 2,
+            'deskripsi' => 'Jadwal dari form tambah.',
+            'deadline' => '2026-11-20',
+            'urutan' => 1,
         ]);
-    }
+
+    $response->assertRedirect(route('koordinator.milestone-global.index'));
+
+    // Milestone baru menempati urutan yang dipilih.
+    $this->assertDatabaseHas('milestone', [
+        'periode_id' => $this->periode->id,
+        'judul' => 'Tambah milestone baru',
+        'urutan' => 1,
+        'kode' => 'M01',
+    ]);
+
+    // Milestone lama bergeser ke urutan berikutnya.
+    $this->assertDatabaseHas('milestone', [
+        'id' => $milestoneLama->id,
+        'judul' => 'Prototype awal',
+        'urutan' => 2,
+        'kode' => 'M02',
+    ]);
+}
 }

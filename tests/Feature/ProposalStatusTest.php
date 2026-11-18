@@ -19,12 +19,59 @@ class ProposalStatusTest extends TestCase
 
     public function test_mahasiswa_proposal_page_shows_status_and_feedback(): void
     {
-        $mahasiswa = Mahasiswa::first() ?? Mahasiswa::create([
+        $periode = Periode::create([
+            'nama_periode' => 'Ganjil 2026/2027',
+            'tahun_akademik' => '2026/2027',
+            'tanggal_mulai' => '2026-09-01',
+            'tanggal_selesai' => '2027-01-31',
+            'is_aktif' => true,
+        ]);
+
+        $kelas = Kelas::create([
+            'nama_kelas' => 'SIB 3B',
+            'periode_id' => $periode->id,
+        ]);
+
+        $dosen = Dosen::create([
+            'nama' => 'Dosen Pembimbing',
+            'email' => 'pembimbing@test.com',
+            'password' => bcrypt('password'),
+            'nidn' => '0011223355',
+            'is_aktif' => true,
+        ]);
+
+        $kelompok = Kelompok::create([
+            'nama_kelompok' => 'Kelompok Proposal',
+            'kelas_id' => $kelas->id,
+            'periode_id' => $periode->id,
+            'dosen_id' => $dosen->id,
+            'tanggal_dibuat' => '2026-09-10',
+        ]);
+
+        $mahasiswa = Mahasiswa::create([
             'nama' => 'Mahasiswa Test',
             'nim' => '2024999',
             'email' => 'mhs@test.com',
             'password' => bcrypt('password'),
+            'kelas_id' => $kelas->id,
             'is_aktif' => true,
+        ]);
+
+        $kelompok->mahasiswa()->attach($mahasiswa->id, [
+            'role_label' => 'Ketua',
+            'is_ketua' => true,
+        ]);
+
+        Proposal::create([
+            'kelompok_id' => $kelompok->id,
+            'judul' => 'Sistem Informasi Monitoring PBL',
+            'deskripsi' => 'Deskripsi proposal.',
+            'latar_belakang' => 'Latar belakang.',
+            'tujuan' => 'Tujuan.',
+            'metode' => 'Metode.',
+            'status' => 'disetujui',
+            'catatan_revisi' => 'Struktur proposal sudah baik.',
+            'tanggal_pengajuan' => '2026-10-01',
         ]);
 
         $response = $this->actingAs($mahasiswa, 'mahasiswa')
@@ -38,6 +85,7 @@ class ProposalStatusTest extends TestCase
 
     public function test_mahasiswa_can_upload_pdf_proposal_and_store_to_database(): void
     {
+        Storage::fake('local');
         Storage::fake('public');
 
         $periode = Periode::create([
@@ -104,7 +152,8 @@ class ProposalStatusTest extends TestCase
 
         $proposal = Proposal::where('kelompok_id', $kelompok->id)->first();
         $this->assertNotNull($proposal->file_proposal);
-        Storage::disk('public')->assertExists($proposal->file_proposal);
+        Storage::disk('local')->assertExists($proposal->file_proposal);
+        Storage::disk('public')->assertMissing($proposal->file_proposal);
 
         // Uji unduh proposal
         $downloadResponse = $this->actingAs($mahasiswa, 'mahasiswa')

@@ -302,8 +302,8 @@
         </div>
         <div class="db-stat-card__body">
             <p class="db-stat-card__label">Proposal</p>
-            <p class="db-stat-card__value">1</p>
-            <p class="db-stat-card__sub">Menunggu revisi</p>
+            <p class="db-stat-card__value">{{ $proposal ? 1 : 0 }}</p>
+            <p class="db-stat-card__sub">{{ $proposal ? ucfirst($proposal->status) : 'Belum diajukan' }}</p>
         </div>
         <div class="db-stat-card__arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
     </a>
@@ -313,8 +313,8 @@
         </div>
         <div class="db-stat-card__body">
             <p class="db-stat-card__label">Logbook</p>
-            <p class="db-stat-card__value">4</p>
-            <p class="db-stat-card__sub">Minggu ini</p>
+            <p class="db-stat-card__value">{{ $logbookStats['total'] }}</p>
+            <p class="db-stat-card__sub">{{ $logbookStats['menunggu'] }} menunggu review</p>
         </div>
         <div class="db-stat-card__arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
     </a>
@@ -324,8 +324,8 @@
         </div>
         <div class="db-stat-card__body">
             <p class="db-stat-card__label">Milestone</p>
-            <p class="db-stat-card__value">2</p>
-            <p class="db-stat-card__sub">Dalam proses</p>
+            <p class="db-stat-card__value">{{ $progres['selesai'] }}/{{ $progres['total'] }}</p>
+            <p class="db-stat-card__sub">{{ $progres['punya_data'] ? 'Mapping selesai' : 'Belum ada data' }}</p>
         </div>
         <div class="db-stat-card__arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
     </a>
@@ -335,7 +335,7 @@
         </div>
         <div class="db-stat-card__body">
             <p class="db-stat-card__label">Anggota Kelompok</p>
-            <p class="db-stat-card__value">4</p>
+            <p class="db-stat-card__value">{{ count($anggota) }}</p>
             <p class="db-stat-card__sub">Orang</p>
         </div>
         <div class="db-stat-card__arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
@@ -366,40 +366,47 @@
                         id="db-progress-circle"/>
                 </svg>
                 <div class="db-project__circle-label">
-                    <span class="db-project__circle-pct">60%</span>
-                    <span class="db-project__circle-txt">Progres</span>
+                    <span class="db-project__circle-pct">{{ $progres['persen'] }}%</span>
+                    <span class="db-project__circle-txt">{{ $progres['punya_data'] ? 'Progres' : 'Belum ada data' }}</span>
                 </div>
             </div>
             <div class="db-project__info">
-                <p class="db-project__name">Kelompok 2 - SIB 3B</p>
-                <p class="db-project__desc">Pengembangan Sistem<br>Monitoring PBL</p>
+                <p class="db-project__name">
+                    {{ $kelompok?->nama_kelompok ?? 'Belum ada kelompok' }}
+                    @if($kelompok?->kelas)
+                        - {{ $kelompok->kelas->nama_kelas }}
+                    @endif
+                </p>
+                <p class="db-project__desc">{{ $kelompok?->judul_proyek ?? 'Belum ada proyek' }}</p>
             </div>
         </div>
         <div class="db-steps">
-            <div class="db-step">
-                <div class="db-step__line db-step__line--done"></div>
-                <div class="db-step__dot db-step__dot--done"></div>
-                <span class="db-step__lbl">Proposal</span>
-                <span class="db-step__sub db-step__sub--done">Disetujui</span>
-            </div>
-            <div class="db-step">
-                <div class="db-step__line db-step__line--active"></div>
-                <div class="db-step__dot db-step__dot--active"></div>
-                <span class="db-step__lbl">Analisis</span>
-                <span class="db-step__sub db-step__sub--active">Dalam Proses</span>
-            </div>
-            <div class="db-step">
-                <div class="db-step__line db-step__line--todo"></div>
-                <div class="db-step__dot db-step__dot--todo"></div>
-                <span class="db-step__lbl">Perancangan</span>
-                <span class="db-step__sub db-step__sub--todo">Belum Mulai</span>
-            </div>
-            <div class="db-step">
-                <div class="db-step__line db-step__line--todo"></div>
-                <div class="db-step__dot db-step__dot--todo"></div>
-                <span class="db-step__lbl">Implementasi</span>
-                <span class="db-step__sub db-step__sub--todo">Belum Mulai</span>
-            </div>
+            @foreach ($tahapan as $tahap)
+                @php
+                    $state = $tahap['state'];
+                    $lineClass = match($state) {
+                        'done' => 'db-step__line--done',
+                        'active' => 'db-step__line--active',
+                        default => 'db-step__line--todo',
+                    };
+                    $dotClass = match($state) {
+                        'done' => 'db-step__dot--done',
+                        'active' => 'db-step__dot--active',
+                        default => 'db-step__dot--todo',
+                    };
+                    $subClass = match($state) {
+                        'done' => 'db-step__sub--done',
+                        'active' => 'db-step__sub--active',
+                        default => 'db-step__sub--todo',
+                    };
+                @endphp
+                <div class="db-step">
+                    <div class="db-step__line {{ $lineClass }}"></div>
+                    <div class="db-step__dot {{ $dotClass }}"></div>
+                    <span class="db-step__lbl">{{ $tahap['label'] }}</span>
+                    <span class="db-step__sub {{ $subClass }}">{{ $tahap['status'] }}</span>
+                </div>
+            @endforeach
         </div>
     </div>
 
@@ -456,46 +463,31 @@
             </h2>
             <a href="{{ route('mahasiswa.logbook') }}" class="db-card__link">Lihat semua</a>
         </div>
-        <div class="db-activity-item">
-            <div class="db-activity-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4A7C59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        @forelse($aktivitasTerbaru as $aktivitas)
+            @php
+                $statusAktivitas = match (strtolower((string) $aktivitas->status)) {
+                    'disetujui' => 'Disetujui',
+                    'revisi' => 'Revisi',
+                    'ditolak' => 'Ditolak',
+                    default => 'Menunggu Review',
+                };
+            @endphp
+            <div class="db-activity-item">
+                <div class="db-activity-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4A7C59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </div>
+                <div class="db-activity-body">
+                    <p class="db-activity-text">{{ $aktivitas->judul ?: $aktivitas->kegiatan }}</p>
+                    <p class="db-activity-time">
+                        {{ $aktivitas->tanggal?->translatedFormat('d M Y') ?? '-' }}
+                        &middot; {{ $statusAktivitas }}
+                    </p>
+                </div>
+                <span class="db-activity-badge badge-logbook">Logbook</span>
             </div>
-            <div class="db-activity-body">
-                <p class="db-activity-text">Logbook minggu 4 berhasil dikirim</p>
-                <p class="db-activity-time">2 hari yang lalu</p>
-            </div>
-            <span class="db-activity-badge badge-logbook">Logbook</span>
-        </div>
-        <div class="db-activity-item">
-            <div class="db-activity-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B8934A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            </div>
-            <div class="db-activity-body">
-                <p class="db-activity-text">Proposal kelompok diperbarui</p>
-                <p class="db-activity-time">3 hari yang lalu</p>
-            </div>
-            <span class="db-activity-badge badge-proposal">Proposal</span>
-        </div>
-        <div class="db-activity-item">
-            <div class="db-activity-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B4FA0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            </div>
-            <div class="db-activity-body">
-                <p class="db-activity-text">Milestone "Perancangan Sistem" diupdate</p>
-                <p class="db-activity-time">4 hari yang lalu</p>
-            </div>
-            <span class="db-activity-badge badge-milestone">Milestone</span>
-        </div>
-        <div class="db-activity-item">
-            <div class="db-activity-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A3E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <div class="db-activity-body">
-                <p class="db-activity-text">Diskusi kelompok baru ditambahkan</p>
-                <p class="db-activity-time">5 hari yang lalu</p>
-            </div>
-            <span class="db-activity-badge badge-kelompok">Kelompok</span>
-        </div>
+        @empty
+            <p class="db-activity-time" style="padding: 18px 0;">Belum ada aktivitas logbook.</p>
+        @endforelse
     </div>
 
     {{-- Jadwal Mendatang --}}
@@ -548,7 +540,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var circle = document.getElementById('db-progress-circle');
     if (circle) {
         var circumference = 2 * Math.PI * 32;
-        var target = circumference * (1 - 0.60);
+        var targetPct = {{ (float) $progres['persen'] }};
+        var target = circumference * (1 - Math.min(100, Math.max(0, targetPct)) / 100);
         circle.style.strokeDashoffset = circumference;
         requestAnimationFrame(function() {
             circle.style.transition = 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)';

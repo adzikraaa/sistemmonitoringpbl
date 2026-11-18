@@ -8,50 +8,86 @@ use App\Models\Kelompok;
 use App\Models\Kelas;
 use App\Models\Mahasiswa;
 use App\Models\Periode;
+use App\Models\RiwayatPenugasanDosen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class KelompokController extends Controller
 {
     public function index()
     {
-        $kelompokList = Kelompok::with(['dosen', 'kelas', 'anggotaKelompok.mahasiswa', 'periode', 'milestoneKelompok'])
+        $kelompokList = Kelompok::with([
+            'dosen',
+            'kelas',
+            'anggotaKelompok.mahasiswa',
+            'periode',
+            'milestoneKelompok',
+        ])
             ->orderByDesc('tanggal_dibuat')
             ->get();
 
         $kelasList = Kelas::orderBy('nama_kelas')->get();
         $dosenList = Dosen::where('is_aktif', true)->orderBy('nama')->get();
-        $periodeList = Periode::orderByDesc('is_aktif')->orderByDesc('tanggal_mulai')->get();
+        $periodeList = Periode::orderByDesc('is_aktif')
+            ->orderByDesc('tanggal_mulai')
+            ->get();
 
-        return view('koordinator.kelompok', compact('kelompokList', 'kelasList', 'dosenList', 'periodeList'));
+        return view('koordinator.kelompok', compact(
+            'kelompokList',
+            'kelasList',
+            'dosenList',
+            'periodeList'
+        ));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'nama_kelompok' => 'required|string|max:120',
-            'judul_proyek'  => 'nullable|string|max:255',
-            'kelas_id'     => 'required|exists:kelas,id',
-            'periode_id'   => 'required|exists:periode,id',
-            'dosen_id'     => 'nullable|exists:dosen,id',
+            'judul_proyek' => 'nullable|string|max:255',
+            'kelas_id' => 'required|exists:kelas,id',
+            'periode_id' => 'required|exists:periode,id',
+            'dosen_id' => 'nullable|exists:dosen,id',
             'mahasiswa_ids' => 'nullable|array',
             'mahasiswa_ids.*' => 'exists:mahasiswa,id',
         ]);
 
-        $dosenId = $request->filled('dosen_id') ? $request->dosen_id : Dosen::where('is_aktif', true)->value('id');
+        $dosenId = $request->filled('dosen_id')
+            ? $request->dosen_id
+            : Dosen::where('is_aktif', true)->value('id');
 
-        $kelompok = Kelompok::create([
-            'nama_kelompok' => $request->nama_kelompok,
-            'judul_proyek'  => $request->judul_proyek ?: $request->nama_kelompok,
-            'dosen_id'      => $dosenId,
-            'kelas_id'      => $request->kelas_id,
-            'periode_id'    => $request->periode_id,
-            'jadwal_bimbingan' => $request->jadwal_bimbingan,
-            'status'        => 'Aktif',
-            'tanggal_dibuat' => now()->toDateString(),
-        ]);
+        DB::transaction(function () use ($request, $dosenId) {
+            $kelompok = Kelompok::create([
+                'nama_kelompok' => $request->nama_kelompok,
+                'judul_proyek' => $request->judul_proyek ?: $request->nama_kelompok,
+                'dosen_id' => $dosenId,
+                'kelas_id' => $request->kelas_id,
+                'periode_id' => $request->periode_id,
+                'jadwal_bimbingan' => $request->jadwal_bimbingan,
+                'status' => 'Aktif',
+                'tanggal_dibuat' => now()->toDateString(),
+            ]);
 
-        $mahasiswaIds = collect($request->input('mahasiswa_ids', []))->filter()->unique()->values()->all();
-        if (! empty($mahasiswaIds)) {
+            // Catat penugasan dosen awal jika dosen tersedia.
+            if ($dosenId !== null) {
+                RiwayatPenugasanDosen::create([
+                    'kelompok_id' => $kelompok->id,
+                    'dosen_id' => $dosenId,
+                    'dosen_sebelumnya_id' => null,
+                    'periode_id' => $request->periode_id,
+                    'koordinator_id' => Auth::guard('koordinator')->id(),
+                    'aksi' => 'penugasan_baru',
+                    'catatan' => 'Penugasan dosen awal saat kelompok dibuat.',
+                ]);
+            }
+
+            $mahasiswaIds = collect($request->input('mahasiswa_ids', []))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
             foreach ($mahasiswaIds as $index => $mahasiswaId) {
                 $kelompok->anggotaKelompok()->create([
                     'mahasiswa_id' => $mahasiswaId,
@@ -59,62 +95,123 @@ class KelompokController extends Controller
                     'is_ketua' => $index === 0,
                 ]);
             }
-        }
+        });
 
-        return redirect()->route('koordinator.kelompok.index')->with('success', 'Kelompok berhasil ditambahkan.');
+        return redirect()
+            ->route('koordinator.kelompok.index')
+            ->with('success', 'Kelompok berhasil ditambahkan.');
     }
 
     public function update(Request $request, $id)
     {
-        $kelompok = Kelompok::findOrFail($id);
-
         $request->validate([
             'nama_kelompok' => 'required|string|max:120',
-            'judul_proyek'  => 'nullable|string|max:255',
-            'kelas_id'     => 'required|exists:kelas,id',
-            'periode_id'   => 'required|exists:periode,id',
-            'dosen_id'     => 'nullable|exists:dosen,id',
+            'judul_proyek' => 'nullable|string|max:255',
+            'kelas_id' => 'required|exists:kelas,id',
+            'periode_id' => 'required|exists:periode,id',
+            'dosen_id' => 'nullable|exists:dosen,id',
             'mahasiswa_ids' => 'nullable|array',
             'mahasiswa_ids.*' => 'exists:mahasiswa,id',
         ]);
 
-        $kelompok->update([
-            'nama_kelompok' => $request->nama_kelompok,
-            'judul_proyek'  => $request->judul_proyek ?: $request->nama_kelompok,
-            'dosen_id'      => $request->dosen_id ?: $kelompok->dosen_id,
-            'kelas_id'      => $request->kelas_id,
-            'periode_id'    => $request->periode_id,
-            'jadwal_bimbingan' => $request->jadwal_bimbingan,
-        ]);
+        DB::transaction(function () use ($request, $id) {
+            // Mengunci baris kelompok selama proses perubahan.
+            $kelompok = Kelompok::lockForUpdate()->findOrFail($id);
 
-        $selectedMahasiswaIds = collect($request->input('mahasiswa_ids', []))->filter()->unique()->values()->all();
-        $existingMahasiswaIds = $kelompok->anggotaKelompok()->pluck('mahasiswa_id')->all();
+            $dosenSebelumnyaId = $kelompok->dosen_id !== null
+                ? (int) $kelompok->dosen_id
+                : null;
 
-        $newMahasiswaIds = array_diff($selectedMahasiswaIds, $existingMahasiswaIds);
-        foreach ($newMahasiswaIds as $index => $mahasiswaId) {
-            $kelompok->anggotaKelompok()->create([
-                'mahasiswa_id' => $mahasiswaId,
-                'role_label' => $index === 0 ? 'Ketua' : 'Anggota',
-                'is_ketua' => $index === 0,
+            // Jika dosen tidak dipilih, pertahankan dosen sebelumnya.
+            $dosenBaruId = $request->filled('dosen_id')
+                ? (int) $request->dosen_id
+                : $dosenSebelumnyaId;
+
+            $kelompok->update([
+                'nama_kelompok' => $request->nama_kelompok,
+                'judul_proyek' => $request->judul_proyek ?: $request->nama_kelompok,
+                'dosen_id' => $dosenBaruId,
+                'kelas_id' => $request->kelas_id,
+                'periode_id' => $request->periode_id,
+                'jadwal_bimbingan' => $request->jadwal_bimbingan,
             ]);
-        }
 
-        return redirect()->route('koordinator.kelompok.index')->with('success', 'Kelompok berhasil diperbarui.');
+            // Catat hanya jika dosen pembimbing benar-benar berubah.
+            if ($dosenSebelumnyaId !== $dosenBaruId) {
+                RiwayatPenugasanDosen::create([
+                    'kelompok_id' => $kelompok->id,
+                    'dosen_id' => $dosenBaruId,
+                    'dosen_sebelumnya_id' => $dosenSebelumnyaId,
+                    'periode_id' => $request->periode_id,
+                    'koordinator_id' => Auth::guard('koordinator')->id(),
+                    'aksi' => $dosenSebelumnyaId === null
+                        ? 'penugasan_baru'
+                        : 'perubahan_dosen',
+                    'catatan' => $dosenSebelumnyaId === null
+                        ? 'Penugasan dosen pembimbing pada kelompok.'
+                        : 'Perubahan dosen pembimbing kelompok.',
+                ]);
+            }
+
+            $selectedMahasiswaIds = collect(
+                $request->input('mahasiswa_ids', [])
+            )
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            $existingMahasiswaIds = $kelompok->anggotaKelompok()
+                ->pluck('mahasiswa_id')
+                ->all();
+
+            $newMahasiswaIds = array_diff(
+                $selectedMahasiswaIds,
+                $existingMahasiswaIds
+            );
+
+            foreach ($newMahasiswaIds as $index => $mahasiswaId) {
+                $kelompok->anggotaKelompok()->create([
+                    'mahasiswa_id' => $mahasiswaId,
+                    'role_label' => $index === 0 ? 'Ketua' : 'Anggota',
+                    'is_ketua' => $index === 0,
+                ]);
+            }
+        });
+
+        return redirect()
+            ->route('koordinator.kelompok.index')
+            ->with('success', 'Kelompok berhasil diperbarui.');
     }
 
     public function show($id)
     {
-        $kelompok = Kelompok::with(['dosen', 'kelas', 'periode', 'anggotaKelompok.mahasiswa', 'milestoneKelompok'])
-            ->findOrFail($id);
+        $kelompok = Kelompok::with([
+            'dosen',
+            'kelas',
+            'periode',
+            'anggotaKelompok.mahasiswa',
+            'milestoneKelompok',
+        ])->findOrFail($id);
 
         $mahasiswaList = Mahasiswa::query()
-            ->where('kelas_id', $kelompok->kelas_id)
-            ->where('is_aktif', true)
-            ->whereNotIn('id', $kelompok->anggotaKelompok()->pluck('mahasiswa_id'))
-            ->orderBy('nama')
-            ->get();
+    ->where('kelas_id', $kelompok->kelas_id)
+    ->where('is_aktif', true)
+    ->whereNotIn(
+        'id',
+        \App\Models\AnggotaKelompok::query()
+            ->whereHas('kelompok', function ($query) use ($kelompok) {
+                $query->where('periode_id', $kelompok->periode_id);
+            })
+            ->select('mahasiswa_id')
+    )
+    ->orderBy('nama')
+    ->get();
 
-        return view('koordinator.kelompok-detail', compact('kelompok', 'mahasiswaList'));
+        return view('koordinator.kelompok-detail', compact(
+            'kelompok',
+            'mahasiswaList'
+        ));
     }
 
     public function storeAnggota(Request $request, $id)
@@ -126,12 +223,23 @@ class KelompokController extends Controller
 
         $kelompok = Kelompok::with('anggotaKelompok')->findOrFail($id);
 
-        if ($kelompok->anggotaKelompok()->where('mahasiswa_id', $request->mahasiswa_id)->exists()) {
-            return back()->withErrors(['mahasiswa_id' => 'Mahasiswa sudah ada di kelompok ini.']);
-        }
+       $mahasiswaSudahTerdaftar = \App\Models\AnggotaKelompok::query()
+    ->where('mahasiswa_id', $request->mahasiswa_id)
+    ->whereHas('kelompok', function ($query) use ($kelompok) {
+        $query->where('periode_id', $kelompok->periode_id);
+    })
+    ->exists();
+
+if ($mahasiswaSudahTerdaftar) {
+    return back()->withErrors([
+        'mahasiswa_id' => 'Mahasiswa sudah tergabung dalam kelompok lain pada periode ini.',
+    ]);
+}
 
         if ($kelompok->anggotaKelompok()->count() >= 4) {
-            return back()->withErrors(['mahasiswa_id' => 'Kapasitas kelompok sudah penuh.']);
+            return back()->withErrors([
+                'mahasiswa_id' => 'Kapasitas kelompok sudah penuh.',
+            ]);
         }
 
         $roleLabel = $request->role_label ?: 'Anggota';
@@ -142,7 +250,9 @@ class KelompokController extends Controller
             'is_ketua' => strtolower($roleLabel) === 'ketua',
         ]);
 
-        return redirect()->route('koordinator.kelompok.show', $kelompok->id)->with('success', 'Anggota berhasil ditambahkan.');
+        return redirect()
+            ->route('koordinator.kelompok.show', $kelompok->id)
+            ->with('success', 'Anggota berhasil ditambahkan.');
     }
 
     public function updateStatus(Request $request, $id)
@@ -152,16 +262,23 @@ class KelompokController extends Controller
         ]);
 
         $kelompok = Kelompok::findOrFail($id);
+
         $kelompok->update([
             'status' => $request->status,
         ]);
 
-        return redirect()->route('koordinator.kelompok.index')->with('success', 'Status kelompok berhasil diperbarui.');
+        return redirect()
+            ->route('koordinator.kelompok.index')
+            ->with('success', 'Status kelompok berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
-        $kelompok = Kelompok::with(['anggotaKelompok', 'milestoneKelompok', 'proposal'])->findOrFail($id);
+        $kelompok = Kelompok::with([
+            'anggotaKelompok',
+            'milestoneKelompok',
+            'proposal',
+        ])->findOrFail($id);
 
         $kelompok->anggotaKelompok()->delete();
         $kelompok->milestoneKelompok()->delete();
@@ -170,6 +287,8 @@ class KelompokController extends Controller
         $namaKelompok = $kelompok->nama_kelompok;
         $kelompok->delete();
 
-        return redirect()->route('koordinator.kelompok.index')->with('success', "Kelompok {$namaKelompok} berhasil dihapus.");
+        return redirect()
+            ->route('koordinator.kelompok.index')
+            ->with('success', "Kelompok {$namaKelompok} berhasil dihapus.");
     }
 }

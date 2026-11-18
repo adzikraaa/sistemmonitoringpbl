@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MilestoneKelompok extends Model
 {
+    public const STATUS_SELESAI = ['selesai'];
+
     protected $table = 'milestone_kelompok';
 
     protected $fillable = [
@@ -15,6 +17,20 @@ class MilestoneKelompok extends Model
         'status',
         'catatan',
     ];
+
+    public static function normalizeStatus(?string $status): string
+    {
+        return strtolower(trim((string) $status));
+    }
+
+    public function isSelesai(): bool
+    {
+        return in_array(
+            static::normalizeStatus($this->status),
+            static::STATUS_SELESAI,
+            true
+        );
+    }
 
     public function milestone(): BelongsTo
     {

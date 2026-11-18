@@ -559,7 +559,7 @@
     }
 
     .sim-detail-action-link {
-        color: var(--dp-ochre); 
+        color: var(--dp-ochre);
         text-decoration: none;
         font-size: 12px;
         font-weight: 700;
@@ -1145,6 +1145,15 @@
                 }
             });
         }
+
     });
 </script>
+@if (session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            openAnggotaModal();
+        });
+    </script>
+@endif
+
 @endsection

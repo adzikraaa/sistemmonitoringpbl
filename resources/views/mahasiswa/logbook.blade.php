@@ -29,7 +29,9 @@
         <p class="sim-page-header__eyebrow">CATATAN PROSES</p>
         <h1 class="sim-page-header__title">Logbook</h1>
         <p class="sim-page-header__desc">
-            Kelompok 01 – SIB 3B &middot; Catat kegiatan berdasarkan tanggal, bukan nomor minggu.
+            {{ $kelompok?->nama_kelompok ?? 'Belum ada kelompok' }}
+            &bull; {{ $kelompok?->kelas?->nama_kelas ?? 'Kelas belum tersedia' }}
+            &middot; Catat kegiatan berdasarkan tanggal, bukan nomor minggu.
         </p>
     </div>
     <div class="sim-page-header__right">
@@ -53,8 +55,16 @@
             </svg>
         </span>
         <span>
-            <strong>Kelompok 01 – SIB 3B</strong>
+            <strong>{{ $kelompok?->nama_kelompok ?? 'Belum ada kelompok' }}{{ $kelompok?->kelas ? ' – '.$kelompok->kelas->nama_kelas : '' }}</strong>
+            {{ $logbookStats['total'] }} catatan &middot;
+            {{ $logbookStats['menunggu'] }} menunggu review &middot;
+            {{ $logbookStats['disetujui'] }} disetujui &middot;
+            {{ $logbookStats['revisi'] }} revisi.
             Minggu dihitung otomatis dari tanggal paling awal ke paling akhir.
+            @if($logbookStats['terbaru'])
+                &middot; Aktivitas terbaru: {{ $logbookStats['terbaru']->judul ?: $logbookStats['terbaru']->kegiatan }}
+                ({{ $logbookStats['terbaru']->tanggal->format('d-m-Y') }}).
+            @endif
         </span>
     </div>
 
@@ -100,7 +110,7 @@
                 {{-- Progress --}}
                 <div class="sim-lb-card__progress-section">
                     <div class="sim-lb-card__progress-row">
-                        <span class="sim-lb-card__progress-label">Progress</span>
+                        <span class="sim-lb-card__progress-label">Progress kegiatan (self-report)</span>
                         <span class="sim-lb-card__progress-pct">{{ $lb['progress'] }} %</span>
                     </div>
                     <div class="sim-lb-card__progress-bar">
@@ -192,7 +202,7 @@
                     </div>
                     <div>
                         <p class="sim-lb-sidebar-card__heading">Ritme mingguan</p>
-                        <p class="sim-lb-sidebar-card__sub">Kelompok 01 – SIB 3B</p>
+                        <p class="sim-lb-sidebar-card__sub">{{ $kelompok?->nama_kelompok ?? 'Belum ada kelompok' }}{{ $kelompok?->kelas ? ' – '.$kelompok->kelas->nama_kelas : '' }}</p>
                     </div>
                 </div>
                 <ul class="sim-lb-sidebar-tips">
@@ -292,7 +302,7 @@
 
             {{-- 4. Progress --}}
             <div class="sim-form-group">
-                <label class="sim-form-label" for="lb-progress">Progress (%)</label>
+                <label class="sim-form-label" for="lb-progress">Progress kegiatan (self-report, %)</label>
                 <input type="number"
                        id="lb-progress"
                        name="progress"
@@ -743,7 +753,7 @@ function lbAddCardToDOM(data) {
 
         '<div class="sim-lb-card__progress-section">' +
         '<div class="sim-lb-card__progress-row">' +
-        '<span class="sim-lb-card__progress-label">Progress</span>' +
+        '<span class="sim-lb-card__progress-label">Progress kegiatan (self-report)</span>' +
         '<span class="sim-lb-card__progress-pct">' + progress + ' %</span>' +
         '</div>' +
         '<div class="sim-lb-card__progress-bar">' +

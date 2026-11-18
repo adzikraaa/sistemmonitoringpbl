@@ -628,11 +628,14 @@
                 @php
                     $kelasTerhubung = $mk->dosenPengampu->pluck('kelas.nama_kelas')->unique()->filter()->values();
                     $kelasCount = $kelasTerhubung->count();
+                    $kodeValue = $mk->kode ?? '';
+                    $kodeLabel = $kodeValue !== '' ? strtoupper($kodeValue) : '-';
+                    $semesterValue = $mk->semester ?? 'null';
                 @endphp
                 <tr id="row-mk-{{ $mk->id }}">
                     {{-- 1. Kode --}}
                     <td>
-                        <div class="td-mk-code">{{ strtoupper($mk->kode) }}</div>
+                        <div class="td-mk-code">{{ $kodeLabel }}</div>
                     </td>
 
                     {{-- 2. Mata Kuliah --}}
@@ -648,7 +651,7 @@
 
                     {{-- 4. Semester --}}
                     <td>
-                        <div class="td-mk-semester">{{ $mk->semester }}</div>
+                        <div class="td-mk-semester">{{ $mk->semester ?? '-' }}</div>
                     </td>
 
                     {{-- 5. Status --}}
@@ -675,13 +678,13 @@
                             {{-- Edit --}}
                             <button type="button"
                                     class="figma-action-btn"
-                                    title="Edit mata kuliah {{ strtoupper($mk->kode) }}"
+                                    title="Edit mata kuliah {{ $kodeLabel }}"
                                     onclick="pilihMkEdit(
                                         {{ $mk->id }},
-                                        '{{ addslashes(strtoupper($mk->kode)) }}',
+                                        '{{ addslashes($kodeValue) }}',
                                         '{{ addslashes($mk->nama_matkul) }}',
                                         {{ $mk->sks }},
-                                        {{ $mk->semester }},
+                                        {{ $semesterValue }},
                                         {{ $mk->is_aktif ? 'true' : 'false' }},
                                         '{{ $kelasTerhubung->implode(',') }}'
                                     )">
@@ -711,7 +714,7 @@
                             </form>
 
                             {{-- Hapus --}}
-                            <form method="POST" action="{{ route('koordinator.master-data.mata-kuliah.destroy', $mk) }}" style="display: inline; margin: 0;" onsubmit="return confirm('Yakin ingin menghapus mata kuliah {{ addslashes(strtoupper($mk->kode)) }}? Data penugasan dosen terkait juga akan ikut terhapus.')">
+                            <form method="POST" action="{{ route('koordinator.master-data.mata-kuliah.destroy', $mk) }}" style="display: inline; margin: 0;" onsubmit="return confirm('Yakin ingin menghapus mata kuliah {{ addslashes($kodeLabel) }}? Data penugasan dosen terkait juga akan ikut terhapus.')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="figma-action-btn" title="Hapus mata kuliah">
@@ -941,16 +944,17 @@
 <script>
     {{-- Fungsi Interaktif Edit Mata Kuliah dari Baris Tabel --}}
     function pilihMkEdit(id, kode, nama, sks, semester, isAktif, kelasList) {
+        const kodeLabel = kode || '(tanpa kode)';
         // Update header form edit
-        document.getElementById('edit-mk-title').textContent = 'Edit mata kuliah ' + kode;
+        document.getElementById('edit-mk-title').textContent = 'Edit mata kuliah ' + kodeLabel;
         document.getElementById('form-edit-mk').action = '/koordinator/master-data/mata-kuliah/' + id;
-        document.getElementById('edit-mk-subtitle').textContent = 'Dipilih: ' + kode + ' · Perubahan tidak menghapus riwayat proyek.';
+        document.getElementById('edit-mk-subtitle').textContent = 'Dipilih: ' + kodeLabel + ' · Perubahan tidak menghapus riwayat proyek.';
 
         // Update value form
         document.getElementById('input-edit-kode').value = kode;
         document.getElementById('input-edit-nama').value = nama;
         document.getElementById('input-edit-sks').value = sks;
-        document.getElementById('select-edit-semester').value = semester;
+        document.getElementById('select-edit-semester').value = semester === null ? '' : semester;
         document.getElementById('select-edit-status').value = isAktif ? '1' : '0';
 
         // Highlight baris yang dipilih
