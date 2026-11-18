@@ -115,11 +115,33 @@ jobs:
             "${TARGET_COMMIT}" "${PREVIOUS_COMMIT}" "${BACKUP_FILE}" "${REMOTE_SHA}" "${STAMP}" \
             > "${RUNNER_TEMP}/sim-pbl-backup/deploy-meta.txt"
 
-      - name: Store off-instance backup in GitHub Actions
+      - name: Encrypt backup before off-instance storage
+        env:
+          BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          test -n "${BACKUP_ENCRYPTION_PASSPHRASE}" || {
+            echo "ERROR: GitHub secret BACKUP_ENCRYPTION_PASSPHRASE belum diatur."
+            exit 1
+          }
+          command -v gpg >/dev/null 2>&1 || { echo "ERROR: gpg tidak tersedia di runner."; exit 1; }
+
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "${BACKUP_ENCRYPTION_PASSPHRASE}" \
+            --symmetric --cipher-algo AES256 \
+            --output "${RUNNER_TEMP}/sim-pbl-backup/database.sql.gz.gpg" \
+            "${RUNNER_TEMP}/sim-pbl-backup/database.sql.gz"
+
+          test -s "${RUNNER_TEMP}/sim-pbl-backup/database.sql.gz.gpg"
+          rm -f "${RUNNER_TEMP}/sim-pbl-backup/database.sql.gz"
+
+      - name: Store encrypted off-instance backup in GitHub Actions
         uses: actions/upload-artifact@v4
         with:
           name: sim-pbl-production-backup-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/sim-pbl-backup/
+          path: |
+            ${{ runner.temp }}/sim-pbl-backup/database.sql.gz.gpg
+            ${{ runner.temp }}/sim-pbl-backup/deploy-meta.txt
           if-no-files-found: error
           retention-days: 30
 
