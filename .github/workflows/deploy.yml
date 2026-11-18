@@ -75,7 +75,7 @@ jobs:
             exit 1
           }
 
-          DB_NAME="$(php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\\Console\\Kernel::class)->bootstrap(); echo config("database.connections.".config("database.default").".database");')"
+          DB_NAME="$(php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo config("database.connections.".config("database.default").".database");')"
           test -n "$DB_NAME" || { echo "ERROR: nama database tidak ditemukan." >&2; exit 1; }
           sudo test -r "$BACKUP_CNF" || { echo "ERROR: root tidak dapat membaca backup config." >&2; exit 1; }
           command -v mysqldump >/dev/null 2>&1 || { echo "ERROR: mysqldump tidak tersedia." >&2; exit 1; }
