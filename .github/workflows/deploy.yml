@@ -90,7 +90,7 @@ jobs:
             echo "ERROR: backup tidak tampak seperti dump SQL." >&2
             exit 1
           }
-          sudo sha256sum "$BACKUP_FILE" > "$BACKUP_FILE.sha256"
+          sudo bash -c 'sha256sum "$1" > "$1.sha256"' _ "$BACKUP_FILE"
           sudo chmod 600 "$BACKUP_FILE" "$BACKUP_FILE.sha256"
           printf 'previous_commit=%s\ntarget_commit=%s\nbackup=%s\ncreated_at=%s\n' \
             "$PREVIOUS_COMMIT" "$TARGET_COMMIT" "$BACKUP_FILE" "$(date -u +%Y%m%dT%H%M%SZ)" \
