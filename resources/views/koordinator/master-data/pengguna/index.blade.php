@@ -545,14 +545,6 @@
     </div>
 
     <div style="display: flex; align-items: center; gap: 10px;">
-        <button type="button" class="btn-figma-outline" onclick="openModalUndang()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
-            </svg>
-            <span>Undang Pengguna</span>
-        </button>
-
         <button type="button" class="btn-figma-primary" onclick="openModalTambah()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -798,7 +790,13 @@
                 </a>
             @endif
 
-            <span class="figma-page-number">{{ $users->currentPage() }}</span>
+            @foreach(range(1, max(1, $users->lastPage())) as $page)
+                @if($page == $users->currentPage())
+                    <span class="figma-page-number">{{ $page }}</span>
+                @else
+                    <a href="{{ $users->url($page) }}" class="figma-pager-btn" style="text-decoration:none; font-weight:600; font-size:12px;">{{ $page }}</a>
+                @endif
+            @endforeach
 
             <span style="font-size: 12.5px; color: var(--sim-text-muted);">
                 dari {{ max(1, $users->lastPage()) }}
@@ -992,39 +990,6 @@
     </div>
 </div>
 
-{{-- ══════════════════════════════════════════════════════
-     MODAL 4: UNDANG PENGGUNA
-     ══════════════════════════════════════════════════════ --}}
-<div id="modal-undang-user" class="figma-modal-overlay">
-    <div class="figma-modal" role="dialog" aria-modal="true" style="max-width: 460px;">
-        <h3 class="figma-modal-title">Undang Pengguna</h3>
-        <p class="figma-modal-desc">Kirim tautan undangan aktivasi akun ke alamat email institusi kampus.</p>
-
-        <form method="POST" action="{{ route('koordinator.master-data.pengguna.invite') }}">
-            @csrf
-
-            <div class="figma-form-group">
-                <label class="figma-form-label" for="invite-email">Email Kampus <span style="color:#DC2626">*</span></label>
-                <input type="email" id="invite-email" name="email" class="figma-input" placeholder="nama@polinema.ac.id" required>
-            </div>
-
-            <div class="figma-form-group">
-                <label class="figma-form-label" for="invite-role">Peran <span style="color:#DC2626">*</span></label>
-                <select id="invite-role" name="role" class="figma-input-select" required>
-                    <option value="mahasiswa">Mahasiswa</option>
-                    <option value="dosen">Dosen</option>
-                    <option value="admin">Admin / Koordinator</option>
-                </select>
-            </div>
-
-            <div class="figma-form-actions">
-                <button type="button" class="btn-figma-outline" onclick="closeModalUndang()">Batal</button>
-                <button type="submit" class="btn-figma-primary">Kirim Undangan</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
@@ -1102,16 +1067,6 @@
 
     function closeModalReset() {
         document.getElementById('modal-reset-user').classList.remove('open');
-        document.body.style.overflow = '';
-    }
-
-    // Modal Undang Pengguna
-    function openModalUndang() {
-        document.getElementById('modal-undang-user').classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeModalUndang() {
-        document.getElementById('modal-undang-user').classList.remove('open');
         document.body.style.overflow = '';
     }
 

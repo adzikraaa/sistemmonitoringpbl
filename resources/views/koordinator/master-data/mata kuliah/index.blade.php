@@ -764,7 +764,13 @@
                 </a>
             @endif
 
-            <span class="figma-page-number">{{ $mataKuliahList->currentPage() }}</span>
+            @foreach(range(1, max(1, $mataKuliahList->lastPage())) as $page)
+                @if($page == $mataKuliahList->currentPage())
+                    <span class="figma-page-number">{{ $page }}</span>
+                @else
+                    <a href="{{ $mataKuliahList->url($page) }}" class="figma-pager-btn" style="text-decoration:none; font-weight:600; font-size:12px;">{{ $page }}</a>
+                @endif
+            @endforeach
 
             <span style="font-size: 12.5px; color: var(--sim-text-muted);">
                 dari {{ max(1, $mataKuliahList->lastPage()) }}
@@ -788,14 +794,14 @@
 <div class="figma-bottom-grid" id="section-edit-mk">
     {{-- ── Form Edit Mata Kuliah ── --}}
     <div class="figma-card">
-        <h2 class="figma-card-title" id="edit-mk-title">Edit mata kuliah</h2>
-        <p class="figma-card-subtitle" id="edit-mk-subtitle">Pilih mata kuliah dari tabel untuk mengedit.</p>
+        <h2 class="figma-card-title" id="edit-mk-title">Tambah / Edit mata kuliah</h2>
+        <p class="figma-card-subtitle" id="edit-mk-subtitle">Pilih mata kuliah dari tabel untuk mengedit, atau isi form berikut untuk menambah mata kuliah baru.</p>
 
         <form method="POST"
               id="form-edit-mk"
-              action="{{ '#' }}">
+              action="{{ route('koordinator.master-data.mata-kuliah.store') }}">
             @csrf
-            @method('PUT')
+            <div id="edit-mk-method-container"></div>
 
             {{-- Row 1: Kode & Nama Mata Kuliah --}}
             <div class="figma-form-row">
@@ -948,6 +954,7 @@
         // Update header form edit
         document.getElementById('edit-mk-title').textContent = 'Edit mata kuliah ' + kodeLabel;
         document.getElementById('form-edit-mk').action = '/koordinator/master-data/mata-kuliah/' + id;
+        document.getElementById('edit-mk-method-container').innerHTML = '<input type="hidden" name="_method" value="PUT">';
         document.getElementById('edit-mk-subtitle').textContent = 'Dipilih: ' + kodeLabel + ' · Perubahan tidak menghapus riwayat proyek.';
 
         // Update value form
@@ -956,6 +963,10 @@
         document.getElementById('input-edit-sks').value = sks;
         document.getElementById('select-edit-semester').value = semester === null ? '' : semester;
         document.getElementById('select-edit-status').value = isAktif ? '1' : '0';
+
+        // Update button text
+        const btnSubmit = document.querySelector('#form-edit-mk button[type="submit"] span');
+        if (btnSubmit) btnSubmit.textContent = 'Simpan perubahan';
 
         // Highlight baris yang dipilih
         document.querySelectorAll('.figma-table tbody tr').forEach(tr => tr.classList.remove('row--selected'));
@@ -968,9 +979,12 @@
 
     function resetFormMk() {
         document.getElementById('form-edit-mk').reset();
-        document.getElementById('form-edit-mk').action = '#';
-        document.getElementById('edit-mk-title').textContent = 'Edit mata kuliah';
-        document.getElementById('edit-mk-subtitle').textContent = 'Pilih mata kuliah dari tabel untuk mengedit.';
+        document.getElementById('form-edit-mk').action = '{{ route("koordinator.master-data.mata-kuliah.store") }}';
+        document.getElementById('edit-mk-method-container').innerHTML = '';
+        document.getElementById('edit-mk-title').textContent = 'Tambah / Edit mata kuliah';
+        document.getElementById('edit-mk-subtitle').textContent = 'Pilih mata kuliah dari tabel untuk mengedit, atau isi form berikut untuk menambah mata kuliah baru.';
+        const btnSubmit = document.querySelector('#form-edit-mk button[type="submit"] span');
+        if (btnSubmit) btnSubmit.textContent = 'Simpan mata kuliah';
         document.querySelectorAll('.figma-table tbody tr').forEach(tr => tr.classList.remove('row--selected'));
     }
 

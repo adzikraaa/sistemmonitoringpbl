@@ -378,13 +378,9 @@
             <!-- Action Buttons -->
             <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--sim-border-warm);">
                @if($periodeAktif && $periodeAktif->is_aktif)
-                    <form action="{{ route('koordinator.periode.toggle-aktif', 0) }}" method="POST" onsubmit="return confirm('Yakin ingin menonaktifkan semester aktif ini?');" style="display:inline;">
-                        @csrf
-                        @method('PATCH') <!-- Sesuaikan dengan route -->
-                        <button type="submit" style="color: #DC2626; background: none; border: none; font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: underline; padding: 0;">
-                            Nonaktifkan semester
-                        </button>
-                    </form>
+                    <button type="button" onclick="if(confirm('Yakin ingin menonaktifkan semester aktif ini?')) document.getElementById('form-nonaktifkan-periode').submit();" style="color: #DC2626; background: none; border: none; font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: underline; padding: 0;">
+                        Nonaktifkan semester
+                    </button>
                 @else
                     <span></span>
                 @endif
@@ -401,6 +397,13 @@
                 </div>
             </div>
         </form>
+
+        @if($periodeAktif && $periodeAktif->is_aktif)
+            <form id="form-nonaktifkan-periode" action="{{ route('koordinator.periode.toggle-aktif', 0) }}" method="POST" style="display: none;">
+                @csrf
+                @method('PATCH')
+            </form>
+        @endif
         @endif
     </div>
 

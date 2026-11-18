@@ -569,7 +569,7 @@
         <h1 class="krd-dash-title">Dashboard &amp; Rekap Global</h1>
         <p class="krd-dash-desc">Satu pandangan untuk mengelola pelaksanaan PBL di seluruh kelas dan kelompok.</p>
     </div>
-    <a href="#" class="krd-btn-ekspor">
+    <a href="{{ route('koordinator.dashboard.export', request()->query()) }}" class="krd-btn-ekspor">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
@@ -581,50 +581,81 @@
 
 {{-- ─── Filter Bar ─────────────────────────────────── --}}
 <div class="krd-filter-bar">
-    <div class="krd-filter-select">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <div class="krd-filter-info-badge" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: #FDFAF7; border: 1.5px solid var(--krd-border-input); border-radius: 7px; font-size: 12.5px; color: var(--krd-brown-dark); font-weight: 600;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--krd-text-muted);">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
-        Periode: 31 Agu 2026 – 15 Jan 2027
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="6 9 12 15 18 9"/>
-        </svg>
+        @if($periodeAktif)
+            <span>SEMESTER {{ strtoupper($periodeAktif->nama_periode) }} {{ $periodeAktif->tahun_akademik }} &middot; <span style="font-weight: 500; color: var(--krd-text-muted);">{{ $periodeAktif->tanggal_mulai ? $periodeAktif->tanggal_mulai->format('d M Y') : '' }} – {{ $periodeAktif->tanggal_selesai ? $periodeAktif->tanggal_selesai->format('d M Y') : '' }}</span></span>
+        @else
+            <span style="color: #9B1C1C; font-weight: 600;">Belum ada periode aktif</span>
+        @endif
     </div>
+
     <div class="krd-filter-divider"></div>
-    <div class="krd-filter-select">
-        Semua kelas (3)
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="6 9 12 15 18 9"/>
-        </svg>
-    </div>
+
+    <form method="GET" action="{{ route('koordinator.dashboard') }}" id="form-filter-kelas" style="display: inline-flex; align-items: center; margin: 0;">
+        <div class="krd-filter-select-wrap" style="position: relative; display: inline-flex; align-items: center;">
+            <select name="kelas_id" class="krd-filter-select" onchange="document.getElementById('form-filter-kelas').submit()" style="padding-right: 28px; appearance: none; -webkit-appearance: none; cursor: pointer;">
+                <option value="">Semua kelas ({{ $totalKelasCount }})</option>
+                @foreach($kelasList as $kls)
+                    <option value="{{ $kls->id }}" {{ (string)$selectedKelasId === (string)$kls->id ? 'selected' : '' }}>
+                        Kelas {{ $kls->nama_kelas }}
+                    </option>
+                @endforeach
+            </select>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position: absolute; right: 10px; pointer-events: none; color: var(--krd-text-muted);">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </div>
+    </form>
+
     <div class="krd-filter-badge">
         <span class="krd-filter-dot"></span>
-        Lingkup global · 18 kelompok
+        @if($selectedKelasId)
+            @php $klsTerpilih = $kelasList->firstWhere('id', (int)$selectedKelasId); @endphp
+            Kelas {{ $klsTerpilih?->nama_kelas }} &middot; {{ $totalKelompok }} kelompok
+        @else
+            Lingkup global &middot; {{ $totalKelompok }} kelompok
+        @endif
     </div>
-    <span class="krd-filter-updated">Diperbarui 25 Okt, 10:42 WIB</span>
+
+    <span class="krd-filter-updated">Diperbarui {{ now()->format('d M, H:i') }} WIB</span>
 </div>
 
 {{-- ─── Stats Cards ─────────────────────────────────── --}}
 <div class="krd-stats-grid">
     <div class="krd-stat-card">
         <p class="krd-stat-label">Kelas Aktif</p>
-        <p class="krd-stat-number">3</p>
-        <p class="krd-stat-sub">SIB 3A &middot; SIB 3B &middot; SIB 3C</p>
+        <p class="krd-stat-number">{{ $kelasCount }}</p>
+        <p class="krd-stat-sub">{{ $namaKelasList ?: 'Tidak ada kelas' }}</p>
     </div>
     <div class="krd-stat-card">
         <p class="krd-stat-label">Kelompok PBL</p>
-        <p class="krd-stat-number">18</p>
-        <p class="krd-stat-sub">6 kelompok pada setiap kelas</p>
+        <p class="krd-stat-number">{{ $totalKelompok }}</p>
+        <p class="krd-stat-sub">
+            @if($kelasCount > 0)
+                {{ round($totalKelompok / max(1, $kelasCount), 1) }} kelompok rata-rata per kelas
+            @else
+                Belum ada kelompok
+            @endif
+        </p>
     </div>
     <div class="krd-stat-card">
         <p class="krd-stat-label">Mahasiswa</p>
-        <p class="krd-stat-number">72</p>
-        <p class="krd-stat-sub">4 mahasiswa per kelompok</p>
+        <p class="krd-stat-number">{{ $mahasiswaCount }}</p>
+        <p class="krd-stat-sub">
+            @if($totalKelompok > 0)
+                {{ round($mahasiswaCount / max(1, $totalKelompok), 1) }} mahasiswa per kelompok
+            @else
+                Terdaftar di sistem
+            @endif
+        </p>
     </div>
     <div class="krd-stat-card">
         <p class="krd-stat-label">Dosen Pembimbing</p>
-        <p class="krd-stat-number">8</p>
-        <p class="krd-stat-sub">16 dari 18 kelompok ditugaskan</p>
+        <p class="krd-stat-number">{{ $dosenPembimbingCount }}</p>
+        <p class="krd-stat-sub">{{ $kelompokDitugaskanCount }} dari {{ $totalKelompok }} kelompok ditugaskan</p>
     </div>
 </div>
 
@@ -634,19 +665,9 @@
     {{-- Bar Chart: Penyelesaian Milestone Global --}}
     <div class="krd-chart-card">
         <h2 class="krd-chart-title">Penyelesaian milestone global</h2>
-        <p class="krd-chart-subtitle">Jumlah kelompok selesai per tahapan &middot; dari 18 kelompok</p>
+        <p class="krd-chart-subtitle">Jumlah kelompok selesai per tahapan &middot; dari {{ $totalKelompok }} kelompok</p>
 
-        @php
-        $milestoneData = [
-            ['label' => 'Tim &amp; topik',   'val' => 18, 'max' => 18, 'pct' => 100, 'color' => '#4A3222'],
-            ['label' => 'Proposal',          'val' => 16, 'max' => 18, 'pct' => 88.9,'color' => '#8B6240'],
-            ['label' => 'Prototipe',         'val' => 10, 'max' => 18, 'pct' => 55.6,'color' => '#B08060'],
-            ['label' => 'Implementasi',      'val' => 0,  'max' => 18, 'pct' => 0,   'color' => '#D6C4B2'],
-            ['label' => 'Laporan akhir',     'val' => 0,  'max' => 18, 'pct' => 0,   'color' => '#D6C4B2'],
-        ];
-        @endphp
-
-        @foreach($milestoneData as $row)
+        @foreach($milestoneChartData as $row)
         <div class="krd-bar-row">
             <span class="krd-bar-label">{!! $row['label'] !!}</span>
             <div class="krd-bar-track">
@@ -667,9 +688,6 @@
         <p class="krd-chart-subtitle">Setiap milestone memiliki bobot yang sama.</p>
 
         @php
-            $totalTarget = 90;
-            $selesai = 44;
-            $pctCapaian = round(($selesai / $totalTarget) * 100, 1);
             $circumference = 2 * M_PI * 54; // r=54
             $offset = $circumference * (1 - $pctCapaian / 100);
         @endphp
@@ -693,14 +711,14 @@
             </div>
             <div class="krd-donut-info">
                 <div class="krd-donut-score">
-                    {{ $selesai }} / {{ $totalTarget }}
+                    {{ $totalSelesaiSemua }} / {{ $totalTargetSemua }}
                     <small>target telah selesai</small>
                 </div>
                 <div class="krd-badge-sisa">
-                    &bull; {{ $totalTarget - $selesai }} target tersisa
+                    &bull; {{ max(0, $totalTargetSemua - $totalSelesaiSemua) }} target tersisa
                 </div>
             </div>
-            <p class="krd-donut-note">18 kelompok &times; 5 milestone.<br>Capaian dihitung dari penyelesaian,<br>bukan penilaian akademik.</p>
+            <p class="krd-donut-note">{{ $totalKelompok }} kelompok &times; {{ count($milestoneChartData) }} milestone.<br>Capaian dihitung dari penyelesaian,<br>bukan penilaian akademik.</p>
         </div>
     </div>
 </div>
@@ -730,81 +748,80 @@
             </tr>
         </thead>
         <tbody>
-            @php
-            $kelasData = [
-                [
-                    'kelas' => 'SIB 3A',
-                    'pic'   => 'Dr. Rian Hidayat',
-                    'mhs'   => 24,
-                    'kel'   => 6,
-                    'ms_selesai' => '16 / 30 target',
-                    'capaian_pct' => 53.3,
-                    'status' => 'Sesuai jadwal',
-                    'status_type' => 'ok',
-                ],
-                [
-                    'kelas' => 'SIB 3B',
-                    'pic'   => 'Dr. Farida, M.T.',
-                    'mhs'   => 24,
-                    'kel'   => 6,
-                    'ms_selesai' => '15 / 30 target',
-                    'capaian_pct' => 50.0,
-                    'status' => 'Perlu perhatian',
-                    'status_type' => 'warn',
-                ],
-                [
-                    'kelas' => 'SIB 3C',
-                    'pic'   => 'Bambang Pratama, M.Kom',
-                    'mhs'   => 24,
-                    'kel'   => 6,
-                    'ms_selesai' => '13 / 30 target',
-                    'capaian_pct' => 43.3,
-                    'status' => 'Perlu perhatian',
-                    'status_type' => 'warn',
-                ],
-            ];
-            @endphp
-
-            @foreach($kelasData as $row)
+            @forelse($rekapKelas as $row)
             <tr>
                 <td>
-                    <span class="krd-kelas-name">{{ $row['kelas'] }}</span>
-                    <span class="krd-kelas-pic">{{ $row['pic'] }}</span>
+                    <span class="krd-kelas-name">{{ $row->nama_kelas }}</span>
+                    <span class="krd-kelas-pic">{{ $row->pic }}</span>
                 </td>
-                <td>{{ $row['mhs'] }}</td>
-                <td>{{ $row['kel'] }}</td>
-                <td>{{ $row['ms_selesai'] }}</td>
+                <td>{{ $row->mhs }}</td>
+                <td>{{ $row->kel }}</td>
+                <td>{{ $row->ms_selesai }}</td>
                 <td>
                     <span class="krd-mini-bar-track">
-                        <span class="krd-mini-bar-fill" style="width: {{ $row['capaian_pct'] }}%; background: {{ $row['status_type'] === 'ok' ? '#4A7C59' : '#D97706' }};"></span>
+                        <span class="krd-mini-bar-fill" style="width: {{ $row->capaian_pct }}%; background: {{ $row->status_type === 'ok' ? '#4A7C59' : '#D97706' }};"></span>
                     </span>
-                    <span class="krd-mini-bar-pct">{{ $row['capaian_pct'] }}%</span>
+                    <span class="krd-mini-bar-pct">{{ $row->capaian_pct }}%</span>
                 </td>
                 <td>
-                    <span class="krd-status-badge krd-status-badge--{{ $row['status_type'] }}">
+                    <span class="krd-status-badge krd-status-badge--{{ $row->status_type }}">
                         <span class="krd-status-dot"></span>
-                        {{ $row['status'] }}
+                        {{ $row->status }}
                     </span>
                 </td>
                 <td>
-                    <a href="#" class="krd-detail-link">Detail &rarr;</a>
+                    <a href="{{ route('koordinator.kelompok', ['kelas_id' => $row->id]) }}" class="krd-detail-link">Detail &rarr;</a>
                 </td>
             </tr>
-            @endforeach
+            @empty
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 32px; color: var(--krd-text-muted);">
+                    Tidak ada data kelas untuk periode atau filter yang dipilih.
+                </td>
+            </tr>
+            @endforelse
         </tbody>
     </table>
 
     <div class="krd-rekap-footer">
-        <span class="krd-rekap-footer-text">3 dari 3 kelas &middot; 72 mahasiswa &middot; 18 kelompok</span>
+        <span class="krd-rekap-footer-text">
+            @if($rekapKelas->total() > 0)
+                Menampilkan {{ $rekapKelas->firstItem() }}–{{ $rekapKelas->lastItem() }} dari {{ $rekapKelas->total() }} kelas &middot; {{ $mahasiswaCount }} mahasiswa &middot; {{ $totalKelompok }} kelompok
+            @else
+                0 kelas
+            @endif
+        </span>
         <div class="krd-pagination">
-            <button class="krd-page-btn">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-            <button class="krd-page-btn krd-page-btn--active">1</button>
-            <span style="font-size:12px; color: var(--krd-text-muted);">dari 1</span>
-            <button class="krd-page-btn">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
+            {{-- Prev --}}
+            @if($rekapKelas->onFirstPage())
+                <button type="button" class="krd-page-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+            @else
+                <a href="{{ $rekapKelas->previousPageUrl() }}" class="krd-page-btn" title="Halaman sebelumnya">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                </a>
+            @endif
+
+            {{-- Numbers --}}
+            @foreach(range(1, max(1, $rekapKelas->lastPage())) as $page)
+                @if($page == $rekapKelas->currentPage())
+                    <button type="button" class="krd-page-btn krd-page-btn--active">{{ $page }}</button>
+                @else
+                    <a href="{{ $rekapKelas->url($page) }}" class="krd-page-btn">{{ $page }}</a>
+                @endif
+            @endforeach
+
+            {{-- Next --}}
+            @if($rekapKelas->hasMorePages())
+                <a href="{{ $rekapKelas->nextPageUrl() }}" class="krd-page-btn" title="Halaman berikutnya">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+            @else
+                <button type="button" class="krd-page-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            @endif
         </div>
     </div>
 </div>

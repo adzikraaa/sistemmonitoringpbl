@@ -18,8 +18,8 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::get('/', fn () => redirect()->route('koordinator.dashboard'));
 
         // Dashboard Koordinator
-        Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->name('dashboard');
+        Route::get('/dashboard/export', [DashboardController::class, 'export'])->name('dashboard.export');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Notifikasi Koordinator
         Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi');
@@ -45,6 +45,8 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::delete('/master-data/pengguna/{role}/{id}', [PenggunaController::class, 'destroy'])->name('master-data.pengguna.destroy');
 
         // Master Data Mata Kuliah
+        Route::get('/mata-kuliah', fn () => redirect()->route('koordinator.master-data.mata-kuliah'))->name('mata-kuliah');
+        Route::match(['put', 'patch'], '/master-data/mata-kuliah', fn () => redirect()->route('koordinator.master-data.mata-kuliah')->with('error', 'Silakan pilih mata kuliah yang ingin diedit terlebih dahulu.'));
         Route::get('/master-data/mata-kuliah', [MataKuliahController::class, 'index'])->name('master-data.mata-kuliah');
         Route::post('/master-data/mata-kuliah', [MataKuliahController::class, 'store'])->name('master-data.mata-kuliah.store');
         Route::put('/master-data/mata-kuliah/{mataKuliah}', [MataKuliahController::class, 'update'])->name('master-data.mata-kuliah.update');
@@ -74,7 +76,7 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');
         Route::post('/periode', [PeriodeController::class, 'store'])->name('periode.store');
         Route::match(['put', 'patch'], '/periode/{id}', [PeriodeController::class, 'update'])->name('periode.update');
-        Route::match(['put', 'patch'], '/periode/{id}/toggle-aktif', [PeriodeController::class, 'toggleAktif'])->name('periode.toggle-aktif');
+        Route::match(['post', 'put', 'patch'], '/periode/{id}/toggle-aktif', [PeriodeController::class, 'toggleAktif'])->name('periode.toggle-aktif');
 
         // Milestone Global
         Route::get('/milestone-global', [MilestoneController::class, 'index'])->name('milestone-global.index');

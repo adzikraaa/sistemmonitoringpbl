@@ -740,11 +740,11 @@
 
         {{-- FILTER DAN PENCARIAN --}}
         <div class="sim-kelompok-filter-wrap">
-            <div class="sim-kelompok-filters">
-                <select id="filterKelasKelompok" class="sim-kelompok-select" aria-label="Filter kelas">
+            <form method="GET" action="{{ route('koordinator.kelompok.index') }}" class="sim-kelompok-filters" id="form-filter-kelompok">
+                <select name="kelas_id" id="filterKelasKelompok" class="sim-kelompok-select" aria-label="Filter kelas" onchange="document.getElementById('form-filter-kelompok').submit()">
                     <option value="">Semua kelas</option>
                     @foreach ($kelasList as $kelas)
-                        <option value="{{ $kelas->id }}">
+                        <option value="{{ $kelas->id }}" {{ (string)request('kelas_id') === (string)$kelas->id ? 'selected' : '' }}>
                             {{ $kelas->nama_kelas }}
                         </option>
                     @endforeach
@@ -752,19 +752,21 @@
 
                 <input
                     type="text"
+                    name="search"
                     id="searchKelompok"
                     class="sim-kelompok-search sim-kelompok-input"
                     placeholder="Cari kelompok, proyek, mahasiswa..."
                     aria-label="Cari kelompok"
+                    value="{{ request('search') }}"
                 >
 
-                <select id="filterStatusKelompok" class="sim-kelompok-select" aria-label="Filter status">
+                <select name="status" id="filterStatusKelompok" class="sim-kelompok-select" aria-label="Filter status" onchange="document.getElementById('form-filter-kelompok').submit()">
                     <option value="">Semua status</option>
-                    <option value="Aktif">Aktif</option>
-                    <option value="Draft">Draft</option>
-                    <option value="Ditangguhkan">Ditangguhkan</option>
+                    <option value="Aktif" {{ request('status') === 'Aktif' ? 'selected' : '' }}>Aktif</option>
+                    <option value="Draft" {{ request('status') === 'Draft' ? 'selected' : '' }}>Draft</option>
+                    <option value="Ditangguhkan" {{ request('status') === 'Ditangguhkan' ? 'selected' : '' }}>Ditangguhkan</option>
                 </select>
-            </div>
+            </form>
         </div>
 
         {{-- TABEL KELOMPOK --}}
@@ -934,7 +936,44 @@
         {{-- FOOTER TABEL --}}
         <div class="sim-kelompok-footer">
             <div id="kelompokFooterCount">
-                Menampilkan {{ $kelompokList->count() }} kelompok
+                @if($kelompokList->total() > 0)
+                    Menampilkan {{ $kelompokList->firstItem() ?? 1 }}–{{ $kelompokList->lastItem() ?? $kelompokList->total() }} dari {{ $kelompokList->total() }} kelompok
+                @else
+                    Menampilkan 0 kelompok
+                @endif
+            </div>
+
+            <div class="sim-kelompok-pagination">
+                {{-- Prev --}}
+                @if($kelompokList->onFirstPage())
+                    <button type="button" class="page-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                @else
+                    <a href="{{ $kelompokList->previousPageUrl() }}" class="page-btn" title="Halaman sebelumnya">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                    </a>
+                @endif
+
+                {{-- Page numbers --}}
+                @foreach(range(1, max(1, $kelompokList->lastPage())) as $page)
+                    @if($page == $kelompokList->currentPage())
+                        <button type="button" class="page-btn current">{{ $page }}</button>
+                    @else
+                        <a href="{{ $kelompokList->url($page) }}" class="page-btn">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                {{-- Next --}}
+                @if($kelompokList->hasMorePages())
+                    <a href="{{ $kelompokList->nextPageUrl() }}" class="page-btn" title="Halaman berikutnya">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                @else
+                    <button type="button" class="page-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                @endif
             </div>
         </div>
     </div>

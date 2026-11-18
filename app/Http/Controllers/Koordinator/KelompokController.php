@@ -15,17 +15,43 @@ use Illuminate\Support\Facades\DB;
 
 class KelompokController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $kelompokList = Kelompok::with([
+        $query = Kelompok::with([
             'dosen',
             'kelas',
             'anggotaKelompok.mahasiswa',
             'periode',
             'milestoneKelompok',
-        ])
-            ->orderByDesc('tanggal_dibuat')
-            ->get();
+        ]);
+
+        if ($request->filled('kelas_id')) {
+            $query->where('kelas_id', $request->kelas_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_kelompok', 'like', "%{$search}%")
+                  ->orWhere('judul_proyek', 'like', "%{$search}%")
+                  ->orWhereHas('anggotaKelompok.mahasiswa', function ($m) use ($search) {
+                      $m->where('nama', 'like', "%{$search}%")
+                        ->orWhere('nim', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('dosen', function ($d) use ($search) {
+                      $d->where('nama', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $kelompokList = $query->orderByDesc('tanggal_dibuat')
+            ->orderBy('nama_kelompok')
+            ->paginate(10)
+            ->withQueryString();
 
         $kelasList = Kelas::orderBy('nama_kelas')->get();
         $dosenList = Dosen::where('is_aktif', true)->orderBy('nama')->get();

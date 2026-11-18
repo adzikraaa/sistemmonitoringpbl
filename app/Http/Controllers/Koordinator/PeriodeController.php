@@ -30,10 +30,10 @@ class PeriodeController extends Controller
             'tahun_akademik' => 'required|string|max:20',
             'tanggal_mulai'   => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
-            'is_aktif'        => 'nullable|boolean',
+            'is_aktif'        => 'nullable',
         ]);
 
-        $isAktif = $request->has('is_aktif');
+        $isAktif = $request->boolean('is_aktif');
 
         DB::transaction(function () use ($validated, $isAktif) {
             if ($isAktif) {
@@ -50,7 +50,11 @@ class PeriodeController extends Controller
             ]);
         });
 
-        return redirect()->route('koordinator.periode.index')->with('success', 'Semester baru berhasil ditambahkan!');
+        $msg = $isAktif 
+            ? 'Semester baru berhasil ditambahkan dan langsung dijadikan semester aktif!' 
+            : 'Semester baru berhasil ditambahkan!';
+
+        return redirect()->route('koordinator.periode.index')->with('success', $msg);
     }
 
     public function update(Request $request, $id)
@@ -62,13 +66,13 @@ class PeriodeController extends Controller
             'tahun_akademik' => 'required|string|max:20',
             'tanggal_mulai'   => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
-            'is_aktif'        => 'nullable|boolean',
+            'is_aktif'        => 'nullable',
         ]);
 
-        $isAktif = $request->has('is_aktif');
+        $isAktif = $request->boolean('is_aktif');
 
         DB::transaction(function () use ($periode, $validated, $isAktif) {
-            if ($isAktif && !$periode->is_aktif) {
+            if ($isAktif) {
                 Periode::where('id', '!=', $periode->id)->update(['is_aktif' => false]);
             }
 
@@ -89,7 +93,8 @@ class PeriodeController extends Controller
         DB::transaction(function () use ($id) {
             Periode::query()->update(['is_aktif' => false]);
             if ($id > 0) {
-                Periode::where('id', $id)->update(['is_aktif' => true]);
+                $periode = Periode::findOrFail($id);
+                $periode->update(['is_aktif' => true]);
             }
         });
 
