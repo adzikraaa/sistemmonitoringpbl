@@ -7,7 +7,7 @@
 @section('title', 'Detail Kelompok')
 
 @section('content')
-<div style="padding: 24px 32px 40px;">
+<div class="px-4 sm:px-8 py-6 pb-10">
     <!-- Breadcrumb & Back -->
     <div class="mb-5">
         <a href="{{ route('dosen.kelompok') }}" class="text-xs font-semibold text-[#7A5C4A] hover:text-[#2B221D] inline-flex items-center gap-1.5 transition-colors">
