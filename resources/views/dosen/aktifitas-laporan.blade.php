@@ -4,11 +4,162 @@
 @section('breadcrumb', 'Laporan aktivitas')
 @section('meta_description', 'Pantau pembaruan pekerjaan dan perkembangan proyek mahasiswa.')
 
+@push('styles')
+<style>
+/* Responsive Styles for Laporan Aktivitas */
+.la-shell {
+    padding: 0 32px 40px;
+    box-sizing: border-box;
+}
+
+.la-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.la-filter-grid {
+    background: #FFFFFF;
+    border: 1px solid var(--sim-border);
+    border-radius: 16px;
+    padding: 18px 24px;
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.la-bottom-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.la-item {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--sim-border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s;
+    cursor: pointer;
+}
+
+.la-item:last-child {
+    border-bottom: none;
+}
+
+.la-item:hover {
+    background: #FAF7F3;
+}
+
+.la-item__left {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    min-width: 0;
+}
+
+.la-item__right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.la-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    font-size: 13px;
+    color: var(--sim-text-muted);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.la-page-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--sim-border);
+    background: #FFF;
+    color: var(--sim-text-dark);
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.12s;
+}
+
+.la-page-btn:hover {
+    background: #F5EFE6;
+}
+
+.la-page-btn--active {
+    background: #2C1A0E !important;
+    color: #FAF7F3 !important;
+    font-weight: 600;
+    border-color: #2C1A0E !important;
+}
+
+.la-page-btn--disabled {
+    color: var(--sim-text-light) !important;
+    background: #FAF7F3 !important;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+@media (max-width: 1024px) {
+    .la-filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .la-bottom-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .la-shell {
+        padding: 0 16px 32px;
+    }
+    .la-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .la-filter-grid {
+        grid-template-columns: 1fr;
+        padding: 16px;
+    }
+    .la-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+    }
+    .la-item__right {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .la-pagination {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+</style>
+@endpush
+
 @section('content')
 
 {{-- Page Header Section --}}
-<div class="sim-page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-    <div style="flex: 1;">
+<div class="sim-page-header la-header">
+    <div style="flex: 1; min-width: 0;">
         <p class="sim-page-header__eyebrow" style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); margin-bottom: 4px;">RUANG DOSEN • LAPORAN AKTIVITAS</p>
         <h1 class="sim-page-header__title" style="font-family: 'DM Serif Display', serif; font-size: 28px; font-weight: 400; color: var(--sim-text-dark); margin: 0 0 6px;">
             Laporan aktivitas kelompok
@@ -18,258 +169,188 @@
         </p>
     </div>
 
-    <div style="display: flex; gap: 10px;">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button type="button" id="btnEksporRekap" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--sim-text-dark); cursor: pointer;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Ekspor rekap
         </button>
-        <button type="button" id="btnPerbaruiData" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--sim-text-dark); cursor: pointer;">
+        <button type="button" id="btnPerbaruiData" onclick="window.location.href='{{ route('dosen.laporan-aktivitas') }}'" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--sim-text-dark); cursor: pointer;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            Perbarui data
+            Reset filter
         </button>
     </div>
 </div>
 
 {{-- Main Container --}}
-<div style="padding: 0 32px 40px;">
+<div class="la-shell">
 
-    {{-- Filter Bar --}}
-    <div style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px; padding: 18px 24px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: center;">
-        <div>
-            <label style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Kelas</label>
-            <select id="filterKelas" style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
-                <option value="semua">Semua Kelas</option>
-                <option value="SIB 3A">SIB 3A</option>
-                <option value="SIB 3B">SIB 3B</option>
-                <option value="SIB 3C">SIB 3C</option>
-                <option value="SIB 3D">SIB 3D</option>
-                <option value="SIB 3E">SIB 3E</option>
-            </select>
-        </div>
-        <div>
-            <label style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Jenis Laporan</label>
-            <select id="filterJenisLaporan" style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
-                <option value="semua">Semua jenis</option>
-                <option value="logbook">Logbook</option>
-                <option value="proposal">Proposal</option>
-                <option value="milestone">Milestone</option>
-            </select>
-        </div>
-        <div>
-            <label style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Status Evaluasi</label>
-            <select id="filterStatusEvaluasi" style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
-                <option value="semua">Semua status</option>
-                <option value="menunggu-review">Menunggu review</option>
-                <option value="perlu-revisi">Perlu revisi</option>
-                <option value="disetujui">Disetujui</option>
-            </select>
-        </div>
-        <div>
-            <label style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Pencarian</label>
-            <div style="position: relative;">
-                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--sim-text-light);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                </span>
-                <input type="text" placeholder="Cari topik atau lainnya..." style="width: 100%; padding: 8px 12px 8px 34px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; outline: none; box-sizing: border-box;">
+    {{-- Filter & Search Bar --}}
+    <form method="GET" action="{{ route('dosen.laporan-aktivitas') }}" id="filterAktivitasForm">
+        <div class="la-filter-grid">
+            <div>
+                <label for="filterKelas" style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Kelas</label>
+                <select id="filterKelas" name="kelas" onchange="this.form.submit()" style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
+                    <option value="semua">Semua Kelas</option>
+                    @foreach(($daftarKelas ?? ['SIB 3A', 'SIB 3B', 'SIB 3C', 'SIB 3D', 'SIB 3E']) as $kls)
+                        <option value="{{ $kls }}" {{ request('kelas') === $kls ? 'selected' : '' }}>{{ $kls }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="filterJenisLaporan" style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Jenis Laporan</label>
+                <select id="filterJenisLaporan" name="jenis" onchange="this.form.submit()" style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
+                    <option value="semua">Semua jenis</option>
+                    <option value="logbook" {{ request('jenis') === 'logbook' ? 'selected' : '' }}>Logbook</option>
+                    <option value="proposal" {{ request('jenis') === 'proposal' ? 'selected' : '' }}>Proposal</option>
+                    <option value="milestone" {{ request('jenis') === 'milestone' ? 'selected' : '' }}>Milestone</option>
+                </select>
+            </div>
+            <div>
+                <label for="filterStatusEvaluasi" style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Status Evaluasi</label>
+                <select id="filterStatusEvaluasi" name="status" onchange="this.form.submit()" style="width: 100%; padding: 8px 12px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; background: #FFF; color: var(--sim-text-dark); outline: none;">
+                    <option value="semua">Semua status</option>
+                    <option value="menunggu-review" {{ request('status') === 'menunggu-review' ? 'selected' : '' }}>Menunggu review</option>
+                    <option value="perlu-revisi" {{ request('status') === 'perlu-revisi' ? 'selected' : '' }}>Perlu revisi</option>
+                    <option value="disetujui" {{ request('status') === 'disetujui' ? 'selected' : '' }}>Disetujui</option>
+                </select>
+            </div>
+            <div>
+                <label for="searchAktivitas" style="display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; color: var(--sim-text-muted); text-transform: uppercase; margin-bottom: 6px;">Pencarian</label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--sim-text-light); pointer-events: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </span>
+                    <input type="text"
+                           id="searchAktivitas"
+                           name="search"
+                           value="{{ request('search') }}"
+                           placeholder="Cari topik atau lainnya..."
+                           style="width: 100%; padding: 8px 32px 8px 34px; border: 1px solid var(--sim-border); border-radius: 8px; font-size: 13px; outline: none; box-sizing: border-box;">
+                    @if(request('search'))
+                        <a href="{{ route('dosen.laporan-aktivitas', request()->except('search', 'page')) }}"
+                           style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--sim-text-muted); text-decoration: none; font-size: 16px; font-weight: bold; line-height: 1;"
+                           title="Hapus pencarian">&times;</a>
+                    @endif
+                </div>
             </div>
         </div>
-    </div>
+    </form>
 
     {{-- List Section Wrapper --}}
     <div style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px; margin-bottom: 24px; overflow: hidden;">
         
         {{-- List Header Info --}}
-        <div style="padding: 16px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; justify-content: space-between; align-items: center;">
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sim-text-muted);">Daftar Pembaruan & Dokumen</span>
-            <span id="jumlahAktivitas" style="font-size: 12px; color: var(--sim-text-muted);">Menampilkan 5 aktivitas</span>
+            <span id="jumlahAktivitas" style="font-size: 12px; color: var(--sim-text-muted);">
+                Menampilkan {{ $aktivitasList->count() }} dari {{ $aktivitasList->total() }} aktivitas
+            </span>
         </div>
 
         {{-- Items List --}}
-        <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; flex-direction: column;" id="aktivitasContainer">
 
-            {{-- Item 1: Menunggu Review --}}
-            <div data-jenis-laporan="logbook" data-status="menunggu-review" data-kelas="SIB 3A" style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
-                <div style="display: flex; align-items: flex-start; gap: 14px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #FDF6EE; color: #D97706; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="13" y1="17" x2="8" y2="17"/></svg>
-                    </div>
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px;">
-                            <span style="font-size: 11px; font-weight: 600; color: var(--sim-text-muted);">Kelompok 01 - SIB 3A</span>
-                            <span style="color: var(--sim-text-light);">•</span>
-                            <span style="font-size: 11px; color: var(--sim-text-muted);">Pengembangan Sistem Magang</span>
+            @forelse($aktivitasList as $item)
+                @php
+                    $detailUrl = route('dosen.kelompok.show', $item['kelompok_id'] ?? 1);
+                @endphp
+                <a href="{{ $detailUrl }}"
+                   class="la-item"
+                   data-jenis-laporan="{{ $item['jenis_laporan'] }}"
+                   data-status="{{ $item['status'] }}"
+                   data-kelas="{{ $item['kelas'] }}"
+                   title="Buka detail kelompok {{ $item['kelompok_nama'] }}">
+                    <div class="la-item__left">
+                        <div style="width: 36px; height: 36px; border-radius: 10px; background: {{ $item['icon_bg'] }}; color: {{ $item['icon_color'] }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                            @if($item['jenis_laporan'] === 'logbook')
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="13" y1="17" x2="8" y2="17"/></svg>
+                            @elseif($item['jenis_laporan'] === 'proposal')
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.2"/></svg>
+                            @else
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                            @endif
                         </div>
-                        <h3 style="font-size: 14.5px; font-weight: 600; color: var(--sim-text-dark); margin: 0 0 6px;">
-                            Logbook: Implementasi autentikasi & perancangan token JWT
-                        </h3>
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--sim-text-muted);">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            <span>Diunggah oleh Andi Pratama</span>
-                            <span>•</span>
-                            <span>28 September 2026, 14:15</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: flex; align-items: center; gap: 16px;">
-                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #FEF3C7; color: #92400E; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #D97706;"></span>
-                        Menunggu review
-                    </span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sim-text-light);"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-            </div>
-
-            {{-- Item 2: Perlu Revisi --}}
-            <div data-jenis-laporan="proposal" data-status="perlu-revisi" data-kelas="SIB 3B" style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
-                <div style="display: flex; align-items: flex-start; gap: 14px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #FEE2E2; color: #DC2626; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.2"/></svg>
-                    </div>
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px;">
-                            <span style="font-size: 11px; font-weight: 600; color: var(--sim-text-muted);">Kelompok 01 - SIB 3B</span>
-                            <span style="color: var(--sim-text-light);">•</span>
-                            <span style="font-size: 11px; color: var(--sim-text-muted);">Platform Kolaborasi Laboratorium</span>
-                        </div>
-                        <h3 style="font-size: 14.5px; font-weight: 600; color: var(--sim-text-dark); margin: 0 0 6px;">
-                            Proposal: Revisi latar belakang & batasan implementasi sensor IoT
-                        </h3>
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--sim-text-muted);">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            <span>Diunggah oleh Dimas Arya</span>
-                            <span>•</span>
-                            <span>28 September 2026, 14:15</span>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap;">
+                                <span style="font-size: 11px; font-weight: 600; color: var(--sim-text-muted);">{{ $item['kelompok_nama'] }} - {{ $item['kelas'] }}</span>
+                                <span style="color: var(--sim-text-light);">•</span>
+                                <span style="font-size: 11px; color: var(--sim-text-muted);">{{ $item['proyek_nama'] }}</span>
+                                @if(!empty($item['is_database']))
+                                    <span style="font-size: 9.5px; font-weight: 700; background: #EAF4EE; color: #2E6B42; padding: 1px 6px; border-radius: 4px; text-transform: uppercase;">Database</span>
+                                @endif
+                            </div>
+                            <h3 style="font-size: 14.5px; font-weight: 600; color: var(--sim-text-dark); margin: 0 0 6px;">
+                                {{ $item['judul'] }}
+                            </h3>
+                            <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--sim-text-muted); flex-wrap: wrap;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <span>Diunggah oleh {{ $item['pengunggah'] }}</span>
+                                <span>•</span>
+                                <span>{{ $item['waktu'] }}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div style="display: flex; align-items: center; gap: 16px;">
-                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #FEE2E2; color: #991B1B; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #DC2626;"></span>
-                        Perlu revisi
-                    </span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sim-text-light);"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-            </div>
-
-            {{-- Item 3: Disetujui --}}
-            <div data-jenis-laporan="logbook" data-status="disetujui" data-kelas="SIB 3C" style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
-                <div style="display: flex; align-items: flex-start; gap: 14px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #ECFDF5; color: #059669; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                    <div class="la-item__right">
+                        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap;" class="{{ $item['status_badge'] }}">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ $item['status_dot'] }};"></span>
+                            {{ $item['status_label'] }}
+                        </span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sim-text-light); flex-shrink: 0;"><polyline points="9 18 15 12 9 6"/></svg>
                     </div>
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px;">
-                            <span style="font-size: 11px; font-weight: 600; color: var(--sim-text-muted);">Kelompok 01 - SIB 3C</span>
-                            <span style="color: var(--sim-text-light);">•</span>
-                            <span style="font-size: 11px; color: var(--sim-text-muted);">Sistem Informasi Inventaris Kampus</span>
-                        </div>
-                        <h3 style="font-size: 14.5px; font-weight: 600; color: var(--sim-text-dark); margin: 0 0 6px;">
-                            Logbook: Pengujian unit testing modul inventaris barang
-                        </h3>
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--sim-text-muted);">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            <span>Diunggah oleh Siti Rahma</span>
-                            <span>•</span>
-                            <span>Disetujui kemarin pada 20:10</span>
-                        </div>
-                    </div>
+                </a>
+            @empty
+                <div style="padding: 48px 24px; text-align: center; color: var(--sim-text-muted);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 12px; opacity: 0.5;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <p style="font-size: 14px; margin: 0 0 6px; font-weight: 500; color: var(--sim-text-dark);">Tidak ada laporan aktivitas ditemukan.</p>
+                    <p style="font-size: 12.5px; margin: 0;">Coba sesuaikan kata kunci pencarian atau ganti filter yang dipilih.</p>
+                    <a href="{{ route('dosen.laporan-aktivitas') }}" style="display: inline-block; margin-top: 14px; font-size: 12.5px; color: #5C3317; font-weight: 600; text-decoration: underline;">
+                        Reset semua filter
+                    </a>
                 </div>
-
-                <div style="display: flex; align-items: center; gap: 16px;">
-                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #ECFDF5; color: #065F46; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #059669;"></span>
-                        Disetujui
-                    </span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sim-text-light);"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-            </div>
-
-            {{-- Item 4: Disetujui --}}
-            <div data-jenis-laporan="logbook" data-status="disetujui" data-kelas="SIB 3D" style="padding: 18px 24px; border-bottom: 1px solid var(--sim-border-light); display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
-                <div style="display: flex; align-items: flex-start; gap: 14px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #ECFDF5; color: #059669; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-                    </div>
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px;">
-                            <span style="font-size: 11px; font-weight: 600; color: var(--sim-text-muted);">Kelompok 01 - SIB 3D</span>
-                            <span style="color: var(--sim-text-light);">•</span>
-                            <span style="font-size: 11px; color: var(--sim-text-muted);">Pengembangan Situs Web Perpustakaan Kampus</span>
-                        </div>
-                        <h3 style="font-size: 14.5px; font-weight: 600; color: var(--sim-text-dark); margin: 0 0 6px;">
-                            Logbook: Penyusunan skema database ERD & relasi tabel
-                        </h3>
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--sim-text-muted);">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            <span>Diunggah oleh Budi Santoso</span>
-                            <span>•</span>
-                            <span style="color: #059669; font-weight: 500;">Disetujui pada 25 Sep 2026</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: flex; align-items: center; gap: 16px;">
-                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #ECFDF5; color: #065F46; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap;">
-                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #059669;"></span>
-                        Disetujui
-                    </span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sim-text-light);"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-            </div>
-
-            {{-- Item 5: Disetujui --}}
-            <div data-jenis-laporan="milestone" data-status="disetujui" data-kelas="SIB 3E" style="padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s;" onmouseover="this.style.background='#FAF7F3'" onmouseout="this.style.background='#FFFFFF'">
-                <div style="display: flex; align-items: flex-start; gap: 14px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #ECFDF5; color: #059669; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-                    </div>
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px;">
-                            <span style="font-size: 11px; font-weight: 600; color: var(--sim-text-muted);">Kelompok 01 - SIB 3E</span>
-                            <span style="color: var(--sim-text-light);">•</span>
-                            <span style="font-size: 11px; color: var(--sim-text-muted);">Pengembangan Sistem Alarm Pintar</span>
-                        </div>
-                        <h3 style="font-size: 14.5px; font-weight: 600; color: var(--sim-text-dark); margin: 0 0 6px;">
-                            Milestone 1 : Laporan Progress Minggu 1–4
-                        </h3>
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--sim-text-muted);">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            <span>Diunggah oleh Andika Sulaiman</span>
-                            <span>•</span>
-                            <span style="color: #059669; font-weight: 500;">Disetujui pada 8 Okt 2026</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: flex; align-items: center; gap: 16px;">
-                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #ECFDF5; color: #065F46; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap;">
-                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #059669;"></span>
-                        Disetujui
-                    </span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sim-text-light);"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
-            </div>
+            @endforelse
 
         </div>
 
     </div>
 
     {{-- Pagination Bar --}}
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; font-size: 13px; color: var(--sim-text-muted);">
-        <span>Menampilkan halaman 1 dari 3</span>
-        <div style="display: flex; align-items: center; gap: 6px;">
-            <button type="button" style="padding: 6px 12px; border: 1px solid var(--sim-border); background: #FFF; border-radius: 6px; color: var(--sim-text-light); cursor: pointer;" disabled>Sebelumnya</button>
-            <button type="button" style="padding: 6px 12px; border: 1px solid var(--sim-border); background: #2C1A0E; color: #FAF7F3; border-radius: 6px; font-weight: 600; cursor: pointer;">1</button>
-            <button type="button" style="padding: 6px 12px; border: 1px solid var(--sim-border); background: #FFF; color: var(--sim-text-dark); border-radius: 6px; cursor: pointer;">2</button>
-            <button type="button" style="padding: 6px 12px; border: 1px solid var(--sim-border); background: #FFF; color: var(--sim-text-dark); border-radius: 6px; cursor: pointer;">3</button>
-            <button type="button" style="padding: 6px 12px; border: 1px solid var(--sim-border); background: #FFF; border-radius: 6px; color: var(--sim-text-dark); cursor: pointer;">Selanjutnya</button>
+    <div class="la-pagination">
+        <span>
+            Menampilkan halaman {{ $aktivitasList->currentPage() }} dari {{ max(1, $aktivitasList->lastPage()) }}
+            @if($aktivitasList->total() > 0)
+                <span style="color: var(--sim-text-light);">• Total {{ $aktivitasList->total() }} aktivitas</span>
+            @endif
+        </span>
+
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            {{-- Tombol Sebelumnya --}}
+            @if($aktivitasList->onFirstPage())
+                <span class="la-page-btn la-page-btn--disabled">Sebelumnya</span>
+            @else
+                <a href="{{ $aktivitasList->previousPageUrl() }}" class="la-page-btn">Sebelumnya</a>
+            @endif
+
+            {{-- Angka Halaman --}}
+            @for($p = 1; $p <= $aktivitasList->lastPage(); $p++)
+                @if($p == $aktivitasList->currentPage())
+                    <span class="la-page-btn la-page-btn--active">{{ $p }}</span>
+                @else
+                    <a href="{{ $aktivitasList->url($p) }}" class="la-page-btn">{{ $p }}</a>
+                @endif
+            @endfor
+
+            {{-- Tombol Selanjutnya --}}
+            @if($aktivitasList->hasMorePages())
+                <a href="{{ $aktivitasList->nextPageUrl() }}" class="la-page-btn">Selanjutnya</a>
+            @else
+                <span class="la-page-btn la-page-btn--disabled">Selanjutnya</span>
+            @endif
         </div>
     </div>
 
     {{-- Bottom Grid (2 Kolom: Prioritas & Statistik) --}}
-    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; align-items: start;">
+    <div class="la-bottom-grid">
 
         {{-- Kartu Kiri: Prioritas Bimbingan --}}
         <div style="background: linear-gradient(135deg, #321F14 0%, #20130C 100%); border-radius: 20px; padding: 28px 32px; color: #FAF7F3; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
@@ -283,23 +364,23 @@
             </div>
 
             <h2 style="font-family: 'DM Serif Display', serif; font-size: 24px; font-weight: 400; color: #FAF7F3; margin: 0 0 12px; line-height: 1.3;">
-                Total 4 dokumen menunggu evaluasi dosen minggu ini.
+                Total dokumen menunggu evaluasi dosen minggu ini.
             </h2>
 
             <p style="font-size: 13px; color: #D1C4B8; line-height: 1.5; margin: 0 0 24px;">
                 Pemberian catatan berkala membantu mahasiswa mempertahankan momentum kerja kelompok serta menghindari deviasi dari target capaian semester.
             </p>
 
-            <div style="display: flex; align-items: center; gap: 20px;">
-                <a href="#" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #FAF7F3; color: #2C1A0E; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none;">
-                    Mulai review antrean pertama &rarr;
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <a href="{{ route('dosen.kelompok') }}" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #FAF7F3; color: #2C1A0E; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none;">
+                    Mulai review kelompok &rarr;
                 </a>
                 <span style="font-size: 12px; color: #A08C7D;">Estimasi waktu: ~15 menit</span>
             </div>
         </div>
 
         {{-- Kartu Kanan: Statistik Respon Dosen --}}
-        <div style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; padding: 28px 32px; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+        <div style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; padding: 28px 32px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box;">
             <div>
                 <p style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sim-text-muted); margin: 0 0 20px;">
                     STATISTIK RESPON DOSEN
@@ -338,56 +419,13 @@
 
 </div>
 
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const filterKelas = document.getElementById('filterKelas');
-    const filterJenisLaporan = document.getElementById('filterJenisLaporan');
-    const filterStatusEvaluasi = document.getElementById('filterStatusEvaluasi');
-    const daftarAktivitas = document.querySelectorAll('[data-jenis-laporan]');
-    const jumlahAktivitas = document.getElementById('jumlahAktivitas');
-
-    function filterAktivitas() {
-        const kelasDipilih = filterKelas.value;
-        const jenisDipilih = filterJenisLaporan.value;
-        const statusDipilih = filterStatusEvaluasi.value;
-        let jumlahTampil = 0;
-
-        daftarAktivitas.forEach(function (aktivitas) {
-            const sesuaiKelas =
-                kelasDipilih === 'semua' ||
-                aktivitas.dataset.kelas === kelasDipilih;
-
-            const sesuaiJenis =
-                jenisDipilih === 'semua' ||
-                aktivitas.dataset.jenisLaporan === jenisDipilih;
-
-            const sesuaiStatus =
-                statusDipilih === 'semua' ||
-                aktivitas.dataset.status === statusDipilih;
-
-            const tampil = sesuaiKelas && sesuaiJenis && sesuaiStatus;
-            aktivitas.style.display = tampil ? 'flex' : 'none';
-
-            if (tampil) {
-                jumlahTampil++;
-            }
-        });
-
-        jumlahAktivitas.textContent =
-            'Menampilkan ' + jumlahTampil + ' aktivitas';
-    }
-
-    filterKelas.addEventListener('change', filterAktivitas);
-    filterJenisLaporan.addEventListener('change', filterAktivitas);
-    filterStatusEvaluasi.addEventListener('change', filterAktivitas);
-
-    // Ekspor aktivitas yang sedang tampil sesuai filter ke file CSV.
-    document.getElementById('btnEksporRekap').addEventListener('click', function () {
-        const aktivitasTampil = Array.from(daftarAktivitas).filter(function (aktivitas) {
-            return aktivitas.style.display !== 'none';
-        });
-
-        if (aktivitasTampil.length === 0) {
+    // Ekspor aktivitas yang sedang tampil ke file CSV.
+    document.getElementById('btnEksporRekap')?.addEventListener('click', function () {
+        const itemNodes = document.querySelectorAll('#aktivitasContainer .la-item');
+        if (itemNodes.length === 0) {
             alert('Tidak ada aktivitas yang dapat diekspor.');
             return;
         }
@@ -400,46 +438,18 @@ document.addEventListener('DOMContentLoaded', function () {
             ['Kelas', 'Kelompok', 'Nama Proyek', 'Jenis Laporan', 'Judul Aktivitas', 'Status Evaluasi']
         ];
 
-        aktivitasTampil.forEach(function (aktivitas) {
-            const teks = Array.from(aktivitas.querySelectorAll('span, h3'))
-                .map(function (elemen) { return elemen.textContent.trim(); })
-                .filter(Boolean);
-
-            const infoKelompok = teks.find(function (teksItem) {
-                return teksItem.includes('Kelompok');
-            }) || '';
-
-            const judul = aktivitas.querySelector('h3')?.textContent.trim() || '';
-            const kelas = aktivitas.dataset.kelas || '';
-            const jenis = aktivitas.dataset.jenisLaporan || '';
-            const status = aktivitas.dataset.status || '';
-
-            const namaProyek = teks.find(function (teksItem) {
-                return teksItem !== infoKelompok && teksItem !== judul &&
-                    !teksItem.includes('Diunggah oleh') &&
-                    !teksItem.includes('Disetujui') &&
-                    !teksItem.includes('Menunggu') &&
-                    !teksItem.includes('Perlu revisi');
-            }) || '';
-
-            const labelJenis = {
-                logbook: 'Logbook',
-                proposal: 'Proposal',
-                milestone: 'Milestone'
-            };
-            const labelStatus = {
-                'menunggu-review': 'Menunggu review',
-                'perlu-revisi': 'Perlu revisi',
-                disetujui: 'Disetujui'
-            };
+        itemNodes.forEach(function (node) {
+            const judul = node.querySelector('h3')?.textContent.trim() || '';
+            const kelas = node.dataset.kelas || '';
+            const jenis = node.dataset.jenisLaporan || '';
+            const status = node.dataset.status || '';
 
             baris.push([
                 kelas,
-                infoKelompok,
-                namaProyek,
-                labelJenis[jenis] || jenis,
+                node.getAttribute('title') || '',
+                jenis,
                 judul,
-                labelStatus[status] || status
+                status
             ]);
         });
 
@@ -457,14 +467,8 @@ document.addEventListener('DOMContentLoaded', function () {
         link.remove();
         URL.revokeObjectURL(url);
     });
-
-    // Muat ulang halaman untuk mengambil ulang data dari sumber halaman saat ini.
-    document.getElementById('btnPerbaruiData').addEventListener('click', function () {
-        window.location.reload();
-    });
-
-    filterAktivitas();
 });
 </script>
+@endpush
 
 @endsection

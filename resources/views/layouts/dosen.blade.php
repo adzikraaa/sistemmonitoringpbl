@@ -114,17 +114,6 @@
                     </a>
                 </li>
 
-                {{-- Penyelesaian Milestone --}}
-                <li>
-                    <a href="{{ route('dosen.penyelesaian-milestone.index') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.penyelesaian-milestone*') ? 'sim-sidebar__menu-item--active' : '' }}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 11l3 3L22 4"/>
-                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                        </svg>
-                        Penyelesaian Milestone
-                    </a>
-                </li>
 
                 {{-- Laporan Aktivitas --}}
                 <li>
