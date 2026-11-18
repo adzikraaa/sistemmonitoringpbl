@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Dosen;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kelompok;
+use App\Models\LogbookMilestone;
+use App\Models\Proposal;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class DashboardController extends Controller
 {
@@ -134,8 +138,241 @@ class DashboardController extends Controller
         return collect($this->kelasList())->firstWhere('id', $id);
     }
 
-    public function laporanAktivitas()
+    protected function sampleAktivitas(): array
     {
-        return view('dosen.aktifitas-laporan');
+        return [
+            [
+                'id' => 'act-1',
+                'kelompok_id' => 1,
+                'kelompok_nama' => 'Kelompok 01',
+                'kelas' => 'SIB 3A',
+                'proyek_nama' => 'Pengembangan Sistem Magang',
+                'jenis_laporan' => 'logbook',
+                'judul' => 'Logbook: Implementasi autentikasi & perancangan token JWT',
+                'pengunggah' => 'Andi Pratama',
+                'waktu' => '28 September 2026, 14:15',
+                'status' => 'menunggu-review',
+                'status_label' => 'Menunggu review',
+                'status_badge' => 'bg-[#FEF3C7] text-[#92400E]',
+                'status_dot' => '#D97706',
+                'icon_bg' => '#FDF6EE',
+                'icon_color' => '#D97706',
+                'is_database' => false,
+            ],
+            [
+                'id' => 'act-2',
+                'kelompok_id' => 1,
+                'kelompok_nama' => 'Kelompok 01',
+                'kelas' => 'SIB 3B',
+                'proyek_nama' => 'Platform Kolaborasi Laboratorium',
+                'jenis_laporan' => 'proposal',
+                'judul' => 'Proposal: Revisi latar belakang & batasan implementasi sensor IoT',
+                'pengunggah' => 'Dimas Arya',
+                'waktu' => '28 September 2026, 14:15',
+                'status' => 'perlu-revisi',
+                'status_label' => 'Perlu revisi',
+                'status_badge' => 'bg-[#FEE2E2] text-[#991B1B]',
+                'status_dot' => '#DC2626',
+                'icon_bg' => '#FEE2E2',
+                'icon_color' => '#DC2626',
+                'is_database' => false,
+            ],
+            [
+                'id' => 'act-3',
+                'kelompok_id' => 1,
+                'kelompok_nama' => 'Kelompok 01',
+                'kelas' => 'SIB 3C',
+                'proyek_nama' => 'Sistem Informasi Inventaris Kampus',
+                'jenis_laporan' => 'logbook',
+                'judul' => 'Logbook: Pengujian unit testing modul inventaris barang',
+                'pengunggah' => 'Siti Rahma',
+                'waktu' => 'Disetujui kemarin pada 20:10',
+                'status' => 'disetujui',
+                'status_label' => 'Disetujui',
+                'status_badge' => 'bg-[#ECFDF5] text-[#065F46]',
+                'status_dot' => '#059669',
+                'icon_bg' => '#ECFDF5',
+                'icon_color' => '#059669',
+                'is_database' => false,
+            ],
+            [
+                'id' => 'act-4',
+                'kelompok_id' => 1,
+                'kelompok_nama' => 'Kelompok 01',
+                'kelas' => 'SIB 3D',
+                'proyek_nama' => 'Pengembangan Situs Web Perpustakaan Kampus',
+                'jenis_laporan' => 'logbook',
+                'judul' => 'Logbook: Penyusunan skema database ERD & relasi tabel',
+                'pengunggah' => 'Budi Santoso',
+                'waktu' => 'Disetujui pada 25 Sep 2026',
+                'status' => 'disetujui',
+                'status_label' => 'Disetujui',
+                'status_badge' => 'bg-[#ECFDF5] text-[#065F46]',
+                'status_dot' => '#059669',
+                'icon_bg' => '#ECFDF5',
+                'icon_color' => '#059669',
+                'is_database' => false,
+            ],
+            [
+                'id' => 'act-5',
+                'kelompok_id' => 1,
+                'kelompok_nama' => 'Kelompok 01',
+                'kelas' => 'SIB 3E',
+                'proyek_nama' => 'Pengembangan Sistem Alarm Pintar',
+                'jenis_laporan' => 'milestone',
+                'judul' => 'Milestone 1 : Laporan Progress Minggu 1–4',
+                'pengunggah' => 'Andika Sulaiman',
+                'waktu' => 'Disetujui pada 8 Okt 2026',
+                'status' => 'disetujui',
+                'status_label' => 'Disetujui',
+                'status_badge' => 'bg-[#ECFDF5] text-[#065F46]',
+                'status_dot' => '#059669',
+                'icon_bg' => '#ECFDF5',
+                'icon_color' => '#059669',
+                'is_database' => false,
+            ],
+        ];
+    }
+
+    public function laporanAktivitas(Request $request)
+    {
+        $aktivitasDb = collect();
+
+        // 1. Ambil logbook dari database jika tersedia
+        try {
+            $logbooks = LogbookMilestone::with(['kelompok.kelas', 'mahasiswa'])->latest()->get();
+            foreach ($logbooks as $lb) {
+                $statusSlug = match(strtolower($lb->status ?? '')) {
+                    'disetujui'              => 'disetujui',
+                    'revisi', 'perlu revisi' => 'perlu-revisi',
+                    default                  => 'menunggu-review',
+                };
+                $aktivitasDb->push([
+                    'id'            => 'db-lb-' . $lb->id,
+                    'kelompok_id'   => $lb->kelompok_id ?? 1,
+                    'kelompok_nama' => $lb->kelompok?->nama_kelompok ?? 'Kelompok',
+                    'kelas'         => $lb->kelompok?->kelas?->nama_kelas ?? 'SIB 3B',
+                    'proyek_nama'   => $lb->kelompok?->judul_proyek ?? 'Proyek PBL',
+                    'jenis_laporan' => 'logbook',
+                    'judul'         => 'Logbook: ' . ($lb->judul ?? 'Catatan Mingguan'),
+                    'pengunggah'    => $lb->mahasiswa?->nama ?? 'Mahasiswa',
+                    'waktu'         => $lb->created_at ? $lb->created_at->translatedFormat('d F Y, H:i') : now()->translatedFormat('d F Y, H:i'),
+                    'status'        => $statusSlug,
+                    'status_label'  => match($statusSlug) {
+                        'disetujui'    => 'Disetujui',
+                        'perlu-revisi' => 'Perlu revisi',
+                        default        => 'Menunggu review',
+                    },
+                    'status_badge'  => match($statusSlug) {
+                        'disetujui'    => 'bg-[#ECFDF5] text-[#065F46]',
+                        'perlu-revisi' => 'bg-[#FEE2E2] text-[#991B1B]',
+                        default        => 'bg-[#FEF3C7] text-[#92400E]',
+                    },
+                    'status_dot'    => match($statusSlug) {
+                        'disetujui'    => '#059669',
+                        'perlu-revisi' => '#DC2626',
+                        default        => '#D97706',
+                    },
+                    'icon_bg'       => '#FDF6EE',
+                    'icon_color'    => '#D97706',
+                    'is_database'   => true,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Logbook query failsafe
+        }
+
+        // 2. Ambil proposal dari database jika tersedia
+        try {
+            $proposals = Proposal::with(['kelompok.kelas'])->latest()->get();
+            foreach ($proposals as $prop) {
+                $statusSlug = match(strtolower($prop->status ?? '')) {
+                    'disetujui'         => 'disetujui',
+                    'ditolak', 'revisi' => 'perlu-revisi',
+                    default             => 'menunggu-review',
+                };
+                $aktivitasDb->push([
+                    'id'            => 'db-prop-' . $prop->id,
+                    'kelompok_id'   => $prop->kelompok_id ?? 1,
+                    'kelompok_nama' => $prop->kelompok?->nama_kelompok ?? 'Kelompok',
+                    'kelas'         => $prop->kelompok?->kelas?->nama_kelas ?? 'SIB 3B',
+                    'proyek_nama'   => $prop->judul ?? 'Pengajuan Proposal',
+                    'jenis_laporan' => 'proposal',
+                    'judul'         => 'Proposal: ' . ($prop->judul ?? 'Pengajuan Draf'),
+                    'pengunggah'    => 'Ketua Kelompok',
+                    'waktu'         => $prop->tanggal_pengajuan ? $prop->tanggal_pengajuan->translatedFormat('d F Y') : now()->translatedFormat('d F Y'),
+                    'status'        => $statusSlug,
+                    'status_label'  => match($statusSlug) {
+                        'disetujui'    => 'Disetujui',
+                        'perlu-revisi' => 'Perlu revisi',
+                        default        => 'Menunggu review',
+                    },
+                    'status_badge'  => match($statusSlug) {
+                        'disetujui'    => 'bg-[#ECFDF5] text-[#065F46]',
+                        'perlu-revisi' => 'bg-[#FEE2E2] text-[#991B1B]',
+                        default        => 'bg-[#FEF3C7] text-[#92400E]',
+                    },
+                    'status_dot'    => match($statusSlug) {
+                        'disetujui'    => '#059669',
+                        'perlu-revisi' => '#DC2626',
+                        default        => '#D97706',
+                    },
+                    'icon_bg'       => '#FEE2E2',
+                    'icon_color'    => '#DC2626',
+                    'is_database'   => true,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Proposal query failsafe
+        }
+
+        // 3. Gabungkan data: DB di awal, disusul sampel mockup
+        $allAktivitas = $aktivitasDb->concat($this->sampleAktivitas());
+
+        // 4. Filter Kelas
+        if ($request->filled('kelas') && $request->kelas !== 'semua') {
+            $allAktivitas = $allAktivitas->filter(fn($item) => $item['kelas'] === $request->kelas);
+        }
+
+        // 5. Filter Jenis Laporan
+        if ($request->filled('jenis') && $request->jenis !== 'semua') {
+            $allAktivitas = $allAktivitas->filter(fn($item) => $item['jenis_laporan'] === $request->jenis);
+        }
+
+        // 6. Filter Status Evaluasi
+        if ($request->filled('status') && $request->status !== 'semua') {
+            $allAktivitas = $allAktivitas->filter(fn($item) => $item['status'] === $request->status);
+        }
+
+        // 7. Filter Pencarian (Keyword: judul, proyek, kelompok, pengunggah, kelas)
+        if ($request->filled('search')) {
+            $keyword = mb_strtolower(trim($request->search));
+            if ($keyword !== '') {
+                $allAktivitas = $allAktivitas->filter(function ($item) use ($keyword) {
+                    return str_contains(mb_strtolower($item['judul'] ?? ''), $keyword)
+                        || str_contains(mb_strtolower($item['proyek_nama'] ?? ''), $keyword)
+                        || str_contains(mb_strtolower($item['kelompok_nama'] ?? ''), $keyword)
+                        || str_contains(mb_strtolower($item['pengunggah'] ?? ''), $keyword)
+                        || str_contains(mb_strtolower($item['kelas'] ?? ''), $keyword);
+                });
+            }
+        }
+
+        // 8. Paginasi: default 5 per halaman, parameter per_page didukung untuk pengujian
+        $perPage = max(1, (int) $request->query('per_page', 5));
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $pagedItems = $allAktivitas->values()->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        $aktivitasList = new LengthAwarePaginator(
+            $pagedItems,
+            $allAktivitas->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $daftarKelas = ['SIB 3A', 'SIB 3B', 'SIB 3C', 'SIB 3D', 'SIB 3E'];
+
+        return view('dosen.aktifitas-laporan', compact('aktivitasList', 'daftarKelas'));
     }
 }

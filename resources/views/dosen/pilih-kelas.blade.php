@@ -46,7 +46,7 @@
             Total kelas yang ditugaskan: <strong>{{ count($kelasList) }} kelas</strong>
         </div>
     </div>
-    <button type="button" class="sim-dosen-banner__button">Ganti Semester</button>
+    <a href="{{ route('dosen.pilih-semester') }}" class="sim-dosen-banner__button" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Ganti Semester</a>
 </div>
 
 <section class="sim-dosen-grid" id="kelas-grid">

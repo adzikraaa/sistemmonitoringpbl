@@ -157,13 +157,29 @@ class KelompokController extends Controller
             return is_object($item->kelas) ? ($item->kelas->nama_kelas ?? null) : $item->kelas;
         })->filter()->unique()->sort()->values();
 
-        // 3. Filter Pencarian (Live Search nama kelompok atau judul proyek)
+        // 3. Filter Pencarian (nama kelompok, judul proyek, atau nama/NIM anggota)
         if ($request->filled('search')) {
-            $keyword = mb_strtolower($request->search);
-            $allItems = $allItems->filter(function ($item) use ($keyword) {
-                return str_contains(mb_strtolower($item->nama_kelompok ?? ''), $keyword)
-                    || str_contains(mb_strtolower($item->judul_proyek ?? ''), $keyword);
-            });
+            $keyword = mb_strtolower(trim($request->search));
+            if ($keyword !== '') {
+                $allItems = $allItems->filter(function ($item) use ($keyword) {
+                    $matchNamaKelompok = str_contains(mb_strtolower($item->nama_kelompok ?? ''), $keyword);
+                    $matchJudulProyek  = str_contains(mb_strtolower($item->judul_proyek ?? ''), $keyword);
+                    $matchAnggota      = false;
+
+                    if (isset($item->anggotaKelompok) && is_iterable($item->anggotaKelompok)) {
+                        foreach ($item->anggotaKelompok as $ak) {
+                            $namaMhs = mb_strtolower($ak->mahasiswa->nama ?? '');
+                            $nimMhs  = mb_strtolower($ak->mahasiswa->nim ?? '');
+                            if (str_contains($namaMhs, $keyword) || str_contains($nimMhs, $keyword)) {
+                                $matchAnggota = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    return $matchNamaKelompok || $matchJudulProyek || $matchAnggota;
+                });
+            }
         }
 
         // 4. Filter Dropdown Kelas
@@ -183,8 +199,8 @@ class KelompokController extends Controller
             });
         }
 
-        // 6. Paginasi manual 8 item per halaman agar semua tampil rapi dalam 1 layar pengujian
-        $perPage = 8;
+        // 6. Paginasi manual (default 8 item per halaman, dapat diatur via parameter per_page untuk pengujian)
+        $perPage = max(1, (int) $request->query('per_page', 8));
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $pagedItems = $allItems->values()->slice(($currentPage - 1) * $perPage, $perPage)->values();
 
