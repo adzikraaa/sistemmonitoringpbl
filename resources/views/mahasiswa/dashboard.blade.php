@@ -1,4 +1,4 @@
-﻿@extends('layouts.mahasiswa')
+@extends('layouts.mahasiswa')
 
 @section('title', 'Dashboard')
 @section('meta_description', 'Dashboard mahasiswa SIM-PBL - ringkasan proyek, aktivitas, dan jadwal mendatang.')
@@ -400,12 +400,21 @@
                         default => 'db-step__sub--todo',
                     };
                 @endphp
-                <div class="db-step">
-                    <div class="db-step__line {{ $lineClass }}"></div>
-                    <div class="db-step__dot {{ $dotClass }}"></div>
-                    <span class="db-step__lbl">{{ $tahap['label'] }}</span>
-                    <span class="db-step__sub {{ $subClass }}">{{ $tahap['status'] }}</span>
-                </div>
+                @if($tahap['label'] === 'Proposal')
+                    <a href="{{ route('mahasiswa.proposal') }}" class="db-step" style="text-decoration: none; color: inherit; cursor: pointer;" title="Buka Halaman Proposal">
+                        <div class="db-step__line {{ $lineClass }}"></div>
+                        <div class="db-step__dot {{ $dotClass }}"></div>
+                        <span class="db-step__lbl">{{ $tahap['label'] }}</span>
+                        <span class="db-step__sub {{ $subClass }}">{{ $tahap['status'] }}</span>
+                    </a>
+                @else
+                    <div class="db-step">
+                        <div class="db-step__line {{ $lineClass }}"></div>
+                        <div class="db-step__dot {{ $dotClass }}"></div>
+                        <span class="db-step__lbl">{{ $tahap['label'] }}</span>
+                        <span class="db-step__sub {{ $subClass }}">{{ $tahap['status'] }}</span>
+                    </div>
+                @endif
             @endforeach
         </div>
     </div>

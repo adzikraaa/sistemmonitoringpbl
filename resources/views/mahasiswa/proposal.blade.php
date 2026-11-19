@@ -96,12 +96,14 @@
                     </span>
                 </a>
             @else
-                <div class="sim-proposal-attachment">
-                    <div class="sim-proposal-attachment__icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div class="sim-proposal-attachment" onclick="openProposalModal()" style="cursor: pointer; border: 1.5px dashed #CFC7BC; background: rgba(247, 246, 240, 0.7); transition: all 0.15s ease;" title="Klik untuk mengajukan proposal baru">
+                    <div class="sim-proposal-attachment__icon" style="color: #7A5C4A;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
                     </div>
-                    <span class="sim-proposal-attachment__name">{{ $proposalData['file_name'] ?? 'proposal-kelompok-01.pdf' }}</span>
-                    <span class="sim-proposal-attachment__type">PDF</span>
+                    <span class="sim-proposal-attachment__name" style="color: #7A5C4A; font-weight: 500;">
+                        Belum ada berkas proposal &mdash; <span style="text-decoration: underline;">Klik untuk mengajukan</span>
+                    </span>
+                    <span class="sim-proposal-attachment__type" style="background: #EDE8DE; color: #2D2621; padding: 2px 8px; border-radius: 6px;">+ Ajukan</span>
                 </div>
             @endif
 
@@ -372,7 +374,6 @@ function previewProposalFile(input) {
         const filledEl = document.getElementById('proposalDropzoneFilled');
         const nameEl = document.getElementById('proposalFileName');
         const sizeEl = document.getElementById('proposalFileSize');
-        const errEl = document.getElementById('err-file_proposal');
 
         if (emptyEl) emptyEl.style.display = 'none';
         if (filledEl) filledEl.style.display = 'block';

@@ -75,7 +75,8 @@
                 {{-- Dashboard --}}
                 <li>
                     <a href="{{ route('dosen.dashboard') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.dashboard') ? 'sim-sidebar__menu-item--active' : '' }}">
+                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.dashboard') ? 'sim-sidebar__menu-item--active' : '' }}"
+                       onclick="closeSidebar()">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="3" width="7" height="7" rx="1"/>
                             <rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -89,7 +90,8 @@
                 {{-- Pilih Kelas (dari fitur tambah_kelas_dosen) --}}
                 <li>
                     <a href="{{ route('dosen.pilih-kelas') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.pilih-kelas') ? 'sim-sidebar__menu-item--active' : '' }}">
+                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.pilih-kelas') ? 'sim-sidebar__menu-item--active' : '' }}"
+                       onclick="closeSidebar()">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                             <path d="M6.5 2H20v15H6.5A2.5 2.5 0 0 0 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
@@ -103,7 +105,8 @@
                 {{-- Kelompok --}}
                 <li>
                     <a href="{{ route('dosen.kelompok') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.kelompok*') ? 'sim-sidebar__menu-item--active' : '' }}">
+                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.kelompok*') ? 'sim-sidebar__menu-item--active' : '' }}"
+                       onclick="closeSidebar()">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                             <circle cx="9" cy="7" r="4"/>
@@ -118,7 +121,8 @@
                 {{-- Laporan Aktivitas --}}
                 <li>
                     <a href="{{ route('dosen.laporan-aktivitas') }}"
-                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.laporan-aktivitas') ? 'sim-sidebar__menu-item--active' : '' }}">
+                       class="sim-sidebar__menu-item {{ request()->routeIs('dosen.laporan-aktivitas') ? 'sim-sidebar__menu-item--active' : '' }}"
+                       onclick="closeSidebar()">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="20" x2="18" y2="10"/>
                             <line x1="12" y1="20" x2="12" y2="4"/>
@@ -136,7 +140,7 @@
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="sim-sidebar__logout"
-                    style="background: none; border: none; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 0; font-size: inherit; font-family: inherit;">
+                    style="background: none; border: none; width: 100%; cursor: pointer; text-align: left; font-family: inherit;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>
@@ -209,6 +213,18 @@
                         {{ $userRole ?? 'Dosen Pengampu' }}
                     </span>
                 </div>
+
+                {{-- Tombol Keluar Cepat untuk Mobile/Tablet --}}
+                <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                    @csrf
+                    <button type="submit" class="sim-header__logout-mobile" title="Keluar" aria-label="Keluar">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                    </button>
+                </form>
 
             </div>
         </header>

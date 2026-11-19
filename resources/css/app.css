@@ -76,11 +76,12 @@ body.sim-body {
     left: 0;
     width: var(--sim-sidebar-w);
     height: 100vh;
+    height: 100dvh;
     background: var(--sim-sidebar-bg);
     display: flex;
     flex-direction: column;
     z-index: 200;
-    overflow-y: auto;
+    overflow-y: hidden;
     transition: transform 0.3s ease;
 }
 
@@ -90,6 +91,7 @@ body.sim-body {
     gap: 10px;
     padding: 20px 20px 16px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
 }
 
 .sim-sidebar__logo-icon {
@@ -116,6 +118,8 @@ body.sim-body {
 
 .sim-sidebar__nav {
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     padding: 20px 12px;
 }
 
@@ -175,6 +179,7 @@ body.sim-body {
 .sim-sidebar__footer {
     padding: 16px 12px 20px;
     border-top: 1px solid rgba(255,255,255,0.06);
+    margin-top: auto; /* selalu tempel di dasar sidebar */
 }
 
 .sim-sidebar__logout {
@@ -1281,6 +1286,28 @@ body.sim-body {
     color: var(--sim-white);
 }
 
+/* Tombol logout di header — hidden by default, tampil di mobile */
+.sim-header__logout-mobile {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--sim-text-muted);
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.sim-header__logout-mobile:hover {
+    background: var(--sim-cream);
+    color: var(--sim-text-dark);
+}
+
 /* ============================================================
    MOBILE OVERLAY (sidebar)
    ============================================================ */
@@ -1322,6 +1349,25 @@ body.sim-body {
     .sim-header__hamburger {
         display: flex;
     }
+    .sim-header__logout-mobile {
+        display: inline-flex;
+    }
+    /* Sembunyikan breadcrumb panjang di mobile, tampilkan hanya current */
+    .sim-header__breadcrumb-root,
+    .sim-header__breadcrumb-link,
+    .sim-header__breadcrumb-sep {
+        display: none;
+    }
+    .sim-header__breadcrumb-current {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--sim-text-dark);
+        max-width: 160px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
     /* Stack group bar */
     .sim-group-bar__left {
         flex-direction: column;
@@ -1357,7 +1403,10 @@ body.sim-body {
 
 @media (max-width: 480px) {
     .sim-header { padding: 0 16px; }
+    /* Sembunyikan info user tapi tampilkan tombol logout di header */
     .sim-header__user-info { display: none; }
+    .sim-header__notif { display: none; }
+    .sim-header__logout-mobile { display: inline-flex; }
     .sim-page-header { padding: 16px 16px 12px; }
     .sim-page-header__title { font-size: 28px; }
     .sim-proposal-grid { padding: 0 16px 32px; }
