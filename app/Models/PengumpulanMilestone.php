@@ -19,6 +19,13 @@ class PengumpulanMilestone extends Model
         'link_bukti',
         'catatan',
         'status',
+        'created_at',
+        'updated_at',
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function milestone(): BelongsTo
