@@ -42,18 +42,23 @@
 {{-- ─── Main Content Wrap ────────────────────────────────────────────────── --}}
 <div style="padding: 0 32px 40px;">
     <!-- Timeline List Mata Kuliah -->
-    <div class="relative pl-8 space-y-6 before:absolute before:left-3.5 before:top-4 before:bottom-4 before:w-0.5 before:bg-[#CFC7BC] before:pointer-events-none">
+    <div class="relative pl-8 space-y-6">
         @forelse($mataKuliahList as $item)
-            <div class="relative flex items-start gap-4">
-                <!-- Badge Bulat M1, M2, M3 -->
+            <div class="relative flex items-center">
+                {{-- Garis Penghubung antar-Card Mata Kuliah (menghubungkan tepat dari tengah ke tengah) --}}
+                @if(!$loop->last)
+                    <div class="pointer-events-none absolute -left-[17px] top-1/2 -bottom-6 w-0.5 bg-[#CFC7BC] z-0"></div>
+                @endif
+
+                <!-- Badge Bulat MK1, MK2, MK3 (Tepat di tengah vertikal card) -->
                 @php($tone = $statusTone($item, $loop->first))
-                <span class="pointer-events-none absolute -left-8 top-3.5 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm ring-4 ring-[#F6F4F1] z-10 {{ $circleToneClass($tone) }}">
-                    {{ $item['kode'] }}
+                <span class="pointer-events-none absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm ring-4 ring-[#F6F4F1] z-10 {{ $circleToneClass($tone) }}">
+                    MK{{ $loop->iteration }}
                 </span>
 
                 <!-- Seluruh Card Mata Kuliah Dibuat Klikabel (Tag <a>) -->
                 <a href="{{ route('mahasiswa.milestone.detail', $item['slug']) }}"
-                   class="group block w-full bg-white border border-[#CFC7BC] hover:border-[#7A5C4A] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer no-underline relative z-20">
+                   class="group block w-full bg-white border border-[#CFC7BC] hover:border-[#7A5C4A] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer no-underline relative z-10">
                     
                     <!-- Title & Status Badge -->
                     <div class="flex items-center justify-between mb-3">

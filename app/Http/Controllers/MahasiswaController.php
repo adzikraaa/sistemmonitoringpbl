@@ -507,6 +507,8 @@ class MahasiswaController extends Controller
                 ];
             }
 
+            $waktuUpload = $submission->updated_at ?? $submission->created_at;
+
             return [
                 'id' => $submission->milestone_id,
                 'judul' => $milestone
@@ -516,8 +518,8 @@ class MahasiswaController extends Controller
                     ? 'Menunggu Review'
                     : ucfirst((string) $submission->status),
                 'ringkasan' => $submission->catatan ?? '',
-                'waktu' => $submission->created_at
-                    ? $submission->created_at->translatedFormat('d F Y, H:i').' WIB'
+                'waktu' => $waktuUpload
+                    ? $waktuUpload->timezone('Asia/Jakarta')->translatedFormat('d F Y, H:i').' WIB'
                     : '',
                 'pengunggah' => $submission->pengunggah?->nama ?? 'Mahasiswa',
                 'dokumen' => $dokumen,
@@ -623,15 +625,26 @@ class MahasiswaController extends Controller
                     'link_bukti' => $validated['link_bukti'] ?? null,
                     'catatan' => $validated['catatan'],
                     'status' => 'diajukan',
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
 
                 if ($existing) {
-                    $existing->update($data);
+                    $existing->fill($data);
+                    $existing->created_at = now();
+                    $existing->updated_at = now();
+                    $existing->save();
 
                     return $existing;
                 }
 
-                return PengumpulanMilestone::create($data);
+                $submission = new PengumpulanMilestone();
+                $submission->fill($data);
+                $submission->created_at = now();
+                $submission->updated_at = now();
+                $submission->save();
+
+                return $submission;
             });
         } catch (UniqueConstraintViolationException $exception) {
             Storage::disk('local')->delete($storedPath);
