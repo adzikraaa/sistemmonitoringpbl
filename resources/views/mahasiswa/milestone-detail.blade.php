@@ -233,14 +233,14 @@
 
             <!-- Dropzone Upload -->
             <div class="mb-4 text-xs">
-                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-rose-500">*</span> <span class="text-[#7D746D] font-normal">(PDF/ZIP maks 20 MB)</span></label>
+                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-rose-500">*</span> <span class="text-[#7D746D] font-normal">(PDF/ZIP maks 2 MB)</span></label>
                 <div onclick="document.getElementById('fileInputReal').click()" class="border-2 border-dashed border-[#CFC7BC] rounded-xl p-6 text-center bg-[#F7F6F0]/60 hover:bg-[#F7F6F0] transition-colors cursor-pointer">
                     <input type="file" name="berkas" id="fileInputReal" class="hidden" accept=".pdf,.zip" required onchange="previewFileSelected(this)">
                     
                     <div id="dropzoneEmpty">
                         <svg class="w-8 h-8 text-[#7D746D] mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                         <span class="font-bold text-[#1F1F1F] block">Tarik berkas atau <span class="text-[#7A5C4A] underline">klik untuk memilih</span></span>
-                        <span class="text-[#7D746D] text-[11px]">Format file didukung: PDF, ZIP (Maks. 20 MB)</span>
+                        <span class="text-[#7D746D] text-[11px]">Format file didukung: PDF, ZIP (Maks. 2 MB)</span>
                     </div>
 
                     <div id="dropzoneFilled" class="hidden text-[#2F5C4A]">
@@ -288,8 +288,8 @@ function previewFileSelected(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
 
-        if (file.size > 20 * 1024 * 1024) {
-            alert('Ukuran berkas melebihi batas maksimal 20 MB!');
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.');
             input.value = '';
             return;
         }

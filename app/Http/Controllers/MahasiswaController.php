@@ -572,7 +572,7 @@ class MahasiswaController extends Controller
                     ->where('mata_kuliah_id', $mataKuliah->id),
             ],
             'catatan' => ['required', 'string', 'max:2000'],
-            'berkas' => ['required', 'file', 'mimes:pdf,zip', 'max:20480'],
+            'berkas' => ['required', 'file', 'mimes:pdf,zip', 'max:2048'],
             'link_bukti' => ['nullable', 'url', 'max:255'],
         ], [
             'milestone_id.required' => 'Tahapan milestone wajib dipilih.',
@@ -581,7 +581,7 @@ class MahasiswaController extends Controller
             'berkas.required' => 'Berkas laporan (PDF/ZIP) wajib diunggah.',
             'berkas.file' => 'Berkas laporan yang diunggah tidak valid atau melebihi batas upload server.',
             'berkas.mimes' => 'Format berkas harus berupa PDF atau ZIP.',
-            'berkas.max' => 'Ukuran file melebihi batas maksimal yang diperbolehkan (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.',
+            'berkas.max' => 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.',
             'link_bukti.url' => 'Format tautan repositori/demo tidak valid (harus diawali http:// atau https://).',
         ]);
 
@@ -700,14 +700,14 @@ class MahasiswaController extends Controller
             'tujuan' => 'required|string',
             'latar_belakang' => 'nullable|string',
             'metode' => 'nullable|string',
-            'file_proposal' => 'required|file|mimes:pdf|max:20480',
+            'file_proposal' => 'required|file|mimes:pdf|max:2048',
         ], [
             'judul.required' => 'Judul proyek wajib diisi.',
             'deskripsi.required' => 'Deskripsi singkat wajib diisi.',
             'tujuan.required' => 'Tujuan wajib diisi.',
             'file_proposal.required' => 'Berkas proposal (PDF) wajib diunggah.',
             'file_proposal.mimes' => 'Format berkas harus berupa PDF.',
-            'file_proposal.max' => 'Ukuran berkas proposal maksimal 20 MB.',
+            'file_proposal.max' => 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.',
         ]);
 
         $latarBelakang = $validated['latar_belakang'] ?? '-';

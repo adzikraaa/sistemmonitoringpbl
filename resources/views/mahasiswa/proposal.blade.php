@@ -201,7 +201,7 @@
             <div class="sim-form-group">
                 <label class="sim-form-label" for="fileProposalInput">
                     Pengumpulan Berkas Proposal <span style="color: #e11d48;">*</span> 
-                    <span style="font-weight: 400; color: #7D746D; font-size: 11px;">(PDF maks 20 MB)</span>
+                    <span style="font-weight: 400; color: #7D746D; font-size: 11px;">(PDF maks 2 MB)</span>
                 </label>
                 <div onclick="document.getElementById('fileProposalInput').click()" 
                      id="proposalDropzone"
@@ -213,7 +213,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                         </svg>
                         <span style="font-weight: 700; color: #1F1F1F; display: block; font-size: 13px;">Tarik berkas atau <span style="color: #7A5C4A; text-decoration: underline;">klik untuk memilih</span></span>
-                        <span style="color: #7D746D; font-size: 11px; display: block; margin-top: 4px;">Format file didukung: PDF (Maks. 20 MB)</span>
+                        <span style="color: #7D746D; font-size: 11px; display: block; margin-top: 4px;">Format file didukung: PDF (Maks. 2 MB)</span>
                     </div>
 
                     <div id="proposalDropzoneFilled" style="display: none; color: #2F5C4A;">
@@ -363,8 +363,8 @@ function previewProposalFile(input) {
             return;
         }
 
-        if (file.size > 20 * 1024 * 1024) {
-            if (errEl) { errEl.textContent = 'Ukuran file melebihi batas maksimal yang diperbolehkan (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.'; errEl.style.display = 'block'; }
+        if (file.size > 2 * 1024 * 1024) {
+            if (errEl) { errEl.textContent = 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.'; errEl.style.display = 'block'; }
             input.value = '';
             resetProposalDropzone();
             return;
@@ -473,8 +473,8 @@ function validateForm(data) {
         if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
             showError('file_proposal', 'Format berkas harus berupa PDF.');
             valid = false;
-        } else if (file.size > 20 * 1024 * 1024) {
-            showError('file_proposal', 'Ukuran file melebihi batas maksimal yang diperbolehkan (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.');
+        } else if (file.size > 2 * 1024 * 1024) {
+            showError('file_proposal', 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.');
             valid = false;
         }
     }

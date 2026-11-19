@@ -26,11 +26,11 @@ class PeriodeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_periode'   => 'required|string|max:255',
+            'nama_periode' => 'required|string|max:255',
             'tahun_akademik' => 'required|string|max:20',
-            'tanggal_mulai'   => 'required|date',
+            'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
-            'is_aktif'        => 'nullable',
+            'is_aktif' => 'nullable',
         ]);
 
         $isAktif = $request->boolean('is_aktif');
@@ -42,16 +42,16 @@ class PeriodeController extends Controller
             }
 
             Periode::create([
-                'nama_periode'   => $validated['nama_periode'],
+                'nama_periode' => $validated['nama_periode'],
                 'tahun_akademik' => $validated['tahun_akademik'],
-                'tanggal_mulai'   => $validated['tanggal_mulai'],
+                'tanggal_mulai' => $validated['tanggal_mulai'],
                 'tanggal_selesai' => $validated['tanggal_selesai'],
-                'is_aktif'        => $isAktif,
+                'is_aktif' => $isAktif,
             ]);
         });
 
-        $msg = $isAktif 
-            ? 'Semester baru berhasil ditambahkan dan langsung dijadikan semester aktif!' 
+        $msg = $isAktif
+            ? 'Semester baru berhasil ditambahkan dan langsung dijadikan semester aktif!'
             : 'Semester baru berhasil ditambahkan!';
 
         return redirect()->route('koordinator.periode.index')->with('success', $msg);
@@ -62,28 +62,20 @@ class PeriodeController extends Controller
         $periode = Periode::findOrFail($id);
 
         $validated = $request->validate([
-            'nama_periode'   => 'required|string|max:255',
+            'nama_periode' => 'required|string|max:255',
             'tahun_akademik' => 'required|string|max:20',
-            'tanggal_mulai'   => 'required|date',
+            'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
-            'is_aktif'        => 'nullable',
         ]);
 
-        $isAktif = $request->boolean('is_aktif');
-
-        DB::transaction(function () use ($periode, $validated, $isAktif) {
-            if ($isAktif) {
-                Periode::where('id', '!=', $periode->id)->update(['is_aktif' => false]);
-            }
-
-            $periode->update([
-                'nama_periode'   => $validated['nama_periode'],
-                'tahun_akademik' => $validated['tahun_akademik'],
-                'tanggal_mulai'   => $validated['tanggal_mulai'],
-                'tanggal_selesai' => $validated['tanggal_selesai'],
-                'is_aktif'        => $isAktif,
-            ]);
-        });
+        // is_aktif TIDAK diubah via form update — perubahan status aktif hanya
+        // dilakukan melalui tombol "Aktifkan" di tabel riwayat (toggleAktif).
+        $periode->update([
+            'nama_periode' => $validated['nama_periode'],
+            'tahun_akademik' => $validated['tahun_akademik'],
+            'tanggal_mulai' => $validated['tanggal_mulai'],
+            'tanggal_selesai' => $validated['tanggal_selesai'],
+        ]);
 
         return redirect()->route('koordinator.periode.index')->with('success', 'Pengaturan semester berhasil diperbarui!');
     }
@@ -99,6 +91,7 @@ class PeriodeController extends Controller
         });
 
         $msg = $id > 0 ? 'Semester aktif berhasil diubah!' : 'Semua semester berhasil dinonaktifkan.';
+
         return redirect()->route('koordinator.periode.index')->with('success', $msg);
     }
 }

@@ -121,11 +121,9 @@
         background: rgba(255, 255, 255, 0.7);
         border: 1px solid #E6DFD5;
         border-radius: 14px;
-        padding: 18px 18px 16px;
+        padding: 18px 20px 16px;
         box-shadow: 0 1px 3px rgba(44, 26, 14, 0.02);
-        display: grid;
-        grid-template-columns: 56px minmax(0, 1fr);
-        gap: 16px;
+        display: block;
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
@@ -381,13 +379,7 @@
         }
 
         .sim-list-item {
-            grid-template-columns: 42px minmax(0, 1fr);
-        }
-
-        .sim-step-badge {
-            width: 42px;
-            height: 42px;
-            font-size: 16px;
+            padding: 16px;
         }
     }
 </style>
@@ -421,15 +413,17 @@
                     @php
                         $selected = $selectedMilestone && $selectedMilestone->id === $milestone->id;
                         $deadline = $milestone->deadline ? \Illuminate\Support\Facades\Date::parse($milestone->deadline)->format('d M Y') : 'Belum ditetapkan';
-                        $statusClass = 'sim-badge--warning';
-                        $statusText = 'Belum';
-                        if ($milestone->deadline && \Carbon\Carbon::parse($milestone->deadline)->isPast()) {
-                            $statusClass = 'sim-badge--danger';
-                            $statusText = 'Terlambat';
-                        } elseif ($milestone->deadline) {
+                        // Status: hanya Belum Ditetapkan atau Berjalan — tidak ada "Terlambat"
+                        if ($milestone->deadline) {
                             $statusClass = 'sim-badge--success';
-                            $statusText = 'Berjalan';
+                            $statusText  = 'Berjalan';
+                        } else {
+                            $statusClass = 'sim-badge--warning';
+                            $statusText  = 'Belum Ditetapkan';
                         }
+                        // Progress dinamis
+                        $selesai = $progressMap[$milestone->id] ?? 0;
+                        $persen  = $totalKelompok > 0 ? round(($selesai / $totalKelompok) * 100) : 0;
                     @endphp
                     <article class="sim-list-item {{ $selected ? 'sim-list-item--active' : '' }}" data-id="{{ $milestone->id }}">
                         <div class="sim-step-badge">{{ str_pad((string) $milestone->urutan, 2, '0', STR_PAD_LEFT) }}</div>
@@ -450,10 +444,10 @@
                                 <span>{{ $deadline }}</span>
                                 <span class="sim-badge {{ $statusClass }}">{{ $statusText }}</span>
                             </div>
-                            <div class="sim-progress-outer"><span class="sim-progress-inner" style="width: {{ min(100, 18 * $milestone->urutan) }}%"></span></div>
+                            <div class="sim-progress-outer"><span class="sim-progress-inner" style="width: {{ $persen }}%"></span></div>
                             <div class="sim-item-footer">
                                 <span>{{ $milestone->kode ?? 'M' . str_pad((string) $milestone->urutan, 2, '0', STR_PAD_LEFT) }}</span>
-                                <span>{{ $milestone->periode?->nama_periode ?? 'Semester aktif' }}</span>
+                                <span>{{ $selesai }}/{{ $totalKelompok }} kelompok selesai</span>
                             </div>
                         </div>
                     </article>
