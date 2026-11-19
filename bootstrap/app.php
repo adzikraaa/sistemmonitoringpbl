@@ -26,13 +26,26 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, Request $request) {
-            $msg = 'Ukuran file melebihi batas maksimal yang diperbolehkan server (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.';
+            $msg = 'Ukuran file melebihi kapasitas yang ditentukan (maksimal 2 MB). Silakan gunakan file dengan ukuran lebih kecil.';
             if ($request->expectsJson()) {
-                return response()->json(['message' => $msg, 'errors' => ['file_proposal' => [$msg]]], 422);
+                return response()->json(['message' => $msg, 'errors' => ['berkas' => [$msg], 'file_proposal' => [$msg]]], 422);
             }
             return redirect()->back()->withErrors([
-                'file_proposal' => $msg,
                 'berkas' => $msg,
+                'file_proposal' => $msg,
             ])->withInput();
+        });
+
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, Request $request) {
+            if ($e->getStatusCode() === 413) {
+                $msg = 'Ukuran file melebihi kapasitas yang ditentukan (maksimal 2 MB). Silakan gunakan file dengan ukuran lebih kecil.';
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $msg, 'errors' => ['berkas' => [$msg], 'file_proposal' => [$msg]]], 422);
+                }
+                return redirect()->back()->withErrors([
+                    'berkas' => $msg,
+                    'file_proposal' => $msg,
+                ])->withInput();
+            }
         });
     })->create();

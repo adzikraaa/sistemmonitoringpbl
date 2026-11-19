@@ -39,7 +39,7 @@
 {{-- ─── Main Content Wrap ────────────────────────────────────────────────── --}}
 <div style="padding: 0 32px 40px;">
 
-    {{-- Alert Sukses Upload (Pertemuan 6) --}}
+    {{-- Alert Sukses Upload --}}
     @if(session('success'))
         <div class="mb-5 bg-[#EAF3EC] border border-[#C6DFC8] text-[#2F5C4A] px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2.5">
             <span>✓</span>
@@ -47,7 +47,14 @@
         </div>
     @endif
 
-    {{-- Alert Error Validasi Input (Pertemuan 6) --}}
+    {{-- Alert Peringatan Ukuran File (muncul via JS, disembunyikan awal) --}}
+    <div id="alertFileTerlalubesar" class="hidden mb-5 bg-[#FFF7ED] border border-[#FED7AA] text-[#C2410C] px-4 py-3 rounded-xl text-xs font-medium flex items-start gap-2.5">
+        <span class="text-base mt-0.5">⚠</span>
+        <span>Ukuran file melebihi batas maksimal <strong>2 MB</strong>. Harap pilih file yang lebih kecil (PDF atau ZIP).</span>
+        <button type="button" onclick="document.getElementById('alertFileTerlalubesar').classList.add('hidden')" class="ml-auto text-[#C2410C] hover:text-[#9A3412] font-bold text-sm leading-none flex-shrink-0">&times;</button>
+    </div>
+
+    {{-- Alert Error Validasi Input --}}
     @if($errors->any())
         <div class="mb-5 bg-[#FDF2F2] border border-[#F8B4B4] text-[#9B1C1C] px-4 py-3 rounded-xl text-xs space-y-1">
             <p class="font-bold">Gagal mengumpulkan milestone, periksa kembali isian berikut:</p>
@@ -204,7 +211,7 @@
         <h2 class="text-xl font-serif font-bold text-[#1F1F1F] mt-0.5">Formulir Pengumpulan Milestone</h2>
         <p class="text-xs text-[#7D746D] mb-5">Lengkapi ringkasan capaian dan unggah dokumen pendukung untuk ditinjau oleh dosen pembimbing.</p>
 
-        <form id="formPengumpulanMilestone" action="{{ route('mahasiswa.milestone.upload', $slug) }}" method="POST" enctype="multipart/form-data">
+        <form id="formPengumpulanMilestone" action="{{ route('mahasiswa.milestone.upload', $slug) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateMilestoneForm(event)">
             @csrf
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 text-xs">
                 <div>
@@ -234,6 +241,16 @@
             <!-- Dropzone Upload -->
             <div class="mb-4 text-xs">
                 <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-rose-500">*</span> <span class="text-[#7D746D] font-normal">(PDF/ZIP maks 2 MB)</span></label>
+
+                {{-- Alert Peringatan Ukuran File di dalam Modal --}}
+                <div id="modalAlertFileSize" class="hidden mb-2.5 bg-[#FFF7ED] border border-[#FED7AA] text-[#C2410C] px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base font-bold leading-none">⚠</span>
+                        <span>Ukuran file melebihi kapasitas yang ditentukan (maksimal <strong>2 MB</strong>). Silakan pilih file yang lebih kecil.</span>
+                    </div>
+                    <button type="button" onclick="document.getElementById('modalAlertFileSize').classList.add('hidden')" class="text-[#C2410C] hover:text-[#9A3412] font-bold text-sm leading-none ml-2">&times;</button>
+                </div>
+
                 <div onclick="document.getElementById('fileInputReal').click()" class="border-2 border-dashed border-[#CFC7BC] rounded-xl p-6 text-center bg-[#F7F6F0]/60 hover:bg-[#F7F6F0] transition-colors cursor-pointer">
                     <input type="file" name="berkas" id="fileInputReal" class="hidden" accept=".pdf,.zip" required onchange="previewFileSelected(this)">
                     
@@ -273,9 +290,13 @@ function openModalForm() {
 function closeModalForm() {
     const modal = document.getElementById('modalPengumpulan');
     const form = document.getElementById('formPengumpulanMilestone');
+    const modalAlert = document.getElementById('modalAlertFileSize');
 
     if (form) {
         form.reset();
+    }
+    if (modalAlert) {
+        modalAlert.classList.add('hidden');
     }
     document.getElementById('dropzoneEmpty').classList.remove('hidden');
     document.getElementById('dropzoneFilled').classList.add('hidden');
@@ -287,11 +308,30 @@ function closeModalForm() {
 function previewFileSelected(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
+        const modalAlert = document.getElementById('modalAlertFileSize');
+        const alertEl = document.getElementById('alertFileTerlalubesar');
 
         if (file.size > 2 * 1024 * 1024) {
-            alert('Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.');
+            // Tampilkan notifikasi peringatan file melebihi batas 2MB
+            if (modalAlert) {
+                modalAlert.classList.remove('hidden');
+            }
+            if (alertEl) {
+                alertEl.classList.remove('hidden');
+            }
             input.value = '';
+            // Reset dropzone ke kondisi kosong
+            document.getElementById('dropzoneEmpty').classList.remove('hidden');
+            document.getElementById('dropzoneFilled').classList.add('hidden');
             return;
+        }
+
+        // Sembunyikan alert jika sebelumnya tampil
+        if (modalAlert) {
+            modalAlert.classList.add('hidden');
+        }
+        if (alertEl) {
+            alertEl.classList.add('hidden');
         }
 
         document.getElementById('dropzoneEmpty').classList.add('hidden');
@@ -299,6 +339,21 @@ function previewFileSelected(input) {
         document.getElementById('fileNameText').textContent = '📄 ' + file.name;
         document.getElementById('fileSizeText').textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
     }
+}
+
+function validateMilestoneForm(event) {
+    const fileInput = document.getElementById('fileInputReal');
+    const modalAlert = document.getElementById('modalAlertFileSize');
+
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        if (file.size > 2 * 1024 * 1024) {
+            event.preventDefault();
+            if (modalAlert) modalAlert.classList.remove('hidden');
+            return false;
+        }
+    }
+    return true;
 }
 </script>
 @endsection
