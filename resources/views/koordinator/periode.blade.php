@@ -354,16 +354,17 @@
             </div>
 
 
-            <!-- Switch Status Aktif -->
-            <div style="background: var(--sim-cream-head); border: 1px solid var(--sim-border-warm); border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <!-- Info: Status aktif diubah via tombol Aktifkan di tabel -->
+            <div style="background: var(--sim-cream-head); border: 1px solid var(--sim-border-warm); border-radius: 12px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px;">
+                <span style="font-size: 16px;">ℹ️</span>
                 <div>
-                    <h4 style="font-size: 13px; font-weight: 700; color: var(--sim-brown-dark); margin: 0 0 2px 0;">Jadikan semester aktif</h4>
-                    <p style="font-size: 12px; color: var(--sim-text-muted); margin: 0;">Menjadi acuan default seluruh ruang kerja.</p>
+                    <h4 style="font-size: 13px; font-weight: 700; color: var(--sim-brown-dark); margin: 0 0 2px 0;">
+                        Status: {{ $periodeAktif->is_aktif ? 'Semester Aktif' : 'Semester Nonaktif' }}
+                    </h4>
+                    <p style="font-size: 12px; color: var(--sim-text-muted); margin: 0;">
+                        Untuk mengubah semester aktif, gunakan tombol <strong>Aktifkan</strong> pada tabel riwayat di bawah.
+                    </p>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" name="is_aktif" value="1" class="sr-only peer" {{ $periodeAktif->is_aktif ? 'checked' : '' }}>
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--sim-brown-btn)]"></div>
-                </label>
             </div>
 
             <!-- Warning Notice -->

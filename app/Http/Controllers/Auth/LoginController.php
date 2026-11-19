@@ -116,18 +116,16 @@ class LoginController extends Controller
 
             // SIAKAD mengembalikan {"output":"ok"} jika login berhasil
             if (! $response->successful() || ($data['output'] ?? '') !== 'ok') {
-                $siakadMsg = $data['output'] ?? 'Login gagal';
-
                 return back()
                     ->withInput($request->only('identifier'))
-                    ->withErrors(['identifier' => 'Username atau password salah. ('.$siakadMsg.')']);
+                    ->withErrors(['identifier' => 'NIM/Password salah.']);
             }
         } catch (\Exception $e) {
             \Log::error('SIAKAD Login Error', ['message' => $e->getMessage()]);
 
             return back()
                 ->withInput($request->only('identifier'))
-                ->withErrors(['identifier' => 'Username atau password salah.']);
+                ->withErrors(['identifier' => 'NIM/Password salah.']);
         }
 
         // Cari mahasiswa di database lokal berdasarkan NIM
