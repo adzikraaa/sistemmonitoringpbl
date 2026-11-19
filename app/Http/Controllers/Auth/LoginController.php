@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Mahasiswa;
+use App\Services\DummyKelompokService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -20,26 +21,28 @@ class LoginController extends Controller
     {
         $request->validate([
             'identifier' => 'required|string',
-            'password'   => 'required',
+            'password' => 'required',
         ]);
 
         $remember = $request->boolean('remember');
 
         // ─── 1. Coba Koordinator (lokal) ──────────────────────────────────────
         if (Auth::guard('koordinator')->attempt([
-            'nidn'     => $request->identifier,
+            'nidn' => $request->identifier,
             'password' => $request->password,
         ], $remember)) {
             $request->session()->regenerate();
+
             return redirect()->route('koordinator.dashboard');
         }
 
         // ─── 2. Coba Dosen (lokal) ────────────────────────────────────────────
         if (Auth::guard('dosen')->attempt([
-            'nidn'     => $request->identifier,
+            'nidn' => $request->identifier,
             'password' => $request->password,
         ], $remember)) {
             $request->session()->regenerate();
+
             return redirect()->route('dosen.pilih-semester');
         }
 
@@ -54,9 +57,9 @@ class LoginController extends Controller
      */
     private function loginViaSiakad(Request $request, bool $remember = false)
     {
-        $nim      = $request->identifier;
+        $nim = $request->identifier;
         $password = $request->password;
-        $baseUrl  = 'https://siakad.polinema.ac.id';
+        $baseUrl = 'https://siakad.polinema.ac.id';
 
         try {
             // Step 1: GET halaman login untuk mendapatkan session cookie & CSRF token
@@ -64,13 +67,13 @@ class LoginController extends Controller
                 ->timeout(10)
                 ->withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 ])
                 ->get("{$baseUrl}/login");
 
             // Ambil cookie dari response GET (session cookie SIAKAD)
             $cookies = $getResponse->cookies()->toArray();
-            $cookieStr = collect($cookies)->map(fn($c) => "{$c['Name']}={$c['Value']}")->implode('; ');
+            $cookieStr = collect($cookies)->map(fn ($c) => "{$c['Name']}={$c['Value']}")->implode('; ');
 
             // Coba ekstrak CSRF token dari HTML (jika ada)
             $csrfToken = null;
@@ -94,10 +97,10 @@ class LoginController extends Controller
                 ->timeout(10)
                 ->withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Referer'    => "{$baseUrl}/login",
-                    'Cookie'     => $cookieStr,
-                    'Accept'     => 'application/json, text/plain, */*',
-                    'Origin'     => $baseUrl,
+                    'Referer' => "{$baseUrl}/login",
+                    'Cookie' => $cookieStr,
+                    'Accept' => 'application/json, text/plain, */*',
+                    'Origin' => $baseUrl,
                     'X-Requested-With' => 'XMLHttpRequest',
                 ])
                 ->post("{$baseUrl}/login", $postData);
@@ -107,19 +110,21 @@ class LoginController extends Controller
             // Log untuk debug (hapus di production)
             \Log::info('SIAKAD Login Response', [
                 'status' => $response->status(),
-                'body'   => $response->body(),
-                'data'   => $data,
+                'body' => $response->body(),
+                'data' => $data,
             ]);
 
             // SIAKAD mengembalikan {"output":"ok"} jika login berhasil
-            if (!$response->successful() || ($data['output'] ?? '') !== 'ok') {
+            if (! $response->successful() || ($data['output'] ?? '') !== 'ok') {
                 $siakadMsg = $data['output'] ?? 'Login gagal';
+
                 return back()
                     ->withInput($request->only('identifier'))
-                    ->withErrors(['identifier' => 'Username atau password salah. (' . $siakadMsg . ')']);
+                    ->withErrors(['identifier' => 'Username atau password salah. ('.$siakadMsg.')']);
             }
         } catch (\Exception $e) {
             \Log::error('SIAKAD Login Error', ['message' => $e->getMessage()]);
+
             return back()
                 ->withInput($request->only('identifier'))
                 ->withErrors(['identifier' => 'Username atau password salah.']);
@@ -130,20 +135,23 @@ class LoginController extends Controller
         $mahasiswa = Mahasiswa::firstOrCreate(
             ['nim' => $nim],
             [
-                'nama'     => 'Mahasiswa ' . $nim, // sementara, bisa diupdate nanti
-                'email'    => $nim . '@student.polinema.ac.id',
+                'nama' => 'Mahasiswa '.$nim, // sementara, bisa diupdate nanti
+                'email' => $nim.'@student.polinema.ac.id',
                 'password' => bcrypt(Str::random(32)), // password random (login via SIAKAD)
                 'kelas_id' => null,
             ]
         );
 
+        // Pastikan kelompok dummy otomatis terbentuk jika belum memiliki kelompok pada periode aktif
+        app(DummyKelompokService::class)->ensureDummyKelompok($mahasiswa);
+
         // Login mahasiswa ke guard 'mahasiswa'
         \Log::info('SIM-PBL Mahasiswa Login', [
-        'input_nim' => $nim,
-        'mahasiswa_id' => $mahasiswa->id,
-        'mahasiswa_nim' => $mahasiswa->nim,
-        'mahasiswa_nama' => $mahasiswa->nama,
-    ]);
+            'input_nim' => $nim,
+            'mahasiswa_id' => $mahasiswa->id,
+            'mahasiswa_nim' => $mahasiswa->nim,
+            'mahasiswa_nama' => $mahasiswa->nama,
+        ]);
         Auth::guard('mahasiswa')->login($mahasiswa, $remember);
         $request->session()->regenerate();
 

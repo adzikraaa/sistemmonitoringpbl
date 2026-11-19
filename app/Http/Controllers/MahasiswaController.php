@@ -579,7 +579,7 @@ class MahasiswaController extends Controller
             'milestone_id.exists' => 'Milestone tidak terdaftar untuk mata kuliah ini pada periode kelompok Anda.',
             'catatan.required' => 'Ringkasan capaian milestone wajib diisi.',
             'berkas.required' => 'Berkas laporan (PDF/ZIP) wajib diunggah.',
-            'berkas.file'           => 'Berkas laporan yang diunggah tidak valid atau melebihi batas upload server.',
+            'berkas.file' => 'Berkas laporan yang diunggah tidak valid atau melebihi batas upload server.',
             'berkas.mimes' => 'Format berkas harus berupa PDF atau ZIP.',
             'berkas.max' => 'Ukuran file melebihi batas maksimal yang diperbolehkan (maksimal 20 MB). Silakan gunakan file dengan ukuran lebih kecil.',
             'link_bukti.url' => 'Format tautan repositori/demo tidak valid (harus diawali http:// atau https://).',
@@ -702,12 +702,12 @@ class MahasiswaController extends Controller
             'metode' => 'nullable|string',
             'file_proposal' => 'required|file|mimes:pdf|max:20480',
         ], [
-            'judul.required'          => 'Judul proyek wajib diisi.',
-            'deskripsi.required'      => 'Deskripsi singkat wajib diisi.',
-            'tujuan.required'         => 'Tujuan wajib diisi.',
-            'file_proposal.required'  => 'Berkas proposal (PDF) wajib diunggah.',
-            'file_proposal.mimes'     => 'Format berkas harus berupa PDF.',
-            'file_proposal.max'       => 'Ukuran berkas proposal maksimal 20 MB.',
+            'judul.required' => 'Judul proyek wajib diisi.',
+            'deskripsi.required' => 'Deskripsi singkat wajib diisi.',
+            'tujuan.required' => 'Tujuan wajib diisi.',
+            'file_proposal.required' => 'Berkas proposal (PDF) wajib diunggah.',
+            'file_proposal.mimes' => 'Format berkas harus berupa PDF.',
+            'file_proposal.max' => 'Ukuran berkas proposal maksimal 20 MB.',
         ]);
 
         $latarBelakang = $validated['latar_belakang'] ?? '-';
@@ -890,35 +890,63 @@ class MahasiswaController extends Controller
     }
 
     /**
-     * Update Logbook Entry (backend stub).
+     * Update Logbook Entry.
      *
-     * Menerima data edit dari modal logbook.
-     * Mengembalikan JSON sukses untuk diproses oleh JS.
-     * Implementasi update ke DB dapat ditambahkan
-     * setelah tabel logbook_milestone tersedia.
+     * Menerima data edit dari modal logbook dan menyimpan perubahan ke database.
      */
     public function updateLogbook(Request $request, string $id)
     {
+        /** @var Mahasiswa|null $mahasiswa */
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+
+        if (! $mahasiswa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi tidak valid. Silakan login kembali.',
+            ], 401);
+        }
+
+        /** @var Mahasiswa|null $mahasiswa */
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+
+        if (! $mahasiswa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi tidak valid. Silakan login kembali.',
+            ], 401);
+        }
+
         $validated = $request->validate([
-            'tanggal'  => 'required|date',
-            'judul'    => 'required|string|max:255',
-            'deskripsi'=> 'nullable|string',
+            'tanggal' => 'required|date',
+            'judul' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
             'progress' => 'required|integer|min:0|max:100',
-            'hasil'    => 'nullable|string',
-            'kendala'  => 'nullable|string',
-            'rencana'  => 'nullable|string',
+            'hasil' => 'nullable|string',
+            'kendala' => 'nullable|string',
+            'rencana' => 'nullable|string',
         ]);
 
-        // TODO: update ke database setelah tabel logbook_milestone tersedia
-        // $logbook = LogbookMilestone::where('id', $id)
-        //     ->where('mahasiswa_id', auth('mahasiswa')->id())
-        //     ->firstOrFail();
-        // $logbook->update($validated);
+        $logbook = LogbookMilestone::where('id', $id)
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->firstOrFail();
+
+        $logbook->update([
+            'tanggal' => $validated['tanggal'],
+            'judul' => $validated['judul'],
+            'deskripsi' => $validated['deskripsi'] ?? null,
+            'kegiatan' => filled($validated['deskripsi'] ?? null)
+                ? $validated['deskripsi']
+                : $validated['judul'],
+            'progress' => $validated['progress'],
+            'hasil' => $validated['hasil'] ?? null,
+            'kendala' => $validated['kendala'] ?? null,
+            'rencana' => $validated['rencana'] ?? null,
+        ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Catatan logbook berhasil diperbarui.',
-            'data'    => array_merge($validated, ['id' => $id]),
+            'data' => array_merge($validated, ['id' => $id]),
         ]);
     }
 }

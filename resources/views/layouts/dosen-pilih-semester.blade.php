@@ -11,27 +11,62 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
+    <style>
+        .dosen-ps-header {
+            background: #fff;
+            border-bottom: 1px solid #CFC7BC;
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            gap: 16px;
+        }
+        @media (max-width: 768px) {
+            .dosen-ps-header {
+                padding: 0 16px;
+            }
+            .dosen-ps-sub {
+                display: none !important;
+            }
+            .dosen-ps-user-info {
+                display: none !important;
+            }
+        }
+        @media (max-width: 480px) {
+            .dosen-ps-header {
+                padding: 0 12px;
+                gap: 8px;
+            }
+            .dosen-ps-notif {
+                display: none !important;
+            }
+        }
+    </style>
 </head>
 <body style="margin:0;padding:0;font-family:'Inter',ui-sans-serif,system-ui,sans-serif;background:#FAF8F4;color:#2D2621;min-height:100vh;display:flex;flex-direction:column;">
 
     {{-- ═══════════════════════════════════════════
          HEADER DOSEN
     ═══════════════════════════════════════════ --}}
-    <header style="background:#fff;border-bottom:1px solid #CFC7BC;padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:16px;">
+    <header class="dosen-ps-header">
 
         {{-- Kiri: Logo + Identitas Institusi --}}
         <div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">
             <div style="width:36px;height:36px;background:#3B7454;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;color:#fff;letter-spacing:-0.5px;">S</div>
             <div>
                 <div style="font-size:14px;font-weight:700;color:#2D2621;letter-spacing:0.01em;line-height:1.1;">SIM-PBL</div>
-                <div style="font-size:10.5px;color:#A3978A;font-weight:500;letter-spacing:0.02em;line-height:1.1;">POLITEKNIK NEGERI MALANG</div>
+                <div class="dosen-ps-sub" style="font-size:10.5px;color:#A3978A;font-weight:500;letter-spacing:0.02em;line-height:1.1;">POLITEKNIK NEGERI MALANG</div>
             </div>
         </div>
 
-        {{-- Kanan: Notif + Identitas Dosen --}}
-        <div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">
+        {{-- Kanan: Notif + Identitas Dosen + Keluar --}}
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
             {{-- Ikon Notifikasi --}}
-            <div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;color:#A3978A;transition:background 0.15s;" title="Notifikasi">
+            <div class="dosen-ps-notif" style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;color:#A3978A;transition:background 0.15s;" title="Notifikasi">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 {{-- Dot notifikasi (sembunyikan jika tidak ada notif) --}}
                 <span style="position:absolute;top:6px;right:6px;width:7px;height:7px;background:#3B7454;border-radius:50%;border:1.5px solid #fff;"></span>
@@ -43,7 +78,7 @@
             </div>
 
             {{-- Nama & Role --}}
-            <div style="line-height:1.25;">
+            <div class="dosen-ps-user-info" style="line-height:1.25;">
                 <div style="font-size:13.5px;font-weight:600;color:#2D2621;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;">{{ $userName ?? 'Dosen Pengampu' }}</div>
                 <div style="font-size:11.5px;color:#A3978A;font-weight:500;">{{ $userRole ?? 'Dosen Pengampu' }}</div>
             </div>

@@ -83,6 +83,7 @@
             min-width: var(--krd-sidebar-w);
             max-width: var(--krd-sidebar-w);
             height: 100vh;
+            height: 100dvh;
             background-color: var(--krd-sidebar-bg);
             color: #FAF8F5;
             position: sticky;
@@ -91,10 +92,17 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            overflow-y: auto;
+            overflow-y: hidden;
             z-index: 150;
             padding: 20px 14px 18px 14px;
             flex-shrink: 0;
+        }
+
+        .krd-sidebar-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 2px;
         }
 
         /* Logo Brand */
@@ -412,6 +420,24 @@
             background: #F3EDE4;
         }
 
+        .krd-header-logout-mobile {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--krd-brown-dark);
+            transition: background 0.15s;
+            padding: 0;
+        }
+        .krd-header-logout-mobile:hover {
+            background: #F3EDE4;
+        }
+
         /* Konten Utama: 100% Lebar Desktop, Padding Proporsional 30px */
         .krd-main-body {
             flex: 1;
@@ -498,11 +524,40 @@
             .krd-header-date {
                 display: none;
             }
+            .krd-semester-pill {
+                display: none;
+            }
+            .krd-header-logout-mobile {
+                display: inline-flex;
+            }
+            .krd-breadcrumb-root,
+            .krd-breadcrumb-sep {
+                display: none;
+            }
+            .krd-breadcrumb-current {
+                font-size: 14px;
+                max-width: 160px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
             .krd-page-footer {
                 padding: 16px;
                 flex-direction: column;
                 gap: 8px;
                 text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .krd-top-header {
+                padding: 0 12px;
+            }
+            .krd-header-meta {
+                gap: 8px;
+            }
+            .krd-main-body {
+                padding: 12px;
             }
         }
     </style>
@@ -516,7 +571,7 @@
          1. SIDEBAR KIRI (PERMANEN LEBAR 220px)
          ══════════════════════════════════════════════════════ --}}
     <aside id="krd-sidebar" class="krd-sidebar">
-        <div>
+        <div class="krd-sidebar-scroll">
             {{-- Logo Brand --}}
             <div class="krd-logo-wrap">
                 <div class="krd-logo-circle">S</div>
@@ -533,7 +588,8 @@
                     {{-- Dashboard --}}
                     <li>
                         <a href="{{ route('koordinator.dashboard') }}"
-                           class="krd-nav-link {{ request()->routeIs('koordinator.dashboard') ? 'krd-nav-link--active' : '' }}">
+                           class="krd-nav-link {{ request()->routeIs('koordinator.dashboard') ? 'krd-nav-link--active' : '' }}"
+                           onclick="closeKrdSidebar()">
                             <span class="krd-nav-icon">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
@@ -547,7 +603,8 @@
                     {{-- Semester & Periode --}}
                     <li>
                         <a href="{{ route('koordinator.periode.index') }}" 
-                        class="krd-nav-link {{ request()->routeIs('koordinator.periode.*') ? 'krd-nav-link--active' : '' }}">
+                           class="krd-nav-link {{ request()->routeIs('koordinator.periode.*') ? 'krd-nav-link--active' : '' }}"
+                           onclick="closeKrdSidebar()">
                             <span class="krd-nav-icon">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -561,7 +618,8 @@
                     {{-- Master Data --}}
                     <li>
                         <a href="{{ route('koordinator.master-data.kelas') }}"
-                           class="krd-nav-link {{ request()->routeIs('koordinator.master-data.*') || request()->routeIs('koordinator.kelas') ? 'krd-nav-link--active' : '' }}">
+                           class="krd-nav-link {{ request()->routeIs('koordinator.master-data.*') || request()->routeIs('koordinator.kelas') ? 'krd-nav-link--active' : '' }}"
+                           onclick="closeKrdSidebar()">
                             <span class="krd-nav-icon">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <ellipse cx="12" cy="5" rx="9" ry="3"/>
@@ -575,19 +633,22 @@
                         <ul class="krd-submenu-list">
                             <li>
                                 <a href="{{ route('koordinator.master-data.mata-kuliah') }}"
-                                   class="krd-submenu-link {{ request()->routeIs('koordinator.master-data.mata-kuliah*') ? 'krd-submenu-link--active' : '' }}">
+                                   class="krd-submenu-link {{ request()->routeIs('koordinator.master-data.mata-kuliah*') ? 'krd-submenu-link--active' : '' }}"
+                                   onclick="closeKrdSidebar()">
                                     <span>Mata Kuliah</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('koordinator.master-data.kelas') }}"
-                                   class="krd-submenu-link {{ request()->routeIs('koordinator.master-data.kelas') || request()->routeIs('koordinator.kelas') ? 'krd-submenu-link--active' : '' }}">
+                                   class="krd-submenu-link {{ request()->routeIs('koordinator.master-data.kelas') || request()->routeIs('koordinator.kelas') ? 'krd-submenu-link--active' : '' }}"
+                                   onclick="closeKrdSidebar()">
                                     <span>Kelas</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="{{ route('koordinator.master-data.pengguna') }}"
-                                   class="krd-submenu-link {{ request()->routeIs('koordinator.master-data.pengguna*') || request()->routeIs('koordinator.pengguna*') ? 'krd-submenu-link--active' : '' }}">
+                                   class="krd-submenu-link {{ request()->routeIs('koordinator.master-data.pengguna*') || request()->routeIs('koordinator.pengguna*') ? 'krd-submenu-link--active' : '' }}"
+                                   onclick="closeKrdSidebar()">
                                     <span>Pengguna</span>
                                 </a>
                             </li>
@@ -597,7 +658,8 @@
                     {{-- Milestone Global --}}
                     <li>
                         <a href="{{ route('koordinator.milestone-global.index') }}"
-                           class="krd-nav-link {{ request()->routeIs('koordinator.milestone-global.*') ? 'krd-nav-link--active' : '' }}">
+                           class="krd-nav-link {{ request()->routeIs('koordinator.milestone-global.*') ? 'krd-nav-link--active' : '' }}"
+                           onclick="closeKrdSidebar()">
                             <span class="krd-nav-icon">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
@@ -611,7 +673,8 @@
                     {{-- Penugasan Dosen --}}
                     <li>
                         <a href="{{ route('koordinator.penugasan-dosen.index') }}"
-                           class="krd-nav-link {{ request()->routeIs('koordinator.penugasan-dosen.*') ? 'krd-nav-link--active' : '' }}">
+                           class="krd-nav-link {{ request()->routeIs('koordinator.penugasan-dosen.*') ? 'krd-nav-link--active' : '' }}"
+                           onclick="closeKrdSidebar()">
                             <span class="krd-nav-icon">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -627,7 +690,8 @@
                     {{-- Kelompok PBL --}}
                     <li>
                         <a href="{{ route('koordinator.kelompok.index') }}"
-                           class="krd-nav-link {{ request()->routeIs('koordinator.kelompok.*') || request()->routeIs('koordinator.kelompok') ? 'krd-nav-link--active' : '' }}">
+                           class="krd-nav-link {{ request()->routeIs('koordinator.kelompok.*') || request()->routeIs('koordinator.kelompok') ? 'krd-nav-link--active' : '' }}"
+                           onclick="closeKrdSidebar()">
                             <span class="krd-nav-icon">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -731,6 +795,18 @@
                         <span style="position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: #C0392B; border-radius: 50%; border: 1.5px solid #FAF8F5;"></span>
                     @endif
                 </a>
+
+                {{-- Tombol Keluar Cepat untuk Mobile/Tablet --}}
+                <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                    @csrf
+                    <button type="submit" class="krd-header-logout-mobile" title="Keluar" aria-label="Keluar">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                    </button>
+                </form>
             </div>
         </header>
 
@@ -757,6 +833,13 @@
             const backdrop = document.getElementById('krd-backdrop');
             if (sidebar) sidebar.classList.toggle('open');
             if (backdrop) backdrop.classList.toggle('open');
+        }
+
+        function closeKrdSidebar() {
+            const sidebar = document.getElementById('krd-sidebar');
+            const backdrop = document.getElementById('krd-backdrop');
+            if (sidebar) sidebar.classList.remove('open');
+            if (backdrop) backdrop.classList.remove('open');
         }
     </script>
 </body>
