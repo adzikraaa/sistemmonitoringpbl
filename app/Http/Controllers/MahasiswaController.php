@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dosen;
 use App\Models\DosenPengampu;
 use App\Models\Kelompok;
 use App\Models\LogbookMilestone;
 use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
 use App\Models\Milestone;
+use App\Models\Notifikasi;
 use App\Models\PengumpulanMilestone;
 use App\Models\Proposal;
 use App\Models\RiwayatProposal;
@@ -22,7 +24,7 @@ use Illuminate\Validation\Rule;
 
 class MahasiswaController extends Controller
 {
-    private const MATA_KULIAH_SIM_PBL = [
+    public const MATA_KULIAH_SIM_PBL = [
         'Pemrograman Web Lanjut',
         'Manajemen Proyek Sistem Informasi',
         'Penjaminan Mutu Perangkat Lunak',
@@ -38,6 +40,7 @@ class MahasiswaController extends Controller
 
         return Kelompok::query()
             ->periodeAktif()
+            ->with(['proposal', 'logbookMilestone'])
             ->whereHas('mahasiswa', fn ($query) => $query->where('mahasiswa.id', $mahasiswa->id))
             ->orderBy('id')
             ->first();
@@ -50,12 +53,14 @@ class MahasiswaController extends Controller
     private function sharedViewData(): array
     {
         $mahasiswa = Auth::guard('mahasiswa')->user();
+        $unreadCount = $mahasiswa ? $mahasiswa->notifikasi()->whereNull('dibaca_pada')->count() : 0;
 
         return [
             'userName' => $mahasiswa?->nama ?? 'Mahasiswa',
             'userNim' => $mahasiswa?->nim ?? '-',
             'userKelas' => $mahasiswa?->kelas_id ?? '-',
             'userProdi' => 'Teknologi Informasi',
+            'unreadMhsNotifCount' => $unreadCount,
         ];
     }
 
@@ -276,7 +281,7 @@ class MahasiswaController extends Controller
                 'tujuan' => $dbProposal->tujuan,
                 'metode' => $dbProposal->metode,
                 'file_proposal' => $dbProposal->file_proposal,
-                'file_name' => $dbProposal->file_proposal ? 'proposal-'.$dbProposal->id.'.pdf' : 'proposal-pbl.pdf',
+                'file_name' => $dbProposal->nama_berkas,
                 'file_url' => $dbProposal->file_proposal ? route('mahasiswa.proposal.download', $dbProposal->id) : null,
                 'status' => $statusFormatted,
                 'status_raw' => $statusRaw,
@@ -356,6 +361,10 @@ class MahasiswaController extends Controller
                 'kendala' => $logbook->kendala,
                 'status' => $status,
                 'feedback' => $logbook->feedback,
+                'file_bukti' => $logbook->file_bukti,
+                'file_name' => $logbook->file_bukti ? basename($logbook->file_bukti) : null,
+                'file_url' => $logbook->file_bukti ? route('mahasiswa.logbook.download', $logbook->id) : null,
+                'link_bukti' => $logbook->link_bukti,
             ];
         })->all();
 
@@ -387,7 +396,43 @@ class MahasiswaController extends Controller
 
     public function notifikasi()
     {
-        return view('mahasiswa.notifikasi', $this->sharedViewData());
+        /** @var Mahasiswa|null $mahasiswa */
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $notifikasiList = $mahasiswa ? $mahasiswa->notifikasi()->latest()->get() : collect();
+
+        return view('mahasiswa.notifikasi', array_merge($this->sharedViewData(), [
+            'notifikasiList' => $notifikasiList,
+        ]));
+    }
+
+    public function tandaiNotifikasiDibaca(Request $request, Notifikasi $notifikasi)
+    {
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+
+        if ($mahasiswa && $notifikasi->penerima_type === Mahasiswa::class && (int) $notifikasi->penerima_id === (int) $mahasiswa->id) {
+            $notifikasi->update(['dibaca_pada' => now()]);
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Notifikasi ditandai sudah dibaca.');
+    }
+
+    public function tandaiSemuaNotifikasiDibaca(Request $request)
+    {
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+
+        if ($mahasiswa) {
+            $mahasiswa->notifikasi()->whereNull('dibaca_pada')->update(['dibaca_pada' => now()]);
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Semua notifikasi ditandai sudah dibaca.');
     }
 
     /** Halaman daftar Milestone per Mata Kuliah */
@@ -539,6 +584,57 @@ class MahasiswaController extends Controller
         ]));
     }
 
+    /**
+     * Mengirim notifikasi pengingat ke seluruh dosen terkait kelompok (Dosen Pembimbing & Dosen Pengampu).
+     */
+    private function notifyDosenKelompok(Kelompok $kelompok, string $judul, string $isi, ?string $tautan = null, ?int $mataKuliahId = null): void
+    {
+        try {
+            $targetDosenIds = collect();
+
+            if (! empty($kelompok->dosen_id)) {
+                $targetDosenIds->push((int) $kelompok->dosen_id);
+            }
+
+            if (! empty($kelompok->kelas_id)) {
+                $query = DosenPengampu::where('kelas_id', $kelompok->kelas_id);
+                if ($mataKuliahId) {
+                    $matkulDosenIds = (clone $query)->where('mata_kuliah_id', $mataKuliahId)->pluck('dosen_id');
+                    if ($matkulDosenIds->isNotEmpty()) {
+                        $targetDosenIds = $targetDosenIds->merge($matkulDosenIds);
+                    } else {
+                        $targetDosenIds = $targetDosenIds->merge($query->pluck('dosen_id'));
+                    }
+                } else {
+                    $targetDosenIds = $targetDosenIds->merge($query->pluck('dosen_id'));
+                }
+            }
+
+            $uniqueDosenIds = $targetDosenIds->filter()->unique()->values()->all();
+
+            // Fallback: jika belum ada dosen pembimbing atau pengampu terdaftar, kirim ke seluruh dosen aktif
+            if (empty($uniqueDosenIds)) {
+                $uniqueDosenIds = Dosen::where('is_aktif', true)->pluck('id')->all();
+                if (empty($uniqueDosenIds)) {
+                    $uniqueDosenIds = Dosen::pluck('id')->all();
+                }
+            }
+
+            foreach ($uniqueDosenIds as $dosenId) {
+                Notifikasi::create([
+                    'penerima_type' => Dosen::class,
+                    'penerima_id' => $dosenId,
+                    'judul' => $judul,
+                    'isi' => $isi,
+                    'tautan' => $tautan,
+                    'dibaca_pada' => null,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Failsafe agar kegagalan notifikasi tidak memutus alur penyimpanan berkas utama
+        }
+    }
+
     /** Menyimpan pengumpulan milestone & berkas pendukung (Pertemuan 6: Validasi & File Storage) */
     public function storeMilestoneUpload(Request $request, $id)
     {
@@ -638,7 +734,7 @@ class MahasiswaController extends Controller
                     return $existing;
                 }
 
-                $submission = new PengumpulanMilestone();
+                $submission = new PengumpulanMilestone;
                 $submission->fill($data);
                 $submission->created_at = now();
                 $submission->updated_at = now();
@@ -674,6 +770,15 @@ class MahasiswaController extends Controller
         if ($oldPath && $oldPath !== $storedPath) {
             Storage::disk('local')->delete($oldPath);
         }
+
+        $namaMilestone = Milestone::find($validated['milestone_id'])?->judul ?? 'Milestone';
+        $this->notifyDosenKelompok(
+            $kelompok,
+            'Laporan Milestone Dikumpulkan',
+            'Kelompok "'.$kelompok->nama_kelompok.'" telah mengumpulkan laporan "'.$namaMilestone.'" untuk mata kuliah '.$mataKuliah->nama_matkul.'.',
+            route('dosen.laporan-aktivitas.milestone', [$kelompok->id, $validated['milestone_id']]),
+            $mataKuliah->id
+        );
 
         return redirect()
             ->route('mahasiswa.milestone.detail', $mataKuliah->slug)
@@ -726,8 +831,20 @@ class MahasiswaController extends Controller
         $latarBelakang = $validated['latar_belakang'] ?? '-';
         $metode = $validated['metode'] ?? '-';
 
+        $existingProposal = Proposal::query()
+            ->where('kelompok_id', $kelompok->id)
+            ->latest()
+            ->first();
+        $nextVersion = $existingProposal ? (($existingProposal->riwayatProposal()->max('versi') ?? 1) + 1) : 1;
+
         $file = $request->file('file_proposal');
-        $filePath = $file->storeAs('proposals', Str::random(40).'.pdf', 'local');
+        $originalName = $file->getClientOriginalName();
+        $safeOriginalName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $originalName);
+        if (! str_ends_with(strtolower($safeOriginalName), '.pdf')) {
+            $safeOriginalName .= '.pdf';
+        }
+        $fileName = 'v'.$nextVersion.'_'.$safeOriginalName;
+        $filePath = $file->storeAs('proposals/'.$kelompok->id, $fileName, 'local');
 
         try {
             DB::transaction(function () use (
@@ -735,7 +852,8 @@ class MahasiswaController extends Controller
                 $kelompok,
                 $latarBelakang,
                 $metode,
-                $filePath
+                $filePath,
+                $nextVersion
             ) {
                 $existingProposal = Proposal::query()
                     ->where('kelompok_id', $kelompok->id)
@@ -744,8 +862,6 @@ class MahasiswaController extends Controller
                     ->first();
 
                 if ($existingProposal) {
-                    $nextVersion = ($existingProposal->riwayatProposal()->max('versi') ?? 0) + 1;
-
                     $existingProposal->update([
                         'judul' => $validated['judul'],
                         'deskripsi' => $validated['deskripsi'],
@@ -798,6 +914,14 @@ class MahasiswaController extends Controller
             throw $exception;
         }
 
+        $prop = Proposal::where('kelompok_id', $kelompok->id)->latest()->first();
+        $this->notifyDosenKelompok(
+            $kelompok,
+            'Pengajuan Proposal Proyek Baru',
+            'Kelompok "'.$kelompok->nama_kelompok.'" telah mengajukan proposal: "'.$validated['judul'].'". Silakan tinjau proposal tersebut.',
+            $prop ? route('dosen.laporan-aktivitas.proposal', $prop->id) : route('dosen.laporan-aktivitas')
+        );
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -807,6 +931,161 @@ class MahasiswaController extends Controller
         }
 
         return redirect()->route('mahasiswa.proposal')->with('success', 'Proposal berhasil diajukan dan sedang menunggu review dosen pembimbing!');
+    }
+
+    /**
+     * Memperbarui proposal proyek yang sudah ada.
+     */
+    public function updateProposal(Request $request, $id = null)
+    {
+        $kelompok = $this->kelompokAktif();
+
+        if (! $kelompok) {
+            return redirect()->route('mahasiswa.proposal')->withErrors([
+                'general' => 'Kelompok tidak ditemukan untuk periode aktif.',
+            ]);
+        }
+
+        $proposal = $id
+            ? Proposal::where('kelompok_id', $kelompok->id)->findOrFail($id)
+            : Proposal::where('kelompok_id', $kelompok->id)->latest()->firstOrFail();
+
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'tujuan' => 'required|string',
+            'latar_belakang' => 'nullable|string',
+            'metode' => 'nullable|string',
+            'file_proposal' => 'nullable|file|mimes:pdf|max:2048',
+        ], [
+            'judul.required' => 'Judul proyek wajib diisi.',
+            'deskripsi.required' => 'Deskripsi singkat wajib diisi.',
+            'tujuan.required' => 'Tujuan wajib diisi.',
+            'file_proposal.mimes' => 'Format berkas harus berupa PDF.',
+            'file_proposal.max' => 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.',
+        ]);
+
+        $latarBelakang = $validated['latar_belakang'] ?? $proposal->latar_belakang ?: '-';
+        $metode = $validated['metode'] ?? $proposal->metode ?: '-';
+
+        $filePath = $proposal->file_proposal;
+        $fileUploaded = false;
+        $nextVersion = ($proposal->riwayatProposal()->max('versi') ?? 1) + 1;
+
+        if ($request->hasFile('file_proposal')) {
+            $file = $request->file('file_proposal');
+            $originalName = $file->getClientOriginalName();
+            $safeOriginalName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $originalName);
+            if (! str_ends_with(strtolower($safeOriginalName), '.pdf')) {
+                $safeOriginalName .= '.pdf';
+            }
+            $fileName = 'v'.$nextVersion.'_'.$safeOriginalName;
+            $filePath = $file->storeAs('proposals/'.$kelompok->id, $fileName, 'local');
+            $fileUploaded = true;
+        }
+
+        try {
+            DB::transaction(function () use (
+                $proposal,
+                $validated,
+                $latarBelakang,
+                $metode,
+                $filePath,
+                $nextVersion
+            ) {
+
+                $proposal->update([
+                    'judul' => $validated['judul'],
+                    'deskripsi' => $validated['deskripsi'],
+                    'latar_belakang' => $latarBelakang,
+                    'tujuan' => $validated['tujuan'],
+                    'metode' => $metode,
+                    'file_proposal' => $filePath,
+                    'status' => 'diajukan',
+                    'catatan_revisi' => null,
+                    'tanggal_pengajuan' => now()->toDateString(),
+                ]);
+
+                RiwayatProposal::create([
+                    'proposal_id' => $proposal->id,
+                    'versi' => $nextVersion,
+                    'judul' => $validated['judul'],
+                    'file_proposal' => $filePath,
+                    'status' => 'diajukan',
+                    'catatan' => 'Pembaruan proposal (Versi '.str_pad((string) $nextVersion, 2, '0', STR_PAD_LEFT).')',
+                ]);
+            });
+        } catch (\Throwable $exception) {
+            if ($fileUploaded && $filePath) {
+                Storage::disk('local')->delete($filePath);
+            }
+
+            throw $exception;
+        }
+
+        $this->notifyDosenKelompok(
+            $kelompok,
+            'Pembaruan Proposal Proyek',
+            'Kelompok "'.$kelompok->nama_kelompok.'" telah memperbarui proposal: "'.$validated['judul'].'". Silakan tinjau kembali proposal tersebut.',
+            route('dosen.laporan-aktivitas.proposal', $proposal->id)
+        );
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Proposal berhasil diperbarui.',
+                'status' => 'diajukan',
+            ]);
+        }
+
+        return redirect()->route('mahasiswa.proposal')->with('success', 'Proposal berhasil diperbarui dan diajukan ulang ke dosen pembimbing!');
+    }
+
+    /**
+     * Menghapus proposal proyek beserta berkas dan riwayatnya.
+     */
+    public function destroyProposal(Request $request, $id = null)
+    {
+        $kelompok = $this->kelompokAktif();
+
+        if (! $kelompok) {
+            return redirect()->route('mahasiswa.proposal')->withErrors([
+                'general' => 'Kelompok tidak ditemukan untuk periode aktif.',
+            ]);
+        }
+
+        $proposal = $id
+            ? Proposal::where('kelompok_id', $kelompok->id)->findOrFail($id)
+            : Proposal::where('kelompok_id', $kelompok->id)->latest()->first();
+
+        if (! $proposal) {
+            return redirect()->route('mahasiswa.proposal')->withErrors([
+                'general' => 'Proposal tidak ditemukan.',
+            ]);
+        }
+
+        try {
+            DB::transaction(function () use ($proposal) {
+                if ($proposal->file_proposal && Storage::disk('local')->exists($proposal->file_proposal)) {
+                    Storage::disk('local')->delete($proposal->file_proposal);
+                }
+
+                foreach ($proposal->riwayatProposal as $riwayat) {
+                    if ($riwayat->file_proposal && $riwayat->file_proposal !== $proposal->file_proposal && Storage::disk('local')->exists($riwayat->file_proposal)) {
+                        Storage::disk('local')->delete($riwayat->file_proposal);
+                    }
+                }
+
+                $proposal->riwayatProposal()->delete();
+                $proposal->delete();
+            });
+        } catch (\Throwable $e) {
+            return redirect()->route('mahasiswa.proposal')->withErrors([
+                'general' => 'Gagal menghapus proposal: '.$e->getMessage(),
+            ]);
+        }
+
+        return redirect()->route('mahasiswa.proposal')->with('success', 'Proposal berhasil dihapus. Anda dapat mengajukan proposal baru.');
     }
 
     /**
@@ -826,7 +1105,7 @@ class MahasiswaController extends Controller
             abort(404, 'Berkas proposal tidak ditemukan.');
         }
 
-        $downloadName = 'proposal-'.$proposal->id.'.pdf';
+        $downloadName = $proposal->nama_berkas;
 
         if (Storage::disk('local')->exists($proposal->file_proposal)) {
             return Storage::disk('local')->download($proposal->file_proposal, $downloadName);
@@ -864,7 +1143,18 @@ class MahasiswaController extends Controller
             'hasil' => 'nullable|string',
             'kendala' => 'nullable|string',
             'rencana' => 'nullable|string',
+            'link_bukti' => 'nullable|string|max:500',
+            'file_bukti' => 'nullable|file|mimes:pdf,zip,png,jpg,jpeg|max:2048',
+        ], [
+            'file_bukti.max' => 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.',
+            'file_bukti.mimes' => 'Format file tidak didukung. Gunakan PDF, ZIP, PNG, atau JPG.',
         ]);
+
+        $filePath = null;
+        if ($request->hasFile('file_bukti')) {
+            $file = $request->file('file_bukti');
+            $filePath = $file->storeAs('logbook-attachments/'.$kelompok->id, Str::random(40).'.'.$file->getClientOriginalExtension(), 'local');
+        }
 
         $logbook = LogbookMilestone::create([
             'milestone_id' => null,
@@ -880,9 +1170,18 @@ class MahasiswaController extends Controller
             'hasil' => $validated['hasil'] ?? null,
             'kendala' => $validated['kendala'] ?? null,
             'rencana' => $validated['rencana'] ?? null,
+            'link_bukti' => $validated['link_bukti'] ?? null,
+            'file_bukti' => $filePath,
             'status' => 'diajukan',
             'feedback' => null,
         ]);
+
+        $this->notifyDosenKelompok(
+            $kelompok,
+            'Entri Logbook Baru',
+            'Kelompok "'.$kelompok->nama_kelompok.'" menambahkan catatan logbook baru: "'.$logbook->judul.'".',
+            route('dosen.laporan-aktivitas.logbook', $logbook->id)
+        );
 
         return response()->json([
             'success' => true,
@@ -896,6 +1195,9 @@ class MahasiswaController extends Controller
                 'hasil' => $logbook->hasil,
                 'rencana' => $logbook->rencana,
                 'kendala' => $logbook->kendala,
+                'link_bukti' => $logbook->link_bukti,
+                'file_bukti' => $logbook->file_bukti,
+                'file_name' => $logbook->file_bukti ? basename($logbook->file_bukti) : null,
                 'status' => 'Menunggu Review',
                 'feedback' => null,
             ],
@@ -911,18 +1213,9 @@ class MahasiswaController extends Controller
     {
         /** @var Mahasiswa|null $mahasiswa */
         $mahasiswa = Auth::guard('mahasiswa')->user();
+        $kelompok = $this->kelompokAktif();
 
-        if (! $mahasiswa) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sesi tidak valid. Silakan login kembali.',
-            ], 401);
-        }
-
-        /** @var Mahasiswa|null $mahasiswa */
-        $mahasiswa = Auth::guard('mahasiswa')->user();
-
-        if (! $mahasiswa) {
+        if (! $mahasiswa || ! $kelompok) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sesi tidak valid. Silakan login kembali.',
@@ -937,13 +1230,18 @@ class MahasiswaController extends Controller
             'hasil' => 'nullable|string',
             'kendala' => 'nullable|string',
             'rencana' => 'nullable|string',
+            'link_bukti' => 'nullable|string|max:500',
+            'file_bukti' => 'nullable|file|mimes:pdf,zip,png,jpg,jpeg|max:2048',
+        ], [
+            'file_bukti.max' => 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.',
+            'file_bukti.mimes' => 'Format file tidak didukung. Gunakan PDF, ZIP, PNG, atau JPG.',
         ]);
 
         $logbook = LogbookMilestone::where('id', $id)
             ->where('mahasiswa_id', $mahasiswa->id)
             ->firstOrFail();
 
-        $logbook->update([
+        $updateData = [
             'tanggal' => $validated['tanggal'],
             'judul' => $validated['judul'],
             'deskripsi' => $validated['deskripsi'] ?? null,
@@ -954,12 +1252,64 @@ class MahasiswaController extends Controller
             'hasil' => $validated['hasil'] ?? null,
             'kendala' => $validated['kendala'] ?? null,
             'rencana' => $validated['rencana'] ?? null,
-        ]);
+            'link_bukti' => $validated['link_bukti'] ?? $logbook->link_bukti,
+        ];
+
+        if ($request->hasFile('file_bukti')) {
+            $file = $request->file('file_bukti');
+            $updateData['file_bukti'] = $file->storeAs('logbook-attachments/'.$kelompok->id, Str::random(40).'.'.$file->getClientOriginalExtension(), 'local');
+        }
+
+        $logbook->update($updateData);
+
+        $this->notifyDosenKelompok(
+            $kelompok,
+            'Pembaruan Catatan Logbook',
+            'Kelompok "'.$kelompok->nama_kelompok.'" memperbarui catatan logbook: "'.$logbook->judul.'".',
+            route('dosen.laporan-aktivitas.logbook', $logbook->id)
+        );
 
         return response()->json([
             'success' => true,
             'message' => 'Catatan logbook berhasil diperbarui.',
-            'data' => array_merge($validated, ['id' => $id]),
+            'data' => array_merge($validated, [
+                'id' => $id,
+                'file_bukti' => $logbook->file_bukti,
+                'file_name' => $logbook->file_bukti ? basename($logbook->file_bukti) : null,
+            ]),
         ]);
+    }
+
+    /**
+     * Unduh berkas lampiran logbook.
+     */
+    public function downloadLogbook(int|string $id)
+    {
+        /** @var Mahasiswa|null $mahasiswa */
+        $mahasiswa = Auth::guard('mahasiswa')->user();
+        $kelompok = $this->kelompokAktif();
+
+        if (! $mahasiswa || ! $kelompok) {
+            abort(403);
+        }
+
+        $logbook = LogbookMilestone::where('kelompok_id', $kelompok->id)->findOrFail($id);
+
+        if (! $logbook->file_bukti) {
+            abort(404, 'Berkas logbook tidak ditemukan.');
+        }
+
+        $extension = pathinfo($logbook->file_bukti, PATHINFO_EXTENSION) ?: 'pdf';
+        $downloadName = 'Logbook-'.Str::slug($logbook->judul ?: 'PBL').'.'.$extension;
+
+        if (Storage::disk('local')->exists($logbook->file_bukti)) {
+            return Storage::disk('local')->download($logbook->file_bukti, $downloadName);
+        }
+
+        if (Storage::disk('public')->exists($logbook->file_bukti)) {
+            return Storage::disk('public')->download($logbook->file_bukti, $downloadName);
+        }
+
+        abort(404, 'Berkas bukti logbook tidak ditemukan.');
     }
 }

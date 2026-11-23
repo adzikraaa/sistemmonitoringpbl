@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\AnggotaKelompok;
+use App\Models\Dosen;
+use App\Models\DosenPengampu;
 use App\Models\Kelas;
 use App\Models\Kelompok;
 use App\Models\Mahasiswa;
@@ -90,12 +92,17 @@ class DummyKelompokService
                 return null;
             }
 
+            // Tentukan dosen pembimbing jika tersedia
+            $dosenId = DosenPengampu::where('kelas_id', $kelasId)->value('dosen_id')
+                ?? Dosen::where('is_aktif', true)->value('id')
+                ?? Dosen::query()->value('id');
+
             // Buat kelompok baru khusus untuk mahasiswa ini
             $namaKelompok = 'Kelompok Uji '.$lockedMahasiswa->nim;
             $kelompok = Kelompok::create([
                 'nama_kelompok' => $namaKelompok,
                 'judul_proyek' => null,
-                'dosen_id' => null,
+                'dosen_id' => $dosenId,
                 'kelas_id' => $kelasId,
                 'periode_id' => $periode->id,
                 'jadwal_bimbingan' => null,

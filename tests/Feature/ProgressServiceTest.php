@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Dosen;
 use App\Models\Kelas;
 use App\Models\Kelompok;
+use App\Models\LogbookMilestone;
 use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
 use App\Models\Milestone;
@@ -12,6 +13,7 @@ use App\Models\MilestoneMataKuliah;
 use App\Models\PengumpulanMilestone;
 use App\Models\PenyelesaianMilestone;
 use App\Models\Periode;
+use App\Models\Proposal;
 use App\Services\ProgressService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -302,5 +304,68 @@ class ProgressServiceTest extends TestCase
         }
 
         return $milestones;
+    }
+
+    public function test_proposal_dan_logbook_disetujui_menambah_progres_kelompok(): void
+    {
+        // 1. Awalnya belum ada milestone, proposal, logbook
+        $awal = $this->service->untukKelompok($this->kelompok);
+        $this->assertSame(0.0, $awal['persen']);
+
+        // 2. Mahasiswa mengajukan proposal (status diajukan -> 5%)
+        $proposal = Proposal::create([
+            'kelompok_id' => $this->kelompok->id,
+            'judul' => 'Proposal Sistem PBL',
+            'deskripsi' => 'Deskripsi proposal',
+            'latar_belakang' => 'Latar belakang proposal',
+            'tujuan' => 'Tujuan proposal',
+            'metode' => 'Metode proposal',
+            'status' => 'diajukan',
+            'tanggal_pengajuan' => now()->toDateString(),
+        ]);
+
+        $setelahDiajukan = $this->service->untukKelompok($this->kelompok);
+        $this->assertSame(5.0, $setelahDiajukan['persen']);
+
+        // 3. Dosen menyetujui proposal (status disetujui -> 15%)
+        $proposal->update(['status' => 'disetujui']);
+
+        $setelahDisetujui = $this->service->untukKelompok($this->kelompok);
+        $this->assertSame(15.0, $setelahDisetujui['persen']);
+
+        // 4. Mahasiswa memiliki logbook disetujui (4 dari target 8 -> 7.5%)
+        $mhs = Mahasiswa::create([
+            'nama' => 'Mhs Test',
+            'email' => 'mhs.test@pbl.com',
+            'password' => 'secret123',
+            'nim' => '2441070001',
+            'kelas_id' => $this->kelompok->kelas_id,
+            'is_aktif' => true,
+        ]);
+
+        for ($i = 1; $i <= 4; $i++) {
+            LogbookMilestone::create([
+                'kelompok_id' => $this->kelompok->id,
+                'mahasiswa_id' => $mhs->id,
+                'tanggal' => now()->toDateString(),
+                'judul' => 'Kegiatan Minggu '.$i,
+                'kegiatan' => 'Pengerjaan modul '.$i,
+                'progress' => 50,
+                'status' => 'disetujui',
+            ]);
+        }
+
+        // Total progres = 15% (proposal) + 7.5% (logbook) = 22.5%
+        $setelahLogbook = $this->service->untukKelompok($this->kelompok);
+        $this->assertSame(22.5, $setelahLogbook['persen']);
+
+        // 5. Selesaikan separuh milestone (9 dari 18 -> 50% * 70% = 35%)
+        foreach (array_slice($this->milestones, 0, 9) as $m) {
+            $this->selesaikan($m, $this->mataKuliahA);
+        }
+
+        // Total progres = 15% + 7.5% + 35% = 57.5%
+        $setelahMilestone = $this->service->untukKelompok($this->kelompok);
+        $this->assertSame(57.5, $setelahMilestone['persen']);
     }
 }

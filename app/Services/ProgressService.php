@@ -17,6 +17,8 @@ class ProgressService
                 ?? $this->kosong();
         }
 
+        $kelompok->load(['proposal', 'logbookMilestone']);
+
         return $this->untukDaftar([$kelompok])[$kelompok->id] ?? $this->kosong();
     }
 
@@ -26,7 +28,7 @@ class ProgressService
     }
 
     /**
-     * @return array<int, array{persen: float, selesai: int, total: int, punya_data: bool}>
+     * @return array<int, array{persen: float, selesai: int, total: int, punya_data: bool, detail?: array}>
      */
     public function untukDaftar(iterable $daftarKelompok): array
     {
@@ -42,13 +44,48 @@ class ProgressService
 
         $selesaiPerKelompok = $this->selesaiCountPerKelompok($kelompok->keys()->all());
 
+        $hasEagerLoaded = $kelompok->contains(
+            fn ($item) => $item instanceof Kelompok && ($item->relationLoaded('proposal') || $item->relationLoaded('logbookMilestone'))
+        );
+
+        $proposalMap = collect();
+        $logbookMap = collect();
+
+        if ($hasEagerLoaded) {
+            foreach ($kelompok as $id => $item) {
+                if ($item instanceof Kelompok) {
+                    if ($item->relationLoaded('proposal') && $item->proposal->isNotEmpty()) {
+                        $proposalMap[$id] = $item->proposal->last();
+                    }
+                    if ($item->relationLoaded('logbookMilestone') && $item->logbookMilestone->isNotEmpty()) {
+                        $logbookMap[$id] = $item->logbookMilestone;
+                    }
+                }
+            }
+        }
+
         $hasil = [];
 
         foreach ($kelompok as $id => $item) {
             $total = (int) ($totalPeriode[$item->periode_id] ?? 0);
             $selesai = (int) ($selesaiPerKelompok[$id.':'.$item->periode_id] ?? 0);
 
-            $hasil[$id] = $this->formatHasil($selesai, $total);
+            $propModel = $proposalMap->get($id);
+            $lbCollection = $logbookMap->get($id, collect());
+
+            $propStatus = $propModel?->status;
+            $lbDisetujuiCount = $lbCollection->filter(
+                fn ($lb) => in_array(strtolower(trim((string) $lb->status)), ['disetujui', 'approved'], true)
+            )->count();
+
+            $hasil[$id] = $this->formatHasilKomposit(
+                $selesai,
+                $total,
+                $propStatus,
+                $lbDisetujuiCount,
+                $propModel !== null,
+                $lbCollection->isNotEmpty()
+            );
         }
 
         return $hasil;
@@ -158,6 +195,56 @@ class ProgressService
             ->mapWithKeys(fn ($baris) => [
                 $baris->kelompok_id.':'.$baris->periode_id => (int) $baris->selesai,
             ]);
+    }
+
+    /**
+     * Format hasil perhitungan komposit PBL:
+     * - Proposal Proyek: 15%
+     * - Logbook Kegiatan: 15% (target 8 bimbingan per semester)
+     * - Milestone Mata Kuliah: 70%
+     *
+     * @return array{persen: float, selesai: int, total: int, punya_data: bool, detail?: array}
+     */
+    public function formatHasilKomposit(
+        int $selesai,
+        int $total,
+        ?string $propStatus,
+        int $lbDisetujuiCount,
+        bool $hasProposal = false,
+        bool $hasLogbook = false
+    ): array {
+        if (! $hasProposal && ! $hasLogbook) {
+            return $this->formatHasil($selesai, $total);
+        }
+
+        $normPropStatus = strtolower(trim((string) $propStatus));
+        $propPersen = match ($normPropStatus) {
+            'disetujui', 'approved' => 15.0,
+            'revisi', 'perlu-revisi' => 7.5,
+            'diajukan', 'menunggu-review', 'menunggu review' => 5.0,
+            default => 0.0,
+        };
+
+        $targetLogbook = 8;
+        $lbPersen = round(min(1.0, $lbDisetujuiCount / $targetLogbook) * 15.0, 2);
+
+        $msPersen = $total > 0 ? round(($selesai / $total) * 70.0, 2) : 0.0;
+
+        $totalPersen = min(100.0, round($propPersen + $lbPersen + $msPersen, 2));
+
+        return [
+            'persen' => $totalPersen,
+            'selesai' => $selesai,
+            'total' => $total,
+            'punya_data' => $total > 0 || $hasProposal || $hasLogbook,
+            'detail' => [
+                'proposal_persen' => $propPersen,
+                'logbook_persen' => $lbPersen,
+                'milestone_persen' => $msPersen,
+                'logbook_disetujui' => $lbDisetujuiCount,
+                'target_logbook' => $targetLogbook,
+            ],
+        ];
     }
 
     /**

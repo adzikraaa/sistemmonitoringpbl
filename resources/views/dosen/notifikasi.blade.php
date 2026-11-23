@@ -72,13 +72,16 @@
     <div class="sim-page-header__left">
         <p class="sim-page-header__eyebrow">PUSAT AKTIVITAS</p>
         <h1 class="sim-page-header__title">Notifikasi</h1>
-        <p class="sim-page-header__desc">Pantau pembaruan proposal, bimbingan, logbook, dan perkembangan proyek kelompokmu.</p>
+        <p class="sim-page-header__desc">Pemberitahuan pengingat berkas proposal, logbook, dan laporan milestone yang dikirimkan oleh kelompok mahasiswa.</p>
     </div>
     <div class="sim-page-header__right">
-        <button type="button" class="sim-btn-secondary notif-markall" data-mark-all-read style="border: 1px solid var(--sim-border); border-radius: 20px; padding: 8px 16px; background: #fff; gap: 8px; font-size: 13px; display: inline-flex; align-items: center; cursor: pointer;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Tandai semua dibaca
-        </button>
+        <form action="{{ route('dosen.notifikasi.baca-semua') }}" method="POST" style="margin: 0;">
+            @csrf
+            <button type="submit" class="sim-btn-secondary notif-markall" data-mark-all-read style="border: 1px solid var(--sim-border); border-radius: 20px; padding: 8px 16px; background: #fff; gap: 8px; font-size: 13px; display: inline-flex; align-items: center; cursor: pointer;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Tandai semua dibaca
+            </button>
+        </form>
     </div>
 </div>
 
@@ -176,14 +179,20 @@
                     @if($isRead)
                         <span style="font-size: 12px; color: #7B7B7B; font-weight: 500;">Sudah dibaca</span>
                     @else
-                        <button type="button" class="notif-action-btn" data-mark-read style="border: none; background: transparent; color: var(--sim-text-muted); cursor: pointer; font-weight: 500;">Tandai dibaca</button>
+                        <form action="{{ route('dosen.notifikasi.baca', $id) }}" method="POST" style="margin: 0;" class="notif-baca-form">
+                            @csrf
+                            <button type="submit" class="notif-action-btn" style="border: none; background: transparent; color: var(--sim-text-muted); cursor: pointer; font-weight: 500;">Tandai dibaca</button>
+                        </form>
                     @endif
                 </div>
             </div>
         @empty
             <div style="padding: 48px 24px; text-align: center; color: var(--sim-text-muted); background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 16px;">
-                <p style="font-size: 14px; margin: 0 0 6px; font-weight: 500; color: var(--sim-text-dark);">Tidak ada notifikasi saat ini.</p>
-                <p style="font-size: 12.5px; margin: 0;">Seluruh pembaruan bimbingan akan ditampilkan di sini.</p>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 12px; display: block;">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <p style="font-size: 14px; margin: 0 0 6px; font-weight: 500; color: var(--sim-text-dark);">Belum Ada Notifikasi</p>
+                <p style="font-size: 12.5px; margin: 0;">Notifikasi akan muncul di sini saat mahasiswa mengirimkan proposal, logbook, atau laporan milestone.</p>
             </div>
         @endforelse
 
@@ -195,92 +204,54 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const storageKey = 'sim_dosen_notifikasi_read';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-    const getSavedReads = () => {
-        try {
-            return JSON.parse(localStorage.getItem(storageKey) || '[]');
-        } catch (error) {
-            return [];
-        }
-    };
-
-    const saveReads = (ids) => {
-        localStorage.setItem(storageKey, JSON.stringify(ids));
-    };
-
-    const applyReadState = (card, isRead) => {
+    const applyReadState = (card) => {
         if (!card) return;
-
-        const id = card.dataset.notifId;
-        if (!id) return;
-
+        card.classList.add('is-read');
         const button = card.querySelector('[data-mark-read]');
-        const actionSpan = card.querySelector('.notif-actions span');
-
-        if (isRead) {
-            card.classList.add('is-read');
-            if (button) {
-                button.disabled = true;
-                button.textContent = 'Sudah dibaca';
-                button.style.color = '#7B7B7B';
-            }
-            if (actionSpan) {
-                actionSpan.textContent = 'Sudah dibaca';
-                actionSpan.style.color = '#7B7B7B';
-            }
-        } else {
-            card.classList.remove('is-read');
-            if (button) {
-                button.disabled = false;
-                button.textContent = 'Tandai dibaca';
-                button.style.color = 'var(--sim-text-muted)';
-            }
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Sudah dibaca';
+            button.style.color = '#7B7B7B';
+            button.style.cursor = 'default';
         }
+        const dot = card.querySelector('.notif-unread-dot');
+        if (dot) { dot.style.display = 'none'; }
     };
 
-    const refreshFromStorage = () => {
-        const readIds = new Set(getSavedReads());
-        document.querySelectorAll('.notif-card').forEach((card) => {
-            const id = card.dataset.notifId;
-            const isInitiallyRead = card.classList.contains('is-read');
-            applyReadState(card, id ? readIds.has(id) || isInitiallyRead : isInitiallyRead);
-        });
-    };
-
-    const setAsRead = (button) => {
-        if (!button) return;
-
-        const card = button.closest('.notif-card');
-        const id = card?.dataset.notifId;
-        if (!id) return;
-
-        const saved = new Set(getSavedReads());
-        saved.add(id);
-        saveReads([...saved]);
-        applyReadState(card, true);
-    };
-
+    // Tandai satu notifikasi dibaca via POST ke backend
     document.querySelectorAll('[data-mark-read]').forEach((button) => {
         button.addEventListener('click', function () {
-            setAsRead(this);
-        });
-    });
-
-    document.querySelectorAll('[data-mark-all-read]').forEach((button) => {
-        button.addEventListener('click', function () {
-            const allIds = Array.from(document.querySelectorAll('.notif-card')).map((card) => card.dataset.notifId).filter(Boolean);
-            saveReads(allIds);
-            document.querySelectorAll('.notif-card').forEach((card) => applyReadState(card, true));
+            const card = this.closest('.notif-card');
+            const id = card?.dataset.notifId;
+            if (!id || this.disabled) return;
 
             this.disabled = true;
-            this.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Semua sudah dibaca';
-            this.style.opacity = '0.7';
-            this.style.cursor = 'default';
+            this.textContent = 'Memproses...';
+
+            fetch(`{{ rtrim(url('dosen/notifikasi'), '/') }}/${id}/baca`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+            })
+            .then(res => res.json())
+            .then(() => applyReadState(card))
+            .catch(() => {
+                // fallback: tetap terapkan visual read state meski request gagal
+                applyReadState(card);
+            });
         });
     });
 
-    refreshFromStorage();
+    // Tandai semua dibaca — form POST sudah dihandle oleh browser (submit form),
+    // tapi kita juga terapkan visual update agar terasa responsif
+    document.querySelectorAll('[data-mark-all-read]').forEach((btn) => {
+        // Tombol ini sekarang ada di dalam form POST, biarkan form submit berjalan
+        // Visual update ditangani oleh Blade setelah redirect
+    });
 });
 </script>
 @endpush

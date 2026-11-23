@@ -34,10 +34,8 @@
 }
 
 .la-bottom-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 24px;
-    align-items: start;
+    display: block;
+    margin-top: 0;
 }
 
 .la-item {
@@ -120,9 +118,6 @@
     .la-filter-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    .la-bottom-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 @media (max-width: 768px) {
@@ -174,10 +169,10 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Ekspor rekap
         </button>
-        <button type="button" id="btnPerbaruiData" onclick="window.location.href='{{ route('dosen.laporan-aktivitas') }}'" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--sim-text-dark); cursor: pointer;">
+        <a href="{{ route('dosen.laporan-aktivitas') }}" id="btnPerbaruiData" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--sim-text-dark); cursor: pointer; text-decoration: none;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             Reset filter
-        </button>
+        </a>
     </div>
 </div>
 
@@ -252,14 +247,20 @@
 
             @forelse($aktivitasList as $item)
                 @php
-                    $detailUrl = route('dosen.kelompok.show', $item['kelompok_id'] ?? 1);
+                    $detailUrl = $item['url'] ?? (
+                        $item['jenis_laporan'] === 'logbook' && !empty($item['item_id'])
+                            ? route('dosen.laporan-aktivitas.logbook', $item['item_id'])
+                            : ($item['jenis_laporan'] === 'proposal' && !empty($item['item_id'])
+                                ? route('dosen.laporan-aktivitas.proposal', $item['item_id'])
+                                : route('dosen.kelompok.show', $item['kelompok_id'] ?? 1))
+                    );
                 @endphp
                 <a href="{{ $detailUrl }}"
                    class="la-item"
                    data-jenis-laporan="{{ $item['jenis_laporan'] }}"
                    data-status="{{ $item['status'] }}"
                    data-kelas="{{ $item['kelas'] }}"
-                   title="Buka detail kelompok {{ $item['kelompok_nama'] }}">
+                   title="Buka {{ $item['jenis_laporan'] }} {{ $item['kelompok_nama'] }}">
                     <div class="la-item__left">
                         <div style="width: 36px; height: 36px; border-radius: 10px; background: {{ $item['icon_bg'] }}; color: {{ $item['icon_color'] }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
                             @if($item['jenis_laporan'] === 'logbook')
@@ -275,9 +276,7 @@
                                 <span style="font-size: 11px; font-weight: 600; color: var(--sim-text-muted);">{{ $item['kelompok_nama'] }} - {{ $item['kelas'] }}</span>
                                 <span style="color: var(--sim-text-light);">•</span>
                                 <span style="font-size: 11px; color: var(--sim-text-muted);">{{ $item['proyek_nama'] }}</span>
-                                @if(!empty($item['is_database']))
-                                    <span style="font-size: 9.5px; font-weight: 700; background: #EAF4EE; color: #2E6B42; padding: 1px 6px; border-radius: 4px; text-transform: uppercase;">Database</span>
-                                @endif
+
                             </div>
                             <h3 style="font-size: 14.5px; font-weight: 600; color: var(--sim-text-dark); margin: 0 0 6px;">
                                 {{ $item['judul'] }}
@@ -349,7 +348,7 @@
         </div>
     </div>
 
-    {{-- Bottom Grid (2 Kolom: Prioritas & Statistik) --}}
+    {{-- Kartu Prioritas Bimbingan --}}
     <div class="la-bottom-grid">
 
         {{-- Kartu Kiri: Prioritas Bimbingan --}}
@@ -379,41 +378,6 @@
             </div>
         </div>
 
-        {{-- Kartu Kanan: Statistik Respon Dosen --}}
-        <div style="background: #FFFFFF; border: 1px solid var(--sim-border); border-radius: 20px; padding: 28px 32px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box;">
-            <div>
-                <p style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sim-text-muted); margin: 0 0 20px;">
-                    STATISTIK RESPON DOSEN
-                </p>
-
-                {{-- Rata-rata waktu tanggap --}}
-                <div style="margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="font-size: 13px; color: var(--sim-text-body);">Rata-rata waktu tanggap</span>
-                        <span style="font-size: 14px; font-weight: 600; color: var(--sim-text-dark);">1,4 hari</span>
-                    </div>
-                    <div style="width: 100%; height: 6px; background: #E8E2D9; border-radius: 3px; overflow: hidden;">
-                        <div style="width: 28%; height: 100%; background: #D97706; border-radius: 3px;"></div>
-                    </div>
-                </div>
-
-                {{-- Ketepatan logbook kelompok --}}
-                <div style="margin-bottom: 24px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="font-size: 13px; color: var(--sim-text-body);">Ketepatan logbook kelompok</span>
-                        <span style="font-size: 14px; font-weight: 600; color: var(--sim-text-dark);">91%</span>
-                    </div>
-                    <div style="width: 100%; height: 6px; background: #E8E2D9; border-radius: 3px; overflow: hidden;">
-                        <div style="width: 91%; height: 100%; background: #4A7C59; border-radius: 3px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--sim-text-muted);">
-                <span style="width: 6px; height: 6px; border-radius: 50%; background: #059669;"></span>
-                <span>Sinkronisasi otomatis aktif</span>
-            </div>
-        </div>
 
     </div>
 

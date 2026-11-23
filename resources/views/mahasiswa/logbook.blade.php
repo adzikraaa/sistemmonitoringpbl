@@ -144,6 +144,28 @@
                 </p>
                 @endif
 
+                {{-- Berkas Lampiran & Tautan Bukti --}}
+                @if(!empty($lb['file_bukti']) || !empty($lb['link_bukti']))
+                <div style="margin-top: 14px; padding: 10px 14px; background: #FAF7F3; border: 1px solid #EFEAE4; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; font-size: 12px;">
+                    @if(!empty($lb['file_bukti']))
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span>📎</span>
+                        <a href="{{ route('mahasiswa.logbook.download', $lb['id']) }}" class="sim-link" style="font-weight: 600; text-decoration: underline; color: #2E6B42;" title="Unduh lampiran">
+                            {{ $lb['file_name'] ?? 'Berkas Lampiran' }}
+                        </a>
+                    </div>
+                    @endif
+                    @if(!empty($lb['link_bukti']))
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span>🔗</span>
+                        <a href="{{ $lb['link_bukti'] }}" target="_blank" rel="noopener noreferrer" class="sim-link" style="text-decoration: underline; color: #2E6B42;">
+                            Tautan Bukti Pengerjaan
+                        </a>
+                    </div>
+                    @endif
+                </div>
+                @endif
+
                 {{-- Respons Pembimbing --}}
                 @if($lb['feedback'])
                 <div class="sim-lb-card__response">
@@ -345,6 +367,35 @@
                           rows="3"></textarea>
             </div>
 
+            {{-- 8. Tautan Bukti (opsional) --}}
+            <div class="sim-form-group">
+                <label class="sim-form-label" for="lb-link_bukti">Tautan bukti / repositori (opsional)</label>
+                <input type="url"
+                       id="lb-link_bukti"
+                       name="link_bukti"
+                       class="sim-form-input"
+                       placeholder="https://github.com/organisasi/proyek-pbl"
+                       autocomplete="off">
+            </div>
+
+            {{-- 9. Berkas Lampiran / Bukti Pengerjaan (opsional, maks 2MB) --}}
+            <div class="sim-form-group">
+                <label class="sim-form-label" for="lb-file_bukti">Berkas Lampiran / Bukti (opsional, Maks. 2 MB)</label>
+                <div id="lb-dropzone" onclick="document.getElementById('lb-file_bukti').click()" style="border: 2px dashed #CFC7BC; border-radius: 12px; padding: 18px; text-align: center; cursor: pointer; background: #FAF7F3; transition: background 0.15s;">
+                    <input type="file" id="lb-file_bukti" name="file_bukti" accept=".pdf,.zip,.png,.jpg,.jpeg" onchange="previewLbFile(this)" style="display: none;">
+                    <div id="lb-file-placeholder">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8C7A6B" stroke-width="1.8" style="margin: 0 auto 6px; display: block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <span style="font-size: 12px; font-weight: 600; color: var(--sim-text-dark); display: block;">Pilih berkas lampiran atau klik di sini</span>
+                        <span style="color: #7D746D; font-size: 11px; display: block; margin-top: 2px;">Format didukung: PDF, ZIP, PNG, JPG (Maks. 2 MB)</span>
+                    </div>
+                    <div id="lb-file-preview" style="display: none;">
+                        <span style="font-weight: 700; font-size: 12.5px; display: block;" id="lbFileName"></span>
+                        <span style="font-size: 11px; color: #7D746D; display: block; margin-top: 2px;" id="lbFileSize"></span>
+                    </div>
+                </div>
+                <p class="sim-form-error" id="lb-err-file_bukti" role="alert" style="display: none; color: #e11d48; font-size: 11.5px; margin-top: 4px;"></p>
+            </div>
+
             {{-- Footer: Batal & Simpan --}}
             <div class="sim-modal__footer">
                 <button type="button"
@@ -489,6 +540,13 @@ function openLogbookModal() {
     document.getElementById('lb-edit-id').value   = '';
     document.getElementById('lb-modal-title').textContent = 'Tambah logbook';
     document.getElementById('btn-lb-simpan').textContent  = 'Simpan';
+
+    document.getElementById('lb-link_bukti').value = '';
+    document.getElementById('lb-file_bukti').value = '';
+    document.getElementById('lb-file-placeholder').style.display = 'block';
+    document.getElementById('lb-file-preview').style.display = 'none';
+    var errFile = document.getElementById('lb-err-file_bukti');
+    if (errFile) { errFile.style.display = 'none'; errFile.textContent = ''; }
 }
 
 function closeLogbookModal() {
@@ -580,6 +638,34 @@ function lbValidate(data) {
     return valid;
 }
 
+function previewLbFile(input) {
+    var errEl = document.getElementById('lb-err-file_bukti');
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+        if (file.size > 2 * 1024 * 1024) {
+            if (errEl) {
+                errEl.textContent = 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.';
+                errEl.style.display = 'block';
+            }
+            input.value = '';
+            document.getElementById('lb-file-placeholder').style.display = 'block';
+            document.getElementById('lb-file-preview').style.display = 'none';
+            return;
+        }
+        if (errEl) {
+            errEl.style.display = 'none';
+            errEl.textContent = '';
+        }
+        document.getElementById('lb-file-placeholder').style.display = 'none';
+        document.getElementById('lb-file-preview').style.display = 'block';
+        document.getElementById('lbFileName').textContent = '📄 ' + file.name;
+        document.getElementById('lbFileSize').textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+    } else {
+        document.getElementById('lb-file-placeholder').style.display = 'block';
+        document.getElementById('lb-file-preview').style.display = 'none';
+    }
+}
+
 // ================================================================
 // SUBMIT – fetch ke controller, tambahkan card ke DOM
 // ================================================================
@@ -612,24 +698,46 @@ function submitLogbook(event) {
     var url     = isEdit
         ? '{{ route("mahasiswa.logbook.update", ":id") }}'.replace(':id', editId)
         : '{{ route("mahasiswa.logbook.store") }}';
-    var method  = isEdit ? 'PUT' : 'POST';
+
+    var formData = new FormData();
+    formData.append('tanggal', data.tanggal);
+    formData.append('judul', data.judul);
+    formData.append('deskripsi', data.deskripsi || '');
+    formData.append('progress', parseInt(data.progress, 10));
+    formData.append('hasil', data.hasil || '');
+    formData.append('kendala', data.kendala || '');
+    formData.append('rencana', data.rencana || '');
+
+    var linkVal = (document.getElementById('lb-link_bukti').value || '').trim();
+    if (linkVal) formData.append('link_bukti', linkVal);
+
+    var fileInput = document.getElementById('lb-file_bukti');
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        var f = fileInput.files[0];
+        if (f.size > 2 * 1024 * 1024) {
+            var errEl = document.getElementById('lb-err-file_bukti');
+            if (errEl) {
+                errEl.textContent = 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.';
+                errEl.style.display = 'block';
+            }
+            btn.disabled = false;
+            btn.textContent = isEdit ? 'Simpan Perubahan' : 'Simpan';
+            return;
+        }
+        formData.append('file_bukti', f);
+    }
+
+    if (isEdit) {
+        formData.append('_method', 'PUT');
+    }
 
     fetch(url, {
-        method : method,
+        method : 'POST',
         headers: {
-            'Content-Type'    : 'application/json',
             'X-CSRF-TOKEN'    : csrfToken,
             'Accept'          : 'application/json',
         },
-        body: JSON.stringify({
-            tanggal  : data.tanggal,
-            judul    : data.judul,
-            deskripsi: data.deskripsi,
-            progress : parseInt(data.progress, 10),
-            hasil    : data.hasil,
-            kendala  : data.kendala,
-            rencana  : data.rencana,
-        }),
+        body: formData,
     })
     .then(function (res) {
         if (!res.ok) {
@@ -640,14 +748,10 @@ function submitLogbook(event) {
     .then(function (json) {
         if (json.success) {
             closeLogbookModal();
-            if (isEdit) {
-                // Update card di DOM
-                lbUpdateCardInDOM(editId, data);
-                lbToast('Catatan logbook berhasil diperbarui!', 'success');
-            } else {
-                lbAddCardToDOM(data);
-                lbToast('Catatan logbook berhasil ditambahkan!', 'success');
-            }
+            lbToast(json.message || (isEdit ? 'Catatan logbook berhasil diperbarui!' : 'Catatan logbook berhasil ditambahkan!'), 'success');
+            setTimeout(function() {
+                window.location.reload();
+            }, 600);
         } else {
             throw new Error(json.message || 'Gagal menyimpan catatan.');
         }
@@ -869,6 +973,18 @@ function editLogbook(id) {
     document.getElementById('lb-hasil').value     = lb.hasil     || '';
     document.getElementById('lb-kendala').value   = lb.kendala   || '';
     document.getElementById('lb-rencana').value   = lb.rencana   || '';
+    document.getElementById('lb-link_bukti').value = lb.link_bukti || '';
+    document.getElementById('lb-file_bukti').value = '';
+
+    if (lb.file_name) {
+        document.getElementById('lb-file-placeholder').style.display = 'none';
+        document.getElementById('lb-file-preview').style.display = 'block';
+        document.getElementById('lbFileName').textContent = '📄 ' + lb.file_name;
+        document.getElementById('lbFileSize').textContent = '(Tersimpan)';
+    } else {
+        document.getElementById('lb-file-placeholder').style.display = 'block';
+        document.getElementById('lb-file-preview').style.display = 'none';
+    }
 
     lbClearAllErrors();
 

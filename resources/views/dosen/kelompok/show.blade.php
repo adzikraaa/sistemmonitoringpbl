@@ -26,12 +26,12 @@
     <!-- Card Header Kelompok -->
     <div class="bg-white border border-[#E4DED5] rounded-2xl p-6 mb-6 shadow-2xs">
         <span class="text-[10px] font-bold text-[#8C7A6B] uppercase tracking-widest block">
-            DETAIL KELOMPOK &bull; {{ $kelompok->kelas->nama_kelas ?? $kelompok->kelas ?? 'SIB 3B' }}
+            DETAIL KELOMPOK &bull; {{ $kelompok->kelas->nama_kelas ?? (is_string($kelompok->kelas) ? $kelompok->kelas : '-') }}
         </span>
         <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#1F1F1F] mt-1 mb-1">
-            {{ $kelompok->nama_kelompok ?? 'Kelompok 2' }} - {{ $kelompok->judul_proyek ?? 'Pengembangan Sistem Monitoring PBL' }}
+            {{ $kelompok->nama_kelompok ?? 'Kelompok' }} - {{ $kelompok->judul_proyek ?? 'Proyek PBL' }}
         </h1>
-        <p class="text-xs text-[#7D746D] mb-4">Semester Ganjil 2026/2027</p>
+        <p class="text-xs text-[#7D746D] mb-4">{{ $kelompok->periode->tahun_akademik ?? $tahunAkademik ?? 'Semester Ganjil 2026/2027' }}</p>
 
         <span class="inline-block border text-[11px] font-semibold px-3 py-1 rounded-md mb-6 {{ $statusBadge }}">
             {{ $kelompok->status ?? 'Berjalan' }}
@@ -40,7 +40,7 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-5 border-t border-[#EFEAE2] text-xs">
             <div>
                 <span class="text-[#8C7A6B] block mb-1">Dosen Pengampu</span>
-                <span class="font-bold text-[#1F1F1F]">{{ Auth::guard('dosen')->user()?->nama ?? 'Dian Subhi, S.Kom., M.Kom.' }}</span>
+                <span class="font-bold text-[#1F1F1F]">{{ $kelompok->dosen?->nama ?? Auth::guard('dosen')->user()?->nama ?? '-' }}</span>
             </div>
             <div>
                 <span class="text-[#8C7A6B] block mb-1">Anggota kelompok</span>
@@ -52,7 +52,7 @@
             </div>
             <div>
                 <span class="text-[#8C7A6B] block mb-1">Aktivitas terakhir</span>
-                <span class="font-bold text-[#1F1F1F]">{{ $kelompok->updated_at ? $kelompok->updated_at->format('d M Y') : '24 Okt 2026' }}</span>
+                <span class="font-bold text-[#1F1F1F]">{{ $kelompok->updated_at ? $kelompok->updated_at->format('d M Y') : '-' }}</span>
             </div>
         </div>
     </div>
@@ -91,43 +91,136 @@
             <h2 class="font-bold text-[#1F1F1F] text-base mb-0.5">Ringkasan administrasi &amp; aktivitas</h2>
             <p class="text-xs text-[#7D746D] mb-5">Status berdasarkan data yang tercatat.</p>
 
-            <div class="space-y-4 text-xs mb-6">
-                <div class="flex items-start justify-between gap-3 pb-4 border-b border-[#EFEAE2]">
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-[#EAF3EC] text-[#2F5C4A] flex items-center justify-center font-bold flex-shrink-0">✓</div>
-                        <div>
-                            <h4 class="font-bold text-[#1F1F1F]">Proposal proyek</h4>
-                            <p class="text-[#7D746D] text-[11px] mt-0.5">Proposal telah dikirim dan tercatat pada sistem.</p>
-                        </div>
-                    </div>
-                    <span class="bg-[#EAF3EC] text-[#2F5C4A] px-2.5 py-1 rounded-md text-[11px] font-semibold flex-shrink-0">Terkirim</span>
-                </div>
+            @php
+                $hasActivity = $proposal || $logbookList->isNotEmpty() || $pengumpulanMilestone->isNotEmpty();
+            @endphp
 
-                <div class="flex items-start justify-between gap-3 pb-4 border-b border-[#EFEAE2]">
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-[#EAF3EC] text-[#2F5C4A] flex items-center justify-center font-bold flex-shrink-0">&#9711;</div>
-                        <div>
-                            <h4 class="font-bold text-[#1F1F1F]">Logbook aktivitas</h4>
-                            <p class="text-[#7D746D] text-[11px] mt-0.5">{{ $kelompok->logbookMilestone->count() }} catatan aktivitas tersedia.</p>
+            @if($hasActivity)
+                <div class="space-y-4 text-xs mb-6">
+                    {{-- 1. Proposal Proyek (Hanya tampil jika ada data proposal) --}}
+                    @if($proposal)
+                        @php
+                            $proposalStatus = $proposal->status ?? 'Menunggu Review';
+                            $proposalBadge = match(strtolower($proposalStatus)) {
+                                'disetujui' => 'bg-[#EAF3EC] text-[#2F5C4A]',
+                                'revisi'    => 'bg-[#FDF2F2] text-[#B91C1C]',
+                                default     => 'bg-[#FFF7ED] text-[#C2410C]',
+                            };
+                            $proposalIcon = strtolower($proposalStatus) === 'disetujui' ? '✓' : '📄';
+                        @endphp
+                        <div class="flex items-start justify-between gap-3 pb-4 border-b border-[#EFEAE2]">
+                            <div class="flex gap-3 min-w-0">
+                                <div class="w-8 h-8 rounded-lg bg-[#EAF3EC] text-[#2F5C4A] flex items-center justify-center font-bold flex-shrink-0 text-xs">
+                                    {{ $proposalIcon }}
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-[#1F1F1F]">Proposal proyek</h4>
+                                    <p class="text-[#7D746D] text-[11px] mt-0.5 truncate" title="{{ $proposal->judul }}">
+                                        {{ $proposal->judul }}
+                                    </p>
+                                    <span class="text-[10px] text-[#8C7A6B] block mt-0.5">
+                                        Diajukan: {{ $proposal->tanggal_pengajuan ? $proposal->tanggal_pengajuan->format('d M Y') : ($proposal->created_at ? $proposal->created_at->format('d M Y') : '-') }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold block mb-1 {{ $proposalBadge }}">
+                                    {{ $proposalStatus }}
+                                </span>
+                                <a href="{{ route('dosen.laporan-aktivitas.proposal', $proposal->id) }}" class="text-[11px] font-semibold text-[#2F5C4A] hover:underline inline-flex items-center gap-0.5">
+                                    Periksa &rarr;
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                    <span class="bg-[#EAF3EC] text-[#2F5C4A] px-2.5 py-1 rounded-md text-[11px] font-semibold flex-shrink-0">Tersedia</span>
-                </div>
+                    @endif
 
-                <div class="flex items-start justify-between gap-3">
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-[#FFF7ED] text-[#C2410C] flex items-center justify-center font-bold flex-shrink-0">&#8599;</div>
-                        <div>
-                            <h4 class="font-bold text-[#1F1F1F]">Bukti pekerjaan</h4>
-                            <p class="text-[#7D746D] text-[11px] mt-0.5">Tautan dan berkas pendukung dapat diperiksa pada detail aktivitas.</p>
+                    {{-- 2. Logbook Aktivitas (Hanya tampil jika ada logbook) --}}
+                    @if($logbookList->isNotEmpty())
+                        @php
+                            $latestLogbook = $logbookList->sortByDesc('created_at')->first();
+                            $logbookStatus = $latestLogbook->status ?? 'Tersedia';
+                            $logbookBadge = match(strtolower($logbookStatus)) {
+                                'disetujui' => 'bg-[#EAF3EC] text-[#2F5C4A]',
+                                'revisi'    => 'bg-[#FDF2F2] text-[#B91C1C]',
+                                default     => 'bg-[#EAF3EC] text-[#2F5C4A]',
+                            };
+                        @endphp
+                        <div class="flex items-start justify-between gap-3 pb-4 border-b border-[#EFEAE2] last:border-b-0 last:pb-0">
+                            <div class="flex gap-3 min-w-0">
+                                <div class="w-8 h-8 rounded-lg bg-[#EAF3EC] text-[#2F5C4A] flex items-center justify-center font-bold flex-shrink-0">
+                                    &#9711;
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-[#1F1F1F]">Logbook aktivitas</h4>
+                                    <p class="text-[#7D746D] text-[11px] mt-0.5">
+                                        {{ $logbookList->count() }} catatan aktivitas tersedia.
+                                    </p>
+                                    @if($latestLogbook)
+                                        <span class="text-[10px] text-[#8C7A6B] block mt-0.5">
+                                            Terakhir: {{ $latestLogbook->tanggal ? $latestLogbook->tanggal->format('d M Y') : ($latestLogbook->created_at ? $latestLogbook->created_at->format('d M Y') : '-') }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold block mb-1 {{ $logbookBadge }}">
+                                    {{ $logbookList->count() }} Entri
+                                </span>
+                                <a href="{{ route('dosen.laporan-aktivitas') }}" class="text-[11px] font-semibold text-[#2F5C4A] hover:underline inline-flex items-center gap-0.5">
+                                    Lihat Logbook &rarr;
+                                </a>
+                            </div>
                         </div>
-                    </div>
+                    @endif
+
+                    {{-- 3. Pengumpulan Laporan Milestone (Hanya tampil jika ada milestone submission) --}}
+                    @if($pengumpulanMilestone->isNotEmpty())
+                        @php
+                            $latestMilestoneSub = $pengumpulanMilestone->first();
+                            $mNama = $latestMilestoneSub->milestone?->nama_milestone ?? ('Milestone ' . $latestMilestoneSub->milestone_id);
+                            $subStatus = $latestMilestoneSub->status ?? 'Terkirim';
+                            $subBadge = match(strtolower($subStatus)) {
+                                'disetujui' => 'bg-[#EAF3EC] text-[#2F5C4A]',
+                                'revisi'    => 'bg-[#FDF2F2] text-[#B91C1C]',
+                                default     => 'bg-[#FFF7ED] text-[#C2410C]',
+                            };
+                        @endphp
+                        <div class="flex items-start justify-between gap-3 pb-4 border-b border-[#EFEAE2] last:border-b-0 last:pb-0">
+                            <div class="flex gap-3 min-w-0">
+                                <div class="w-8 h-8 rounded-lg bg-[#FFF7ED] text-[#C2410C] flex items-center justify-center font-bold flex-shrink-0">
+                                    &#8599;
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-[#1F1F1F]">Laporan Milestone</h4>
+                                    <p class="text-[#7D746D] text-[11px] mt-0.5">
+                                        {{ $pengumpulanMilestone->count() }} berkas dikumpulkan ({{ $mNama }})
+                                    </p>
+                                    <span class="text-[10px] text-[#8C7A6B] block mt-0.5">
+                                        Terakhir: {{ $latestMilestoneSub->created_at ? $latestMilestoneSub->created_at->format('d M Y') : '-' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold block mb-1 {{ $subBadge }}">
+                                    {{ $subStatus }}
+                                </span>
+                                <a href="{{ route('dosen.laporan-aktivitas.milestone', [$kelompok->id, $latestMilestoneSub->milestone_id]) }}" class="text-[11px] font-semibold text-[#2F5C4A] hover:underline inline-flex items-center gap-0.5">
+                                    Tinjau &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    @endif
                 </div>
-            </div>
+            @else
+                <div class="py-8 text-center text-xs text-[#7D746D] border border-dashed border-[#E4DED5] rounded-xl bg-[#FBF9F5] mb-6">
+                    <p class="font-semibold text-[#1F1F1F] mb-1">Belum ada administrasi atau aktivitas</p>
+                    <p class="text-[11px] text-[#8C7A6B]">Kelompok ini belum mengirimkan proposal, logbook, maupun laporan milestone.</p>
+                </div>
+            @endif
 
             <a href="{{ route('dosen.laporan-aktivitas') }}"
             class="block w-full text-center py-2.5 bg-white border border-[#CFC7BC] hover:bg-[#FBF9F5] text-[#1F1F1F] text-xs font-semibold rounded-xl transition-colors">
-                Buka Laporan Aktivitas
+                Buka Semua Laporan Aktivitas
             </a>
         </div>
     </div>

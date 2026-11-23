@@ -1,5 +1,11 @@
 @extends('layouts.dosen')
 
+@php
+    /** @var \Illuminate\Pagination\LengthAwarePaginator<\App\Models\Kelompok> $kelompokList */
+    /** @var \Illuminate\Support\Collection<int, string>|array<string> $daftarKelas */
+    /** @var int|null $totalTerdaftar */
+@endphp
+
 @section('title', 'Kelompok Bimbingan')
 
 @section('breadcrumb')
@@ -151,7 +157,7 @@
                         </div>
                         <div>
                             <span class="text-[#8C7A6B] text-[11px] block mb-0.5">Aktivitas terakhir</span>
-                            <span class="font-bold text-[#1F1F1F]">{{ $item->updated_at ? $item->updated_at->format('d M Y') : '25 Okt 2026' }}</span>
+                            <span class="font-bold text-[#1F1F1F]">{{ $item->updated_at ? $item->updated_at->format('d M Y') : '-' }}</span>
                         </div>
                     </div>
 
@@ -159,15 +165,15 @@
                     <div class="mb-5">
                         <div class="flex justify-between text-xs mb-1.5">
                             <span class="text-[#7D746D]">Ringkasan catatan</span>
-                            <span class="font-bold text-[#1F1F1F]">{{ $item->progress_dummy }}%</span>
+                            <span class="font-bold text-[#1F1F1F]">{{ $item->progress ?? 0 }}%</span>
                         </div>
                         <div class="w-full bg-[#E9E1D5] rounded-full h-1.5 overflow-hidden">
-                            <div class="bg-[#2F5C4A] h-1.5 rounded-full" style="width: {{ $item->progress_dummy }}%"></div>
+                            <div class="bg-[#2F5C4A] h-1.5 rounded-full" style="width: {{ $item->progress ?? 0 }}%"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tombol Detail -->
+                {{-- Tombol Detail --}}
                 <div class="text-right">
                     <a href="{{ route('dosen.kelompok.show', $item->id) }}" class="inline-flex items-center justify-center px-4 py-2 bg-[#2F5C4A] hover:bg-[#234739] text-white text-xs font-semibold rounded-lg transition-colors">
                         Lihat detail &rarr;

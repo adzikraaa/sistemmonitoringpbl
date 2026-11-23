@@ -9,6 +9,7 @@ use App\Models\Kelompok;
 use App\Models\MataKuliah;
 use App\Models\Milestone;
 use App\Models\MilestoneMataKuliah;
+use App\Models\PengumpulanMilestone;
 use App\Models\PenyelesaianMilestone;
 use App\Models\Periode;
 use App\Models\RiwayatPenyelesaianMilestone;
@@ -19,6 +20,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PenyelesaianMilestoneTest extends TestCase
@@ -353,5 +355,105 @@ class PenyelesaianMilestoneTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseCount('penyelesaian_milestone', 0);
+    }
+
+    public function test_halaman_index_menampilkan_laporan_mahasiswa_sesuai_mata_kuliah(): void
+    {
+        PengumpulanMilestone::create([
+            'milestone_id' => $this->milestone->id,
+            'kelompok_id' => $this->kelompokA->id,
+            'mata_kuliah' => $this->mataKuliahA->slug,
+            'file_name' => 'laporan_pwl.pdf',
+            'file_path' => 'milestone-submissions/test/laporan_pwl.pdf',
+            'catatan' => 'Catatan PWL mahasiswa',
+            'status' => 'dikumpulkan',
+        ]);
+
+        $response = $this->actingAs($this->dosenA, 'dosen')
+            ->get(route('dosen.penyelesaian-milestone.index'));
+
+        $response->assertOk();
+        $response->assertSee('laporan_pwl.pdf');
+        $response->assertSee('Catatan PWL mahasiswa');
+        $response->assertSee(route('dosen.penyelesaian-milestone.download', [
+            $this->kelompokA,
+            $this->milestone,
+            $this->mataKuliahA,
+        ]));
+    }
+
+    public function test_dosen_dapat_mengunduh_laporan_milestone_milik_kelas_dan_matkul_yang_diampu(): void
+    {
+        Storage::fake('local');
+        $filePath = 'milestone-submissions/test/laporan_pwl.pdf';
+        Storage::disk('local')->put($filePath, 'konten file laporan');
+
+        PengumpulanMilestone::create([
+            'milestone_id' => $this->milestone->id,
+            'kelompok_id' => $this->kelompokA->id,
+            'mata_kuliah' => $this->mataKuliahA->slug,
+            'file_name' => 'laporan_asli.pdf',
+            'file_path' => $filePath,
+            'status' => 'dikumpulkan',
+        ]);
+
+        $response = $this->actingAs($this->dosenA, 'dosen')
+            ->get(route('dosen.penyelesaian-milestone.download', [
+                $this->kelompokA,
+                $this->milestone,
+                $this->mataKuliahA,
+            ]));
+
+        $response->assertOk();
+        $response->assertDownload('laporan_asli.pdf');
+    }
+
+    public function test_dosen_ditolak_mengunduh_laporan_jika_bukan_pengampu_matkul_atau_kelas(): void
+    {
+        Storage::fake('local');
+        $filePath = 'milestone-submissions/test/laporan_pwl.pdf';
+        Storage::disk('local')->put($filePath, 'konten file');
+
+        PengumpulanMilestone::create([
+            'milestone_id' => $this->milestone->id,
+            'kelompok_id' => $this->kelompokA->id,
+            'mata_kuliah' => $this->mataKuliahA->slug,
+            'file_name' => 'laporan_asli.pdf',
+            'file_path' => $filePath,
+            'status' => 'dikumpulkan',
+        ]);
+
+        // dosenB does not teach kelompokA's class for mataKuliahA
+        $response = $this->actingAs($this->dosenB, 'dosen')
+            ->get(route('dosen.penyelesaian-milestone.download', [
+                $this->kelompokA,
+                $this->milestone,
+                $this->mataKuliahA,
+            ]));
+
+        $response->assertForbidden();
+    }
+
+    public function test_unduh_laporan_404_jika_file_tidak_ditemukan(): void
+    {
+        Storage::fake('local');
+
+        PengumpulanMilestone::create([
+            'milestone_id' => $this->milestone->id,
+            'kelompok_id' => $this->kelompokA->id,
+            'mata_kuliah' => $this->mataKuliahA->slug,
+            'file_name' => 'laporan_hilang.pdf',
+            'file_path' => 'milestone-submissions/test/laporan_hilang.pdf',
+            'status' => 'dikumpulkan',
+        ]);
+
+        $response = $this->actingAs($this->dosenA, 'dosen')
+            ->get(route('dosen.penyelesaian-milestone.download', [
+                $this->kelompokA,
+                $this->milestone,
+                $this->mataKuliahA,
+            ]));
+
+        $response->assertNotFound();
     }
 }

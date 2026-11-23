@@ -6,6 +6,7 @@ use App\Models\Dosen;
 use App\Models\Kelas;
 use App\Models\Kelompok;
 use App\Models\Mahasiswa;
+use App\Models\Notifikasi;
 use App\Models\Periode;
 use App\Models\Proposal;
 use App\Models\RiwayatProposal;
@@ -276,6 +277,80 @@ class MahasiswaProposalPersistenceTest extends TestCase
 
         $this->assertDatabaseMissing('proposal', ['status' => 'disetujui']);
         $this->assertDatabaseHas('proposal', ['status' => 'diajukan']);
+    }
+
+    public function test_mahasiswa_dapat_mengedit_proposal(): void
+    {
+        $this->fakeDisks();
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->post(route('mahasiswa.proposal.store'), $this->payload('Proposal Awal'));
+
+        $proposal = Proposal::firstOrFail();
+
+        $response = $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->put(route('mahasiswa.proposal.update', $proposal->id), [
+                'judul' => 'Proposal Diperbarui',
+                'deskripsi' => 'Deskripsi baru.',
+                'tujuan' => 'Tujuan baru.',
+                'latar_belakang' => 'Latar belakang baru.',
+                'metode' => 'Metode baru.',
+            ]);
+
+        $response->assertRedirect(route('mahasiswa.proposal'));
+        $proposal->refresh();
+
+        $this->assertSame('Proposal Diperbarui', $proposal->judul);
+        $this->assertSame('diajukan', $proposal->status);
+        $this->assertCount(2, $proposal->riwayatProposal);
+        $this->assertDatabaseHas('notifikasi', [
+            'penerima_type' => Dosen::class,
+            'penerima_id' => $this->kelompok->dosen_id,
+            'judul' => 'Pembaruan Proposal Proyek',
+        ]);
+    }
+
+    public function test_mahasiswa_dapat_menghapus_proposal(): void
+    {
+        $this->fakeDisks();
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->post(route('mahasiswa.proposal.store'), $this->payload('Proposal Akan Dihapus'));
+
+        $proposal = Proposal::firstOrFail();
+        $filePath = $proposal->file_proposal;
+
+        Storage::disk('local')->assertExists($filePath);
+
+        $response = $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->delete(route('mahasiswa.proposal.destroy', $proposal->id));
+
+        $response->assertRedirect(route('mahasiswa.proposal'));
+        $this->assertDatabaseMissing('proposal', ['id' => $proposal->id]);
+        $this->assertDatabaseMissing('riwayat_proposal', ['proposal_id' => $proposal->id]);
+        Storage::disk('local')->assertMissing($filePath);
+    }
+
+    public function test_notifikasi_dapat_ditandai_sudah_dibaca(): void
+    {
+        $notif = Notifikasi::create([
+            'penerima_type' => Mahasiswa::class,
+            'penerima_id' => $this->mahasiswa->id,
+            'judul' => 'Uji Notifikasi',
+            'isi' => 'Isi notifikasi',
+            'tautan' => route('mahasiswa.proposal'),
+            'dibaca_pada' => null,
+        ]);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->post(route('mahasiswa.notifikasi.baca', $notif->id))
+            ->assertRedirect();
+
+        $this->assertNotNull($notif->fresh()->dibaca_pada);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->post(route('mahasiswa.notifikasi.baca-semua'))
+            ->assertRedirect();
     }
 
     private function payload(string $judul): array
