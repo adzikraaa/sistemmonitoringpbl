@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
+/**
+ * @property int $id
+ * @property string $nama_kelompok
+ * @property string|null $judul_proyek
+ * @property int|null $dosen_id
+ * @property int|null $kelas_id
+ * @property int|null $periode_id
+ * @property string|null $jadwal_bimbingan
+ * @property string|null $status
+ * @property Carbon|null $tanggal_dibuat
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property int|null $progress
+ * @property Kelas|null $kelas
+ * @property Dosen|null $dosen
+ * @property Periode|null $periode
+ * @property \Illuminate\Database\Eloquent\Collection<int, AnggotaKelompok> $anggotaKelompok
+ * @property \Illuminate\Database\Eloquent\Collection<int, LogbookMilestone> $logbookMilestone
+ * @property \Illuminate\Database\Eloquent\Collection<int, Proposal> $proposal
+ */
 class Kelompok extends Model
 {
     protected $table = 'kelompok';

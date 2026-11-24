@@ -603,7 +603,7 @@
                     @endphp
                     <tr data-status="{{ $status }}">
                         <td>
-                            <p class="dd-kelompok-name">{{ $k['nama'] ?? 'Kelompok' }}</p>
+                            <a class="dd-kelompok-name hover:underline" href="{{ route('dosen.kelompok.show', $k['id']) }}">{{ $k['nama'] ?? 'Kelompok' }}</a>
                             <p class="dd-kelompok-kelas">#{{ $k['kelas'] ?? '-' }}</p>
                         </td>
                         <td>{{ $k['proyek'] ?? '-' }}</td>
@@ -659,7 +659,7 @@
                     Sedikit pertanyaan mungkin cukup untuk membantu mereka
                     kembali menemukan ritmenya.
                 </p>
-                <button class="dd-sinyal-btn">Kirim pengingat →</button>
+                <a class="dd-sinyal-btn" href="{{ route('dosen.kelompok') }}">Lihat kelompok →</a>
             @else
                 <h3 class="dd-sinyal-empty-title">Semua kelompok<br>aktif minggu ini! 🎉</h3>
             @endif
@@ -671,7 +671,7 @@
 
             <ul class="dd-review-list">
                 @forelse($pendingReviews ?? [] as $review)
-                <li class="dd-review-item">
+                <li class="dd-review-item" data-url="{{ $review['url'] ?? '#' }}" onclick="if (this.dataset.url &amp;&amp; this.dataset.url !== '#') { window.location.href = this.dataset.url; }" style="cursor: pointer;">
                     <div class="dd-review-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8934A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>

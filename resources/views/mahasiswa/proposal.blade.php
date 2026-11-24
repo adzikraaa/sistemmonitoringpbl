@@ -34,10 +34,27 @@
         <p class="sim-page-header__desc">Satu dokumen yang menyatukan alasan, arah, dan cara kerja kelompok.</p>
     </div>
     <div class="sim-page-header__right">
-        <button id="btn-ajukan-proposal" class="sim-btn-primary" onclick="openProposalModal()">
-            <span class="sim-btn-primary__plus">+</span>
-            Ajukan proposal
-        </button>
+        @if(!empty($proposalData['id']))
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="sim-btn-secondary" onclick="openEditProposalModal()" style="display: inline-flex; align-items: center; gap: 6px; border: 1px solid #CFC7BC; background: #fff; padding: 10px 18px; border-radius: 20px; font-weight: 600; cursor: pointer; color: #2D2621;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Edit proposal
+                </button>
+                <form action="{{ route('mahasiswa.proposal.destroy', $proposalData['id']) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus proposal ini? Tindakan ini tidak dapat dibatalkan.')" style="margin: 0;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="sim-btn-danger" style="display: inline-flex; align-items: center; gap: 6px; border: 1px solid #FCA5A5; background: #FEF2F2; color: #991B1B; padding: 10px 18px; border-radius: 20px; font-weight: 600; cursor: pointer;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        Hapus
+                    </button>
+                </form>
+            </div>
+        @else
+            <button id="btn-ajukan-proposal" class="sim-btn-primary" onclick="openProposalModal()">
+                <span class="sim-btn-primary__plus">+</span>
+                Ajukan proposal
+            </button>
+        @endif
     </div>
 </div>
 
@@ -155,6 +172,7 @@
 
         <form id="proposal-form" class="sim-modal__form" action="{{ route('mahasiswa.proposal.store') }}" method="POST" enctype="multipart/form-data" onsubmit="submitProposal(event)" novalidate>
             @csrf
+            <input type="hidden" name="_method" id="proposal-method-input" value="POST">
 
             <div class="sim-form-group">
                 <label class="sim-form-label" for="field-judul">Judul proyek <span style="color: #e11d48;">*</span></label>
@@ -200,7 +218,7 @@
             {{-- Dropzone Upload Berkas Proposal PDF (Paling Bawah) --}}
             <div class="sim-form-group">
                 <label class="sim-form-label" for="fileProposalInput">
-                    Pengumpulan Berkas Proposal <span style="color: #e11d48;">*</span> 
+                    Pengumpulan Berkas Proposal <span id="fileProposalRequiredAsterisk" style="color: #e11d48;">*</span> 
                     <span style="font-weight: 400; color: #7D746D; font-size: 11px;">(PDF maks 2 MB)</span>
                 </label>
                 <div onclick="document.getElementById('fileProposalInput').click()" 
@@ -319,13 +337,66 @@
 // ============================================================
 // MODAL CONTROL & DROPZONE
 // ============================================================
+let isEditMode = false;
+const proposalExistingData = @json($proposalData ?? []);
+
 function openProposalModal() {
+    isEditMode = false;
     const overlay = document.getElementById('proposal-modal-overlay');
     overlay.classList.add('sim-modal-overlay--visible');
     document.body.style.overflow = 'hidden';
+
+    document.getElementById('modal-title').textContent = 'Ajukan proposal baru';
+    document.getElementById('proposal-form').action = "{{ route('mahasiswa.proposal.store') }}";
+    document.getElementById('proposal-method-input').value = 'POST';
+    document.getElementById('btn-submit-proposal').textContent = 'Kirim proposal';
+    
+    const asterisk = document.getElementById('fileProposalRequiredAsterisk');
+    if (asterisk) asterisk.style.display = 'inline';
+    const fileInput = document.getElementById('fileProposalInput');
+    if (fileInput) fileInput.required = true;
+
     // Reset form
     document.getElementById('proposal-form').reset();
     resetProposalDropzone();
+    clearAllErrors();
+}
+
+function openEditProposalModal() {
+    isEditMode = true;
+    const overlay = document.getElementById('proposal-modal-overlay');
+    overlay.classList.add('sim-modal-overlay--visible');
+    document.body.style.overflow = 'hidden';
+
+    const proposalTitle = proposalExistingData.judul || 'Proposal';
+    document.getElementById('modal-title').textContent = 'Edit proposal: ' + proposalTitle;
+    document.getElementById('proposal-form').action = "{{ !empty($proposalData['id']) ? route('mahasiswa.proposal.update', $proposalData['id']) : route('mahasiswa.proposal.store') }}";
+    document.getElementById('proposal-method-input').value = 'PUT';
+    document.getElementById('btn-submit-proposal').textContent = 'Simpan perubahan proposal';
+
+    const asterisk = document.getElementById('fileProposalRequiredAsterisk');
+    if (asterisk) asterisk.style.display = 'none';
+    const fileInput = document.getElementById('fileProposalInput');
+    if (fileInput) fileInput.required = false;
+
+    // Pre-fill values
+    document.getElementById('field-judul').value = proposalExistingData.judul || '';
+    document.getElementById('field-deskripsi').value = proposalExistingData.deskripsi || '';
+    document.getElementById('field-tujuan').value = proposalExistingData.tujuan || '';
+
+    resetProposalDropzone();
+    if (proposalExistingData.file_name) {
+        const emptyEl = document.getElementById('proposalDropzoneEmpty');
+        const filledEl = document.getElementById('proposalDropzoneFilled');
+        const nameEl = document.getElementById('proposalFileName');
+        const sizeEl = document.getElementById('proposalFileSize');
+
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (filledEl) filledEl.style.display = 'block';
+        if (nameEl) nameEl.textContent = '📄 ' + proposalExistingData.file_name;
+        if (sizeEl) sizeEl.textContent = '(Berkas tersimpan saat ini)';
+    }
+
     clearAllErrors();
 }
 
@@ -465,17 +536,30 @@ function validateForm(data) {
     }
 
     const fileInput = document.getElementById('fileProposalInput');
-    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-        showError('file_proposal', 'Berkas proposal (PDF) wajib diunggah.');
-        valid = false;
+    if (!isEditMode) {
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            showError('file_proposal', 'Berkas proposal (PDF) wajib diunggah.');
+            valid = false;
+        } else {
+            const file = fileInput.files[0];
+            if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+                showError('file_proposal', 'Format berkas harus berupa PDF.');
+                valid = false;
+            } else if (file.size > 2 * 1024 * 1024) {
+                showError('file_proposal', 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.');
+                valid = false;
+            }
+        }
     } else {
-        const file = fileInput.files[0];
-        if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-            showError('file_proposal', 'Format berkas harus berupa PDF.');
-            valid = false;
-        } else if (file.size > 2 * 1024 * 1024) {
-            showError('file_proposal', 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.');
-            valid = false;
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+                showError('file_proposal', 'Format berkas harus berupa PDF.');
+                valid = false;
+            } else if (file.size > 2 * 1024 * 1024) {
+                showError('file_proposal', 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.');
+                valid = false;
+            }
         }
     }
 
@@ -498,7 +582,7 @@ function submitProposal(event) {
 
     const btn = document.getElementById('btn-submit-proposal');
     btn.disabled = true;
-    btn.textContent = 'Mengunggah proposal...';
+    btn.textContent = isEditMode ? 'Menyimpan perubahan...' : 'Mengunggah proposal...';
 
     // Submit form secara langsung ke backend Laravel
     document.getElementById('proposal-form').submit();

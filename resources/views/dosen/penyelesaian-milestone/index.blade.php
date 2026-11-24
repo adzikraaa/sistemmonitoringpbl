@@ -80,47 +80,108 @@
                             $key = $kelompok->id.':'.$milestone->id.':'.$mataKuliah->id;
                             $row = $statusMap->get($key);
                             $status = $row?->status ?? 'belum_dimulai';
+                            $pengumpulanKey = $kelompok->id.':'.$milestone->id.':'.$mataKuliah->slug;
+                            $pengumpulan = $pengumpulanMap->get($pengumpulanKey);
                         @endphp
 
-                        <form method="POST"
-                              action="{{ route('dosen.penyelesaian-milestone.update', [$kelompok, $milestone, $mataKuliah]) }}"
-                              class="grid grid-cols-1 md:grid-cols-[1fr_150px_1fr_110px] gap-3 items-center py-3 border-t border-[#F0EAE2] first:border-t-0">
-                            @csrf
-                            @method('PATCH')
+                        <div class="py-3.5 border-t border-[#F0EAE2] first:border-t-0 space-y-2.5">
+                            <form method="POST"
+                                  action="{{ route('dosen.penyelesaian-milestone.update', [$kelompok, $milestone, $mataKuliah]) }}"
+                                  class="grid grid-cols-1 md:grid-cols-[1fr_150px_1fr_110px] gap-3 items-center">
+                                @csrf
+                                @method('PATCH')
 
-                            <div>
-                                <p class="text-xs font-semibold text-[#1F1F1F]">{{ $milestone->judul }}</p>
-                                <p class="text-[11px] text-[#8C7A6B]">
-                                    {{ $milestone->kode }} &bull;
-                                    {{ $milestone->deadline ? $milestone->deadline->format('d M Y') : 'Tanpa tenggat' }}
-                                </p>
+                                <div>
+                                    <p class="text-xs font-semibold text-[#1F1F1F]">{{ $milestone->judul }}</p>
+                                    <p class="text-[11px] text-[#8C7A6B]">
+                                        {{ $milestone->kode }} &bull;
+                                        {{ $milestone->deadline ? $milestone->deadline->format('d M Y') : 'Tanpa tenggat' }}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label class="sr-only" for="status-{{ $key }}">Status</label>
+                                    <select id="status-{{ $key }}" name="status"
+                                            class="w-full bg-white border border-[#CFC7BC] rounded-lg px-2.5 py-2 text-xs">
+                                        @foreach ($statusLabels as $value => $label)
+                                            <option value="{{ $value }}" {{ $status === $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="sr-only" for="catatan-{{ $key }}">Catatan Dosen</label>
+                                    <input id="catatan-{{ $key }}" type="text" name="catatan"
+                                           value="{{ $row?->catatan }}"
+                                           placeholder="Catatan dosen (opsional)"
+                                           class="w-full bg-white border border-[#CFC7BC] rounded-lg px-2.5 py-2 text-xs">
+                                </div>
+
+                                <button type="submit"
+                                        class="px-3 py-2 bg-[#2F5C4A] hover:bg-[#234739] text-white text-xs font-semibold rounded-lg">
+                                    Simpan
+                                </button>
+                            </form>
+
+                            {{-- Student Submission Info (Pengumpulan Milestone) --}}
+                            <div class="bg-[#FAF8F5] border border-[#EFEAE2] rounded-lg p-3 text-xs">
+                                @if ($pengumpulan)
+                                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                        <div class="space-y-1">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#E8F0EC] text-[#2F5C4A]">
+                                                    Laporan Terkumpul
+                                                </span>
+                                                <span class="font-medium text-[#1F1F1F]">{{ $pengumpulan->file_name ?? 'Berkas Laporan' }}</span>
+                                                @if ($pengumpulan->created_at)
+                                                    <span class="text-[#8C7A6B] text-[11px]">&bull; {{ $pengumpulan->created_at->format('d M Y H:i') }}</span>
+                                                @endif
+                                            </div>
+                                            @if ($pengumpulan->catatan)
+                                                <p class="text-[#594E42] text-[11px]">
+                                                    <span class="font-medium text-[#1F1F1F]">Catatan Mahasiswa:</span> {{ $pengumpulan->catatan }}
+                                                </p>
+                                            @endif
+                                            @if ($pengumpulan->link_bukti)
+                                                <p class="text-[11px]">
+                                                    <span class="font-medium text-[#1F1F1F]">Tautan Bukti:</span>
+                                                    <a href="{{ $pengumpulan->link_bukti }}" target="_blank" rel="noopener noreferrer" class="text-[#2F5C4A] underline hover:text-[#234739]">
+                                                        {{ $pengumpulan->link_bukti }}
+                                                    </a>
+                                                </p>
+                                            @endif
+                                        </div>
+
+                                        @if ($pengumpulan->file_path)
+                                            <div class="shrink-0 flex items-center gap-2">
+                                                <a href="{{ route('dosen.laporan-aktivitas.milestone', [$kelompok, $milestone]) }}"
+                                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FAF7F3] hover:bg-[#F0EBE1] border border-[#CFC7BC] text-[#2E6B42] rounded-lg font-semibold text-xs transition-colors shadow-2xs"
+                                                   title="Buka halaman review milestone terpadu">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                    Tinjau Terpadu
+                                                </a>
+                                                <a href="{{ route('dosen.penyelesaian-milestone.download', [$kelompok, $milestone, $mataKuliah]) }}"
+                                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F5F1EB] border border-[#CFC7BC] text-[#1F1F1F] rounded-lg font-medium text-xs transition-colors shadow-2xs">
+                                                    <svg class="w-3.5 h-3.5 text-[#594E42]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                    </svg>
+                                                    Unduh Berkas
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="flex items-center gap-2 text-[#8C7A6B]">
+                                        <svg class="w-4 h-4 text-[#CFC7BC] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>Laporan belum dikumpulkan oleh kelompok mahasiswa untuk mata kuliah ini.</span>
+                                    </div>
+                                @endif
                             </div>
-
-                            <div>
-                                <label class="sr-only" for="status-{{ $key }}">Status</label>
-                                <select id="status-{{ $key }}" name="status"
-                                        class="w-full bg-white border border-[#CFC7BC] rounded-lg px-2.5 py-2 text-xs">
-                                    @foreach ($statusLabels as $value => $label)
-                                        <option value="{{ $value }}" {{ $status === $value ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="sr-only" for="catatan-{{ $key }}">Catatan</label>
-                                <input id="catatan-{{ $key }}" type="text" name="catatan"
-                                       value="{{ $row?->catatan }}"
-                                       placeholder="Catatan (opsional)"
-                                       class="w-full bg-white border border-[#CFC7BC] rounded-lg px-2.5 py-2 text-xs">
-                            </div>
-
-                            <button type="submit"
-                                    class="px-3 py-2 bg-[#2F5C4A] hover:bg-[#234739] text-white text-xs font-semibold rounded-lg">
-                                Simpan
-                            </button>
-                        </form>
+                        </div>
                     @empty
                         <p class="text-xs text-[#8C7A6B]">Belum ada milestone yang dipetakan ke mata kuliah ini.</p>
                     @endforelse

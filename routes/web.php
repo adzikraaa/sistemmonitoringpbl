@@ -24,7 +24,10 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('auth:mahasiswa')->gr
     Route::get('/proposal', [MahasiswaController::class, 'proposal'])->name('proposal');
     Route::get('/proposal/download/{id?}', [MahasiswaController::class, 'downloadProposal'])->name('proposal.download');
     Route::post('/proposal', [MahasiswaController::class, 'storeProposal'])->name('proposal.store');
+    Route::put('/proposal/{id?}', [MahasiswaController::class, 'updateProposal'])->name('proposal.update');
+    Route::delete('/proposal/{id?}', [MahasiswaController::class, 'destroyProposal'])->name('proposal.destroy');
     Route::get('/logbook', [MahasiswaController::class, 'logbook'])->name('logbook');
+    Route::get('/logbook/download/{id}', [MahasiswaController::class, 'downloadLogbook'])->name('logbook.download');
     Route::post('/logbook', [MahasiswaController::class, 'storeLogbook'])->name('logbook.store');
     Route::put('/logbook/{id}', [MahasiswaController::class, 'updateLogbook'])->name('logbook.update');
 
@@ -33,6 +36,8 @@ Route::prefix('mahasiswa')->name('mahasiswa.')->middleware('auth:mahasiswa')->gr
     Route::post('/milestone/{id}/upload', [MahasiswaController::class, 'storeMilestoneUpload'])->name('milestone.upload');
     Route::get('/milestone-berkas/{pengumpulan}', [MahasiswaController::class, 'downloadMilestoneSubmission'])->name('milestone.berkas.download');
     Route::get('/notifikasi', [MahasiswaController::class, 'notifikasi'])->name('notifikasi');
+    Route::post('/notifikasi/{notifikasi}/baca', [MahasiswaController::class, 'tandaiNotifikasiDibaca'])->name('notifikasi.baca');
+    Route::post('/notifikasi/baca-semua', [MahasiswaController::class, 'tandaiSemuaNotifikasiDibaca'])->name('notifikasi.baca-semua');
 });
 
 // ─── Role-specific routes ─────────────────────────────────────────────────────

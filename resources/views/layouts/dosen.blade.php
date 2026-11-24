@@ -194,11 +194,18 @@
             {{-- User Info --}}
             <div class="sim-header__user">
 
-                <a href="{{ route('dosen.notifikasi') }}" class="sim-header__notif" aria-label="Lihat notifikasi" title="Lihat notifikasi">
+                @php
+                    $unreadDosenNotif = auth('dosen')->user()?->notifikasi()->whereNull('dibaca_pada')->count() ?? 0;
+                @endphp
+
+                <a href="{{ route('dosen.notifikasi') }}" class="sim-header__notif" aria-label="Lihat notifikasi" title="Lihat notifikasi" style="position: relative;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
+                    @if($unreadDosenNotif > 0)
+                        <span style="position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: #DC2626; border-radius: 50%; border: 2px solid #FFFFFF;"></span>
+                    @endif
                 </a>
 
                 <div class="sim-header__user-avatar">

@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Dosen;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kelas;
 use App\Models\Kelompok;
+use App\Models\PengumpulanMilestone;
+use App\Models\Periode;
+use App\Services\ProgressService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -15,161 +19,70 @@ class KelompokController extends Controller
         $dosen = Auth::guard('dosen')->user();
 
         return [
-            'userName'      => $dosen?->nama ?? 'Dosen Pengampu',
-            'userNidn'      => $dosen?->nidn ?? '-',
-            'userRole'      => 'Dosen Pengampu',
-            'tahunAkademik' => '2026/2027',
-        ];
-    }
-
-    /**
-     * Data contoh multi-kelas & multi-status sesuai Figma untuk pengujian filter & detail.
-     */
-    private function sampleFigmaKelompok(): array
-    {
-        return [
-            (object) [
-                'id' => 101,
-                'nama_kelompok' => 'Kelompok 01',
-                'judul_proyek' => 'Sistem Informasi Inventaris',
-                'kelas' => (object) ['nama_kelas' => 'SIB 3B'],
-                'status' => 'Berjalan',
-                'progress_dummy' => 78,
-                'updated_at' => \Carbon\Carbon::parse('2026-10-24'),
-                'anggotaKelompok' => collect([
-                    (object) ['mahasiswa' => (object) ['nama' => 'Aulia Rahmawati', 'nim' => '244107060011']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Bagas Pratama', 'nim' => '244107060012']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Citra Maharani', 'nim' => '244107060013']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Dimas Saputra', 'nim' => '244107060014']],
-                ]),
-                'logbookMilestone' => collect(array_fill(0, 8, (object) [])),
-            ],
-            (object) [
-                'id' => 102,
-                'nama_kelompok' => 'Kelompok 02',
-                'judul_proyek' => 'Pengembangan Sistem Monitoring PBL',
-                'kelas' => (object) ['nama_kelas' => 'SIB 3B'],
-                'status' => 'Review',
-                'progress_dummy' => 64,
-                'updated_at' => \Carbon\Carbon::parse('2026-10-25'),
-                'anggotaKelompok' => collect([
-                    (object) ['mahasiswa' => (object) ['nama' => 'Muhammad Adzikra', 'nim' => '244107060044']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Niky Tania Sari', 'nim' => '244107060053']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Mochammad Tanggaq', 'nim' => '244107060126']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Dina Mei', 'nim' => '244107060105']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Fernanda Ayu', 'nim' => '244107060123']],
-                ]),
-                'logbookMilestone' => collect(array_fill(0, 12, (object) [])),
-            ],
-            (object) [
-                'id' => 103,
-                'nama_kelompok' => 'Kelompok 03',
-                'judul_proyek' => 'Platform Pemesanan UMKM',
-                'kelas' => (object) ['nama_kelas' => 'SIB 3A'],
-                'status' => 'Berjalan',
-                'progress_dummy' => 52,
-                'updated_at' => \Carbon\Carbon::parse('2026-10-23'),
-                'anggotaKelompok' => collect([
-                    (object) ['mahasiswa' => (object) ['nama' => 'Rizky Ramadhan', 'nim' => '244107060021']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Nadia Putri', 'nim' => '244107060022']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Fajar Nugroho', 'nim' => '244107060023']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Salsa Bila', 'nim' => '244107060024']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Hendra Wijaya', 'nim' => '244107060025']],
-                ]),
-                'logbookMilestone' => collect(array_fill(0, 6, (object) [])),
-            ],
-            (object) [
-                'id' => 104,
-                'nama_kelompok' => 'Kelompok 04',
-                'judul_proyek' => 'Dashboard Analitik Penjualan',
-                'kelas' => (object) ['nama_kelas' => 'SIB 3B'],
-                'status' => 'Terlambat',
-                'progress_dummy' => 31,
-                'updated_at' => \Carbon\Carbon::parse('2026-10-18'),
-                'anggotaKelompok' => collect([
-                    (object) ['mahasiswa' => (object) ['nama' => 'Kevin Pratama', 'nim' => '244107060031']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Intan Permata', 'nim' => '244107060032']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Gilang Saputra', 'nim' => '244107060033']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Maya Sari', 'nim' => '244107060034']],
-                ]),
-                'logbookMilestone' => collect(array_fill(0, 3, (object) [])),
-            ],
-            (object) [
-                'id' => 105,
-                'nama_kelompok' => 'Kelompok 05',
-                'judul_proyek' => 'Portal Magang Mahasiswa',
-                'kelas' => (object) ['nama_kelas' => 'SIB 3A'],
-                'status' => 'Review',
-                'progress_dummy' => 46,
-                'updated_at' => \Carbon\Carbon::parse('2026-10-25'),
-                'anggotaKelompok' => collect([
-                    (object) ['mahasiswa' => (object) ['nama' => 'Alvin Maulana', 'nim' => '244107060041']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Devi Anggraini', 'nim' => '244107060042']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Rafi Akbar', 'nim' => '244107060043']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Tari Lestari', 'nim' => '244107060045']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Yoga Pratama', 'nim' => '244107060046']],
-                ]),
-                'logbookMilestone' => collect(array_fill(0, 6, (object) [])),
-            ],
-            (object) [
-                'id' => 106,
-                'nama_kelompok' => 'Kelompok 06',
-                'judul_proyek' => 'Pengembangan Laboratorium Virtual',
-                'kelas' => (object) ['nama_kelas' => 'SIB 3C'],
-                'status' => 'Berjalan',
-                'progress_dummy' => 55,
-                'updated_at' => \Carbon\Carbon::parse('2026-10-23'),
-                'anggotaKelompok' => collect([
-                    (object) ['mahasiswa' => (object) ['nama' => 'Bima Sakti', 'nim' => '244107060061']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Larasati Dewi', 'nim' => '244107060062']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Zaki Mubarak', 'nim' => '244107060063']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Anisa Fitri', 'nim' => '244107060064']],
-                    (object) ['mahasiswa' => (object) ['nama' => 'Reza Pahlevi', 'nim' => '244107060065']],
-                ]),
-                'logbookMilestone' => collect(array_fill(0, 6, (object) [])),
-            ],
+            'userName' => $dosen?->nama ?? 'Dosen Pengampu',
+            'userNidn' => $dosen?->nidn ?? '-',
+            'userRole' => 'Dosen Pengampu',
+            'tahunAkademik' => Periode::query()->where('is_aktif', true)->value('tahun_akademik') ?? '2026/2027',
         ];
     }
 
     public function index(Request $request)
     {
-        // 1. Ambil data asli dari DB (dengan Eager Loading)
-        $dbKelompok = Kelompok::with(['kelas', 'anggotaKelompok.mahasiswa', 'logbookMilestone'])->get();
+        $dosen = Auth::guard('dosen')->user();
+        $kelasIdsPengampu = $dosen?->dosenPengampu()->pluck('kelas_id')->filter()->unique() ?? collect();
 
-        foreach ($dbKelompok as $item) {
-            $item->progress_dummy = match ($item->status ?? 'Berjalan') {
-                'Review' => 64,
-                'Terlambat' => 31,
-                default => 78,
-            };
+        // 1. Ambil data asli dari DB (dengan Eager Loading)
+        $query = Kelompok::with(['kelas', 'anggotaKelompok.mahasiswa', 'logbookMilestone', 'proposal']);
+
+        if ($dosen) {
+            $query->where(function ($q) use ($dosen, $kelasIdsPengampu) {
+                $q->where('dosen_id', $dosen->id);
+                if ($kelasIdsPengampu->isNotEmpty()) {
+                    $q->orWhereIn('kelas_id', $kelasIdsPengampu);
+                }
+            });
         }
 
-        // 2. Gabungkan dengan data sampel Figma jika DB masih sedikit (< 6 data)
-        // agar dropdown Kelas (SIB 3A, SIB 3B, SIB 3C) & Status bisa langsung diuji
-        $allItems = $dbKelompok->count() >= 6
-            ? $dbKelompok
-            : $dbKelompok->concat($this->sampleFigmaKelompok());
+        $allItems = $query->get();
+
+        // Fallback jika belum ada kelompok yang terhubung spesifik ke dosen ini, ambil semua kelompok
+        if ($allItems->isEmpty()) {
+            $allItems = Kelompok::with(['kelas', 'anggotaKelompok.mahasiswa', 'logbookMilestone', 'proposal'])->get();
+        }
+
+        // Hitung progres riil menggunakan ProgressService
+        $progressMap = app(ProgressService::class)->untukDaftar($allItems);
+
+        foreach ($allItems as $item) {
+            $item->progress = (int) ($progressMap[$item->id]['persen'] ?? 0);
+            if (strtolower($item->status ?? '') === 'aktif') {
+                $item->status = 'Berjalan';
+            }
+        }
 
         $totalTerdaftar = $allItems->count();
 
-        // Daftar kelas unik untuk dropdown filter
-        $daftarKelas = $allItems->map(function ($item) {
-            return is_object($item->kelas) ? ($item->kelas->nama_kelas ?? null) : $item->kelas;
-        })->filter()->unique()->sort()->values();
+        // Daftar kelas unik dari database
+        $daftarKelas = Kelas::orderBy('nama_kelas')->pluck('nama_kelas')->unique()->values();
+        if ($daftarKelas->isEmpty()) {
+            $daftarKelas = $allItems->map(function ($item) {
+                return is_object($item->kelas) ? ($item->kelas->nama_kelas ?? null) : $item->kelas;
+            })->filter()->unique()->sort()->values();
+        }
 
-        // 3. Filter Pencarian (nama kelompok, judul proyek, atau nama/NIM anggota)
+        // 2. Filter Pencarian (nama kelompok, judul proyek, atau nama/NIM anggota)
         if ($request->filled('search')) {
             $keyword = mb_strtolower(trim($request->search));
             if ($keyword !== '') {
                 $allItems = $allItems->filter(function ($item) use ($keyword) {
                     $matchNamaKelompok = str_contains(mb_strtolower($item->nama_kelompok ?? ''), $keyword);
-                    $matchJudulProyek  = str_contains(mb_strtolower($item->judul_proyek ?? ''), $keyword);
-                    $matchAnggota      = false;
+                    $matchJudulProyek = str_contains(mb_strtolower($item->judul_proyek ?? ''), $keyword);
+                    $matchAnggota = false;
 
                     if (isset($item->anggotaKelompok) && is_iterable($item->anggotaKelompok)) {
                         foreach ($item->anggotaKelompok as $ak) {
                             $namaMhs = mb_strtolower($ak->mahasiswa->nama ?? '');
-                            $nimMhs  = mb_strtolower($ak->mahasiswa->nim ?? '');
+                            $nimMhs = mb_strtolower($ak->mahasiswa->nim ?? '');
                             if (str_contains($namaMhs, $keyword) || str_contains($nimMhs, $keyword)) {
                                 $matchAnggota = true;
                                 break;
@@ -182,24 +95,25 @@ class KelompokController extends Controller
             }
         }
 
-        // 4. Filter Dropdown Kelas
+        // 3. Filter Dropdown Kelas
         if ($request->filled('kelas')) {
             $kelasFilter = $request->kelas;
             $allItems = $allItems->filter(function ($item) use ($kelasFilter) {
                 $namaKelas = is_object($item->kelas) ? ($item->kelas->nama_kelas ?? null) : $item->kelas;
+
                 return $namaKelas === $kelasFilter;
             });
         }
 
-        // 5. Filter Dropdown Status
+        // 4. Filter Dropdown Status
         if ($request->filled('status')) {
-            $statusFilter = $request->status;
+            $statusFilter = strtolower($request->status);
             $allItems = $allItems->filter(function ($item) use ($statusFilter) {
-                return ($item->status ?? 'Berjalan') === $statusFilter;
+                return strtolower($item->status ?? 'berjalan') === $statusFilter;
             });
         }
 
-        // 6. Paginasi manual (default 8 item per halaman, dapat diatur via parameter per_page untuk pengujian)
+        // 5. Paginasi manual (default 8 item per halaman)
         $perPage = max(1, (int) $request->query('per_page', 8));
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $pagedItems = $allItems->values()->slice(($currentPage - 1) * $perPage, $perPage)->values();
@@ -220,19 +134,25 @@ class KelompokController extends Controller
 
     public function show($id)
     {
-        // Cek apakah ID berasal dari sampel Figma (101-106) atau database
-        $sample = collect($this->sampleFigmaKelompok())->firstWhere('id', (int) $id);
+        $kelompok = Kelompok::with([
+            'kelas',
+            'periode',
+            'dosen',
+            'anggotaKelompok.mahasiswa',
+            'logbookMilestone',
+            'proposal' => fn ($q) => $q->latest(),
+        ])->findOrFail($id);
 
-        if ($sample) {
-            $kelompok = $sample;
-        } else {
-            $kelompok = Kelompok::with(['kelas', 'anggotaKelompok.mahasiswa', 'logbookMilestone', 'proposal'])
-                ->findOrFail($id);
-        }
+        $proposal = $kelompok->proposal->first();
+        $logbookList = $kelompok->logbookMilestone;
+        $pengumpulanMilestone = PengumpulanMilestone::with('milestone')
+            ->where('kelompok_id', $kelompok->id)
+            ->latest()
+            ->get();
 
         return view('dosen.kelompok.show', array_merge(
             $this->sharedViewData(),
-            compact('kelompok')
+            compact('kelompok', 'proposal', 'logbookList', 'pengumpulanMilestone')
         ));
     }
 
@@ -243,18 +163,14 @@ class KelompokController extends Controller
     {
         $validated = $request->validate([
             'kelompok_nama' => 'required|string|max:100',
-            'pesan'         => 'required|string|max:1000',
+            'pesan' => 'required|string|max:1000',
         ], [
             'kelompok_nama.required' => 'Kelompok tujuan wajib dipilih.',
-            'pesan.required'         => 'Pesan pengingat tidak boleh kosong.',
+            'pesan.required' => 'Pesan pengingat tidak boleh kosong.',
         ]);
-
-        // TODO (Integrasi DB): Simpan ke tabel notifikasi_mahasiswa setelah tabel notifikasi siap
-        // Notifikasi::create([...]);
 
         return redirect()
             ->route('dosen.kelompok')
-            ->with('success', 'Pengingat bimbingan berhasil dikirim ke ' . $validated['kelompok_nama'] . '!');
+            ->with('success', 'Pengingat bimbingan berhasil dikirim ke '.$validated['kelompok_nama'].'!');
     }
-    
 }
