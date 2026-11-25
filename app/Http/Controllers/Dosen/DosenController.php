@@ -29,6 +29,7 @@ class DosenController extends Controller
             'userNidn' => $dosen?->nidn ?? '-',
             'userRole' => 'Dosen Pengampu',
             'tahunAkademik' => Periode::query()->where('is_aktif', true)->value('tahun_akademik') ?? '-',
+            'unreadDosenNotifCount' => $dosen?->notifikasi()->whereNull('dibaca_pada')->count() ?? 0,
         ];
     }
 
@@ -161,7 +162,8 @@ class DosenController extends Controller
         // Ambil kelompok dari DB: baik yang langsung dibimbing maupun yang berada di kelas pengampu dosen ini
         $kelasIdsPengampu = $dosen?->dosenPengampu()->pluck('kelas_id')->filter()->unique() ?? collect();
 
-        $kelompokDbQuery = Kelompok::with(['kelas', 'anggotaKelompok.mahasiswa', 'logbookMilestone', 'proposal']);
+        $kelompokRelations = ['kelas', 'anggotaKelompok.mahasiswa', 'logbookMilestone', 'proposal', 'pengumpulanMilestone'];
+        $kelompokDbQuery = Kelompok::with($kelompokRelations);
 
         if ($periode) {
             $kelompokDbQuery->where('periode_id', $periode->id);
@@ -180,7 +182,7 @@ class DosenController extends Controller
 
         // Fallback jika belum ada kelompok yang terhubung langsung, tampilkan kelompok yang ada di periode ini
         if ($kelompokDb->isEmpty()) {
-            $kelompokDb = Kelompok::with(['kelas', 'anggotaKelompok.mahasiswa', 'logbookMilestone', 'proposal'])
+            $kelompokDb = Kelompok::with($kelompokRelations)
                 ->when($periode, fn ($q) => $q->where('periode_id', $periode->id))
                 ->get();
         }
@@ -189,14 +191,14 @@ class DosenController extends Controller
 
         // Format kelompok untuk blade (kelompokData)
         $kelompokData = $kelompokDb->map(function ($k) use ($progressByKelompok) {
-            $logbookTerakhir = $k->logbookMilestone
-                ->sortByDesc(fn ($logbook) => $logbook->updated_at?->getTimestamp() ?? $logbook->created_at?->getTimestamp() ?? 0)
-                ->first();
-            $tanggalAktivitasTerakhir = collect([
-                $k->updated_at,
-                $logbookTerakhir?->updated_at,
-                $logbookTerakhir?->created_at,
+            $tanggalPembaruanTerakhir = collect([
+                $k->logbookMilestone->max('updated_at'),
+                $k->proposal->max('updated_at'),
+                $k->pengumpulanMilestone->max('updated_at'),
             ])->filter()->sortByDesc(fn ($tanggal) => $tanggal->getTimestamp())->first();
+            $tanggalAktivitasTerakhir = $tanggalPembaruanTerakhir
+                ?? $k->tanggal_dibuat
+                ?? $k->created_at;
             $statusAsli = strtolower($k->status ?? 'aktif');
             $hariTidakAktif = $tanggalAktivitasTerakhir?->diffInDays(now()) ?? 0;
             $status = $hariTidakAktif >= 7 && ! in_array($statusAsli, ['selesai', 'ditangguhkan'], true)
@@ -214,6 +216,7 @@ class DosenController extends Controller
                 'progress' => $progressByKelompok[$k->id]['persen'] ?? 0,
                 'status' => $status,
                 'last_update' => $tanggalAktivitasTerakhir,
+                'has_update' => $tanggalPembaruanTerakhir !== null,
             ];
         })->values()->all();
 
@@ -258,8 +261,10 @@ class DosenController extends Controller
             $hariLalu = $oldest['last_update'] ? (int) $oldest['last_update']->diffInDays(now()) : 0;
             if ($hariLalu >= 3) {
                 $sinyalKelompok = [
+                    'id' => $oldest['id'],
                     'nama' => $oldest['nama'],
                     'hari_lalu' => $hariLalu,
+                    'has_update' => $oldest['has_update'],
                 ];
             }
         }
@@ -357,7 +362,7 @@ class DosenController extends Controller
     public function tandaiNotifikasiDibaca(Request $request, Notifikasi $notifikasi)
     {
         abort_unless(
-            $notifikasi->penerima_type === Auth::guard('dosen')->user()::class
+            $notifikasi->penerima_type === Auth::guard('dosen')->user()->getMorphClass()
             && (int) $notifikasi->penerima_id === (int) Auth::guard('dosen')->id(),
             404
         );

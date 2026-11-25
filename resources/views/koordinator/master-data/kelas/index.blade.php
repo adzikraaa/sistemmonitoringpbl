@@ -530,7 +530,7 @@
     <div>
         <p class="figma-title-eyebrow">SIM-PBL / ADMINISTRASI PROGRAM</p>
         <h1 class="figma-title-h1">Master Data</h1>
-        <p class="figma-title-desc">Kelola struktur kelas dan hubungkan mata kuliah, mahasiswa, serta dosen koordinator.</p>
+        <p class="figma-title-desc">Kelola struktur kelas serta hubungan mahasiswa, mata kuliah, dan dosen pengampu.</p>
     </div>
 
     <button type="button" class="btn-figma-primary" onclick="openModalTambah()">
@@ -565,7 +565,7 @@
                        name="search"
                        value="{{ request('search') }}"
                        class="figma-search-input"
-                       placeholder="Cari kelas atau dosen koordinator..."
+                       placeholder="Cari kelas atau dosen pengampu..."
                        autocomplete="off">
             </div>
 
@@ -620,8 +620,7 @@
                     $matkuls = $kelas->dosenPengampu->pluck('mataKuliah')->unique('id')->filter();
                     $totalSks = $matkuls->sum('sks');
                     $mhsCount = $kelas->mahasiswa->count();
-                    $tahunAngkatan = $kelas->periode ? substr($kelas->periode->tahun_akademik, 0, 4) : '2025';
-                    $dosenKoordinator = $kelas->dosenPengampu->first()?->dosen;
+                    $tahunAngkatan = $kelas->periode ? substr($kelas->periode->tahun_akademik, 0, 4) : '-';
                 @endphp
                 <tr class="{{ $isSelected ? 'row--selected' : '' }}" id="row-kelas-{{ $kelas->id }}">
                     {{-- 1. Nama Kelas --}}
@@ -644,18 +643,17 @@
                                 {{ $matkuls->map(fn($m) => strtoupper(substr(str_replace(' ', '', $m->nama_matkul), 0, 6)))->implode(' · ') }}
                             </div>
                             <div class="td-matkul-sub">
-                                {{ $matkuls->count() }} mata kuliah / {{ $totalSks > 0 ? $totalSks : 9 }} SKS
+                                {{ $matkuls->count() }} mata kuliah / {{ $totalSks }} SKS
                             </div>
                         @else
-                            {{-- Fallback representasi mata kuliah sesuai desain Figma --}}
-                            <div class="td-matkul-code">SIB301 · SIB302 · SIB303</div>
-                            <div class="td-matkul-sub">3 mata kuliah / 9 SKS</div>
+                            <div class="td-matkul-code" style="color: var(--sim-text-muted);">Belum ada mata kuliah</div>
+                            <div class="td-matkul-sub">Atur melalui Penugasan Dosen</div>
                         @endif
                     </td>
 
                     {{-- 4. Jumlah Mahasiswa --}}
                     <td>
-                        <div class="td-mahasiswa-num">{{ $mhsCount > 0 ? $mhsCount : 24 }}</div>
+                        <div class="td-mahasiswa-num">{{ $mhsCount }}</div>
                     </td>
 
                     {{-- 5. Status --}}
@@ -678,10 +676,9 @@
                                         '{{ addslashes($kelas->nama_kelas) }}',
                                         '{{ $tahunAngkatan }}',
                                         '{{ addslashes($kelas->prodi ?? 'D4 Sistem Informasi Bisnis') }}',
-                                        '{{ $dosenKoordinator?->id ?? '' }}',
-                                        {{ $mhsCount > 0 ? $mhsCount : 24 }},
-                                        {{ $kelas->kelompok->count() > 0 ? $kelas->kelompok->count() : 6 }},
-                                        '{{ addslashes($kelas->periode?->nama_periode ?? 'Ganjil 2026/2027') }}'
+                                        {{ $mhsCount }},
+                                        {{ $kelas->kelompok->count() }},
+                                        '{{ addslashes($kelas->periode?->nama_periode ?? '-') }}'
                                     )">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -768,20 +765,20 @@
 {{-- ═══════════ 6 & 7. Bagian Form Edit Kelas & Panel Informasi Kelas (Sesuai Figma) ═══════════ --}}
 @php
     $currentKelas = $selectedKelas;
-    $namaCurrentKelas = $currentKelas?->nama_kelas ?? 'SIB 3C';
+    $namaCurrentKelas = $currentKelas?->nama_kelas ?? '-';
     $prodiCurrentKelas = $currentKelas?->prodi ?? 'D4 Sistem Informasi Bisnis';
-    $thnCurrentKelas = $currentKelas?->periode ? substr($currentKelas->periode->tahun_akademik, 0, 4) : '2025';
-    $dosenCurrentKelas = $currentKelas?->dosenPengampu?->first()?->dosen;
-    $mhsCountCurrent = ($currentKelas && $currentKelas->mahasiswa->count() > 0) ? $currentKelas->mahasiswa->count() : 24;
-    $klpCountCurrent = ($currentKelas && $currentKelas->kelompok->count() > 0) ? $currentKelas->kelompok->count() : 6;
-    $periodeLabel = $currentKelas?->periode?->nama_periode ?? 'Ganjil 2026/2027';
+    $thnCurrentKelas = $currentKelas?->periode ? substr($currentKelas->periode->tahun_akademik, 0, 4) : '-';
+    $mhsCountCurrent = $currentKelas?->mahasiswa->count() ?? 0;
+    $klpCountCurrent = $currentKelas?->kelompok->count() ?? 0;
+    $kelompokDenganDosenCount = $currentKelas?->kelompok->whereNotNull('dosen_id')->count() ?? 0;
+    $periodeLabel = $currentKelas?->periode?->nama_periode ?? '-';
 @endphp
 
 <div class="figma-bottom-grid" id="section-edit-kelas">
     {{-- ── 6. Form Edit Kelas ── --}}
     <div class="figma-card">
         <h2 class="figma-card-title" id="edit-card-title">Edit kelas {{ $namaCurrentKelas }}</h2>
-        <p class="figma-card-subtitle">Dosen koordinator dipilih dari pengguna berperan Dosen yang aktif.</p>
+        <p class="figma-card-subtitle">Mahasiswa mengikuti kelas pada data pengguna. Dosen pengampu diatur per mata kuliah.</p>
 
         <form method="POST"
               id="form-edit-kelas"
@@ -830,23 +827,6 @@
                 </select>
             </div>
 
-            {{-- Row 3: Dosen Koordinator --}}
-            <div class="figma-form-group">
-                <label class="figma-form-label" for="select-edit-dosen">Dosen koordinator</label>
-                <select id="select-edit-dosen" name="dosen_id" class="figma-input-select">
-                    <option value="">— Pilih Dosen Koordinator —</option>
-                    @foreach($dosenList as $dsn)
-                        <option value="{{ $dsn->id }}" {{ ($dosenCurrentKelas && $dosenCurrentKelas->id == $dsn->id) ? 'selected' : '' }}>
-                            {{ $dsn->nidn ?? ('DSN-' . str_pad($dsn->id, 3, '0', STR_PAD_LEFT)) }} · {{ $dsn->nama }}
-                        </option>
-                    @endforeach
-                    {{-- Opsi pelengkap jika database belum memiliki data dosen spesifik --}}
-                    @if($dosenList->isEmpty())
-                        <option value="" selected>DSN-003 · Bambang Pratama, M.Kom.</option>
-                    @endif
-                </select>
-            </div>
-
             {{-- Tombol Batal & Simpan Kelas --}}
             <div class="figma-form-actions">
                 <button type="button" class="btn-figma-outline" onclick="resetFormEdit()">
@@ -882,12 +862,12 @@
             </div>
 
             <p class="figma-info-note" id="info-dosen-note">
-                4 dari 6 kelompok sudah memiliki dosen.
+                {{ $kelompokDenganDosenCount }} dari {{ $klpCountCurrent }} kelompok sudah memiliki dosen pembimbing.
             </p>
         </div>
 
         <div>
-            <a href="{{ route('koordinator.penugasan-dosen.index') }}" class="btn-figma-primary" style="width: auto; justify-content: center;">
+            <a href="{{ route('koordinator.penugasan-dosen.index', ['kelas_id' => $currentKelas?->id]) }}" class="btn-figma-primary" style="width: auto; justify-content: center;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="7" y1="17" x2="17" y2="7"/>
                     <polyline points="7 7 17 7 17 17"/>
@@ -936,17 +916,9 @@
                 </select>
             </div>
 
-            <div class="figma-form-group">
-                <label class="figma-form-label" for="t-dosen">Dosen koordinator</label>
-                <select id="t-dosen" name="dosen_id" class="figma-input-select">
-                    <option value="">— Pilih Dosen Koordinator —</option>
-                    @foreach($dosenList as $dsn)
-                        <option value="{{ $dsn->id }}">
-                            {{ $dsn->nidn ?? ('DSN-' . str_pad($dsn->id, 3, '0', STR_PAD_LEFT)) }} · {{ $dsn->nama }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+            <p style="font-size: 12px; color: var(--sim-text-muted); margin: 0;">
+                Setelah kelas disimpan, Anda akan diarahkan untuk memilih dosen pengampu pada setiap mata kuliah.
+            </p>
 
             <div class="figma-form-actions" style="margin-top: 24px;">
                 <button type="button" class="btn-figma-outline" onclick="closeModalTambah()">
@@ -968,7 +940,7 @@
 @push('scripts')
 <script>
     // ── Fungsi Interaktif Edit Kelas dari Baris Tabel ──
-    function pilihKelasEdit(id, nama, angkatan, prodi, dosenId, mhsCount, klpCount, periodeLabel) {
+    function pilihKelasEdit(id, nama, angkatan, prodi, mhsCount, klpCount, periodeLabel) {
         // Update header form edit
         document.getElementById('edit-card-title').textContent = 'Edit kelas ' + nama;
         document.getElementById('form-edit-kelas').action = '/koordinator/master-data/kelas/' + id;
@@ -985,24 +957,11 @@
             }
         }
 
-        // Select dosen
-        const selDosen = document.getElementById('select-edit-dosen');
-        if (dosenId) {
-            for (let i = 0; i < selDosen.options.length; i++) {
-                if (selDosen.options[i].value == dosenId) {
-                    selDosen.selectedIndex = i;
-                    break;
-                }
-            }
-        } else {
-            selDosen.selectedIndex = 0;
-        }
-
         // Update panel info kanan
         document.getElementById('info-card-title').textContent = nama + ' · ' + periodeLabel;
         document.getElementById('info-mhs-count').textContent = mhsCount;
         document.getElementById('info-klp-count').textContent = klpCount;
-        document.getElementById('info-dosen-note').textContent = '4 dari ' + klpCount + ' kelompok sudah memiliki dosen.';
+        document.getElementById('info-dosen-note').textContent = klpCount + ' kelompok terdaftar. Kelola dosen pembimbing melalui menu Kelompok PBL.';
 
         // Highlight baris yang dipilih
         document.querySelectorAll('.figma-table tbody tr').forEach(tr => tr.classList.remove('row--selected'));

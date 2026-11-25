@@ -654,12 +654,17 @@
             @if(!empty($sinyalKelompok))
                 <h3 class="dd-sinyal-title">Satu kelompok<br>perlu disapa.</h3>
                 <p class="dd-sinyal-desc">
-                    {{ $sinyalKelompok['nama'] ?? 'Kelompok ini' }} belum mengirim pembaruan
-                    sejak {{ $sinyalKelompok['hari_lalu'] ?? 3 }} hari lalu.
+                    @if($sinyalKelompok['has_update'])
+                        Pembaruan terakhir {{ $sinyalKelompok['nama'] }} dikirim
+                        {{ $sinyalKelompok['hari_lalu'] }} hari lalu.
+                    @else
+                        {{ $sinyalKelompok['nama'] }} belum pernah mengirim pembaruan sejak terdaftar
+                        {{ $sinyalKelompok['hari_lalu'] }} hari lalu.
+                    @endif
                     Sedikit pertanyaan mungkin cukup untuk membantu mereka
                     kembali menemukan ritmenya.
                 </p>
-                <a class="dd-sinyal-btn" href="{{ route('dosen.kelompok') }}">Lihat kelompok →</a>
+                <a class="dd-sinyal-btn" href="{{ route('dosen.kelompok.show', $sinyalKelompok['id']) }}">Lihat kelompok →</a>
             @else
                 <h3 class="dd-sinyal-empty-title">Semua kelompok<br>aktif minggu ini! 🎉</h3>
             @endif

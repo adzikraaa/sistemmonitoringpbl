@@ -8,6 +8,7 @@ use App\Models\Kelompok;
 use App\Models\MataKuliah;
 use App\Models\Milestone;
 use App\Models\MilestoneMataKuliah;
+use App\Models\PengumpulanMilestone;
 use App\Models\PenyelesaianMilestone;
 use App\Models\RiwayatPenyelesaianMilestone;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -55,6 +56,16 @@ class PenyelesaianMilestoneService
 
         if (! $mataKuliah->is_aktif) {
             throw new \InvalidArgumentException('Mata kuliah tidak aktif.');
+        }
+
+        $pengumpulanAda = PengumpulanMilestone::query()
+            ->where('kelompok_id', $kelompok->id)
+            ->where('milestone_id', $milestone->id)
+            ->where('mata_kuliah', $mataKuliah->slug)
+            ->exists();
+
+        if (! $pengumpulanAda) {
+            throw new \InvalidArgumentException('Laporan mata kuliah belum dikumpulkan.');
         }
 
         return DB::transaction(function () use (

@@ -617,7 +617,7 @@
 
                     {{-- Master Data --}}
                     <li>
-                        <a href="{{ route('koordinator.master-data.kelas') }}"
+                        <a href="{{ route('koordinator.master-data.mata-kuliah') }}"
                            class="krd-nav-link {{ request()->routeIs('koordinator.master-data.*') || request()->routeIs('koordinator.kelas') ? 'krd-nav-link--active' : '' }}"
                            onclick="closeKrdSidebar()">
                             <span class="krd-nav-icon">
@@ -779,7 +779,7 @@
             <div class="krd-header-meta">
                 <div class="krd-semester-pill">
                     <span class="krd-semester-dot"></span>
-                    <span>{{ $periodeAktif ? ($periodeAktif->nama_periode . ' · Aktif') : 'Ganjil 2026/2027 · Aktif' }}</span>
+                    <span>{{ $periodeAktif ? ($periodeAktif->nama_periode . ' · Aktif') : 'Belum ada periode aktif' }}</span>
                 </div>
 
                 <div class="krd-header-date">
@@ -791,8 +791,13 @@
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
-                    @if(!session('all_notif_read', false))
-                        <span style="position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: #C0392B; border-radius: 50%; border: 1.5px solid #FAF8F5;"></span>
+                    @php
+                        $unreadKoordinatorNotif = auth('koordinator')->user()?->notifikasi()->whereNull('dibaca_pada')->count() ?? 0;
+                    @endphp
+                    @if($unreadKoordinatorNotif > 0)
+                        <span aria-label="{{ $unreadKoordinatorNotif }} notifikasi belum dibaca" style="position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:#DC2626;color:#fff;border:2px solid #FAF8F5;border-radius:999px;font-size:9px;font-weight:700;line-height:1;box-sizing:border-box;">
+                            {{ $unreadKoordinatorNotif > 99 ? '99+' : $unreadKoordinatorNotif }}
+                        </span>
                     @endif
                 </a>
 
@@ -827,6 +832,7 @@
     </div>
 
     @stack('scripts')
+    @include('partials.session-flash-behavior')
     <script>
         function toggleKrdSidebar() {
             const sidebar = document.getElementById('krd-sidebar');

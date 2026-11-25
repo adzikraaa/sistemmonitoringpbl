@@ -10,7 +10,6 @@ use App\Models\MataKuliah;
 use App\Models\Periode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -19,7 +18,7 @@ class PenugasanDosenController extends Controller
     /**
      * Kapasitas maksimum penugasan mata kuliah per dosen per semester.
      */
-    public const MAX_KAPASITAS_DOSEN = 3;
+    public const MAX_KAPASITAS_DOSEN = 1;
 
     /**
      * Tampilkan halaman utama Penugasan Dosen Penilai PBL.
@@ -30,7 +29,7 @@ class PenugasanDosenController extends Controller
         $activePeriode = Periode::where('is_aktif', true)->first()
             ?? Periode::latest()->first();
 
-        if (!$activePeriode) {
+        if (! $activePeriode) {
             abort(500, 'Tidak ada periode/semester aktif di sistem.');
         }
 
@@ -56,7 +55,7 @@ class PenugasanDosenController extends Controller
             ? $kelasList->firstWhere('id', (int) $selectedKelasId)
             : $kelasList->first();
 
-        if (!$selectedKelas && $kelasList->isNotEmpty()) {
+        if (! $selectedKelas && $kelasList->isNotEmpty()) {
             $selectedKelas = $kelasList->first();
         }
 
@@ -78,12 +77,12 @@ class PenugasanDosenController extends Controller
             }
 
             $kelasChips[] = [
-                'id'         => $kelas->id,
-                'nama'       => $kelas->nama_kelas,
-                'assigned'   => $countAssigned,
-                'total'      => $totalWajibPerKelas,
+                'id' => $kelas->id,
+                'nama' => $kelas->nama_kelas,
+                'assigned' => $countAssigned,
+                'total' => $totalWajibPerKelas,
                 'is_lengkap' => $isLengkap,
-                'is_active'  => $selectedKelas && ($selectedKelas->id === $kelas->id),
+                'is_active' => $selectedKelas && ($selectedKelas->id === $kelas->id),
             ];
         }
 
@@ -98,16 +97,16 @@ class PenugasanDosenController extends Controller
             $kelasTerliputGlobal = $allPengampu->where('mata_kuliah_id', $mk->id)->unique('kelas_id')->count();
 
             $tableRows[] = [
-                'mata_kuliah_id'   => $mk->id,
-                'nama_matkul'      => $mk->nama_matkul,
-                'sks'              => $mk->sks ?? 3,
-                'semester_label'   => 'Semester 5',
-                'kelas_terliput'   => $kelasTerliputGlobal,
-                'pengampu_id'      => $pengampu?->id,
-                'dosen'            => $pengampu?->dosen,
-                'is_assigned'      => $pengampu !== null && $pengampu->dosen !== null,
-                'kelas_nama'       => $selectedKelas?->nama_kelas ?? '-',
-                'kelas_id'         => $selectedKelas?->id,
+                'mata_kuliah_id' => $mk->id,
+                'nama_matkul' => $mk->nama_matkul,
+                'sks' => $mk->sks ?? 3,
+                'semester_label' => 'Semester 5',
+                'kelas_terliput' => $kelasTerliputGlobal,
+                'pengampu_id' => $pengampu?->id,
+                'dosen' => $pengampu?->dosen,
+                'is_assigned' => $pengampu !== null && $pengampu->dosen !== null,
+                'kelas_nama' => $selectedKelas?->nama_kelas ?? '-',
+                'kelas_id' => $selectedKelas?->id,
             ];
         }
 
@@ -117,10 +116,10 @@ class PenugasanDosenController extends Controller
         $sisaMataKuliah = max(0, $totalWajibPerKelas - $mkTerliputDiKelas);
 
         $metrik = [
-            'dosen_tersedia'        => $dosenTersediaCount,
-            'kelas_terliput_ratio'  => "{$kelasTerliputCount} / " . max(1, $kelasList->count()),
-            'mk_terliput_ratio'     => "{$mkTerliputDiKelas} / {$totalWajibPerKelas}",
-            'sisa_mk'               => $sisaMataKuliah,
+            'dosen_tersedia' => $dosenTersediaCount,
+            'kelas_terliput_ratio' => "{$kelasTerliputCount} / ".max(1, $kelasList->count()),
+            'mk_terliput_ratio' => "{$mkTerliputDiKelas} / {$totalWajibPerKelas}",
+            'sisa_mk' => $sisaMataKuliah,
         ];
 
         // 9. Direktori Dosen Penilai (Kolom Kanan)
@@ -136,26 +135,26 @@ class PenugasanDosenController extends Controller
             // Subtitle text misal: "DSN-001 · Pemrograman Web Lanjut (SIB 3A)"
             $assignmentTexts = [];
             foreach ($dosenAssignments as $asgn) {
-                $assignmentTexts[] = ($asgn->mataKuliah?->nama_matkul ?? '') . ' (' . ($asgn->kelas?->nama_kelas ?? '') . ')';
+                $assignmentTexts[] = ($asgn->mataKuliah?->nama_matkul ?? '').' ('.($asgn->kelas?->nama_kelas ?? '').')';
             }
-            $subtitleDetail = !empty($assignmentTexts)
-                ? ($dosen->nidn . ' · ' . implode(', ', $assignmentTexts))
-                : ($dosen->nidn . ' · Belum ada penugasan');
+            $subtitleDetail = ! empty($assignmentTexts)
+                ? ($dosen->nidn.' · '.implode(', ', $assignmentTexts))
+                : ($dosen->nidn.' · Belum ada penugasan');
 
             // Inisial avatar (misal: "Dr. Rian Hidayat" -> "RH")
             $initials = $this->extractInitials($dosen->nama);
 
             $direktoriDosen[] = [
-                'id'              => $dosen->id,
-                'nama'            => $dosen->nama,
-                'nidn'            => $dosen->nidn,
-                'initials'        => $initials,
-                'subtitle'        => $subtitleDetail,
-                'assigned_count'  => $assignedCount,
-                'max_capacity'    => self::MAX_KAPASITAS_DOSEN,
-                'slot_tersedia'   => $slotTersedia,
-                'percent'         => round(($assignedCount / self::MAX_KAPASITAS_DOSEN) * 100),
-                'is_penuh'        => $isPenuh,
+                'id' => $dosen->id,
+                'nama' => $dosen->nama,
+                'nidn' => $dosen->nidn,
+                'initials' => $initials,
+                'subtitle' => $subtitleDetail,
+                'assigned_count' => $assignedCount,
+                'max_capacity' => self::MAX_KAPASITAS_DOSEN,
+                'slot_tersedia' => $slotTersedia,
+                'percent' => round(($assignedCount / self::MAX_KAPASITAS_DOSEN) * 100),
+                'is_penuh' => $isPenuh,
             ];
         }
 
@@ -172,22 +171,22 @@ class PenugasanDosenController extends Controller
     }
 
     /**
-     * Simpan penugasan dosen penilai baru / multiple mata kuliah.
+     * Simpan satu penugasan mata kuliah untuk dosen penilai.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'dosen_id'        => 'required|exists:dosen,id',
-            'kelas_id'        => 'required|exists:kelas,id',
-            'mata_kuliah_ids' => 'required|array|min:1',
+            'dosen_id' => 'required|exists:dosen,id',
+            'kelas_id' => 'required|exists:kelas,id',
+            'mata_kuliah_ids' => 'required|array|size:1',
             'mata_kuliah_ids.*' => 'exists:mata_kuliah,id',
         ], [
-            'dosen_id.required'        => 'Pilih dosen penilai terlebih dahulu.',
-            'dosen_id.exists'          => 'Dosen penilai yang dipilih tidak valid.',
-            'kelas_id.required'        => 'Pilih kelas terlebih dahulu.',
-            'kelas_id.exists'          => 'Kelas yang dipilih tidak valid.',
+            'dosen_id.required' => 'Pilih dosen penilai terlebih dahulu.',
+            'dosen_id.exists' => 'Dosen penilai yang dipilih tidak valid.',
+            'kelas_id.required' => 'Pilih kelas terlebih dahulu.',
+            'kelas_id.exists' => 'Kelas yang dipilih tidak valid.',
             'mata_kuliah_ids.required' => 'Pilih minimal satu mata kuliah wajib penilai.',
-            'mata_kuliah_ids.min'      => 'Pilih minimal satu mata kuliah wajib penilai.',
+            'mata_kuliah_ids.size' => 'Satu dosen hanya boleh memilih satu mata kuliah.',
         ]);
 
         $dosen = Dosen::findOrFail($validated['dosen_id']);
@@ -198,14 +197,14 @@ class PenugasanDosenController extends Controller
         $currentAssignments = DosenPengampu::where('dosen_id', $dosen->id)
             ->where(function ($q) use ($kelas, $validated) {
                 $q->where('kelas_id', '!=', $kelas->id)
-                  ->orWhereNotIn('mata_kuliah_id', $validated['mata_kuliah_ids']);
+                    ->orWhereNotIn('mata_kuliah_id', $validated['mata_kuliah_ids']);
             })
             ->count();
 
         $newTotal = $currentAssignments + count($validated['mata_kuliah_ids']);
         if ($newTotal > self::MAX_KAPASITAS_DOSEN) {
             throw ValidationException::withMessages([
-                'dosen_id' => "Dosen {$dosen->nama} hanya memiliki sisa " . max(0, self::MAX_KAPASITAS_DOSEN - $currentAssignments) . " slot penugasan. Maksimal " . self::MAX_KAPASITAS_DOSEN . " penugasan per dosen.",
+                'dosen_id' => "Dosen {$dosen->nama} sudah memiliki penugasan. Satu dosen hanya boleh memilih satu mata kuliah.",
             ]);
         }
 
@@ -213,11 +212,11 @@ class PenugasanDosenController extends Controller
             foreach ($validated['mata_kuliah_ids'] as $mkId) {
                 DosenPengampu::updateOrCreate(
                     [
-                        'kelas_id'       => $kelas->id,
+                        'kelas_id' => $kelas->id,
                         'mata_kuliah_id' => $mkId,
                     ],
                     [
-                        'dosen_id'       => $dosen->id,
+                        'dosen_id' => $dosen->id,
                     ]
                 );
             }
@@ -246,7 +245,7 @@ class PenugasanDosenController extends Controller
             'dosen_id' => 'required|exists:dosen,id',
         ], [
             'dosen_id.required' => 'Pilih dosen penilai pengganti.',
-            'dosen_id.exists'   => 'Dosen yang dipilih tidak valid.',
+            'dosen_id.exists' => 'Dosen yang dipilih tidak valid.',
         ]);
 
         $dosenBaru = Dosen::findOrFail($validated['dosen_id']);
@@ -256,7 +255,7 @@ class PenugasanDosenController extends Controller
             $assignedCount = DosenPengampu::where('dosen_id', $dosenBaru->id)->count();
             if ($assignedCount >= self::MAX_KAPASITAS_DOSEN) {
                 throw ValidationException::withMessages([
-                    'dosen_id' => "Dosen {$dosenBaru->nama} sudah mencapai kapasitas penuh (" . self::MAX_KAPASITAS_DOSEN . " penugasan).",
+                    'dosen_id' => "Dosen {$dosenBaru->nama} sudah memiliki penugasan. Satu dosen hanya boleh memilih satu mata kuliah.",
                 ]);
             }
         }
@@ -298,13 +297,14 @@ class PenugasanDosenController extends Controller
     {
         $dosenList = Dosen::where('is_aktif', true)->orderBy('nidn')->get()->map(function ($d) {
             $count = DosenPengampu::where('dosen_id', $d->id)->count();
+
             return [
-                'id'             => $d->id,
-                'nama'           => $d->nama,
-                'nidn'           => $d->nidn,
+                'id' => $d->id,
+                'nama' => $d->nama,
+                'nidn' => $d->nidn,
                 'assigned_count' => $count,
-                'slot_tersedia'  => max(0, self::MAX_KAPASITAS_DOSEN - $count),
-                'is_penuh'       => $count >= self::MAX_KAPASITAS_DOSEN,
+                'slot_tersedia' => max(0, self::MAX_KAPASITAS_DOSEN - $count),
+                'is_penuh' => $count >= self::MAX_KAPASITAS_DOSEN,
             ];
         });
 
@@ -312,8 +312,8 @@ class PenugasanDosenController extends Controller
         $mataKuliahList = MataKuliah::where('is_aktif', true)->orderBy('id')->get(['id', 'nama_matkul', 'sks']);
 
         return response()->json([
-            'dosen'       => $dosenList,
-            'kelas'       => $kelasList,
+            'dosen' => $dosenList,
+            'kelas' => $kelasList,
             'mata_kuliah' => $mataKuliahList,
         ]);
     }
@@ -336,6 +336,6 @@ class PenugasanDosenController extends Controller
             return strtoupper(substr($words[0], 0, 2));
         }
 
-        return strtoupper(substr($words[0], 0, 1) . substr($words[count($words) - 1], 0, 1));
+        return strtoupper(substr($words[0], 0, 1).substr($words[count($words) - 1], 0, 1));
     }
 }

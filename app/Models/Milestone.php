@@ -18,12 +18,14 @@ class Milestone extends Model
         'judul',
         'deskripsi',
         'urutan',
+        'tanggal_mulai',
         'deadline',
     ];
 
     protected function casts(): array
     {
         return [
+            'tanggal_mulai' => 'date',
             'deadline' => 'date',
             'urutan' => 'integer',
         ];
@@ -33,6 +35,12 @@ class Milestone extends Model
     {
         static::created(function (Milestone $milestone) {
             app(MilestoneMataKuliahSync::class)->forMilestone($milestone);
+        });
+
+        static::updated(function (Milestone $milestone) {
+            if ($milestone->wasChanged(['periode_id', 'urutan'])) {
+                app(MilestoneMataKuliahSync::class)->forMilestone($milestone);
+            }
         });
     }
 

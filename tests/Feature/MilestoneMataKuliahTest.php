@@ -60,45 +60,72 @@ class MilestoneMataKuliahTest extends TestCase
         $this->assertTrue($mataKuliah->milestone->contains($milestone));
     }
 
-    public function test_milestone_baru_otomatis_memetakan_semua_matkul_aktif(): void
+    public function test_semua_milestone_global_dipetakan_ke_semua_mata_kuliah_aktif(): void
     {
         $periode = $this->buatPeriode();
         $aktifSatu = $this->buatMataKuliah('SIB301', 'Pemrograman Web Lanjut');
         $aktifDua = $this->buatMataKuliah('SIB302', 'Manajemen Proyek Sistem Informasi');
         $tidakAktif = $this->buatMataKuliah('SIB303', 'Mata Kuliah Nonaktif', false);
 
-        $milestone = $this->buatMilestone($periode, 1, 'M01');
+        $milestoneSatu = $this->buatMilestone($periode, 1, 'M01');
+        $milestoneDua = $this->buatMilestone($periode, 2, 'M02');
+        $milestoneTiga = $this->buatMilestone($periode, 3, 'M03');
 
-        $this->assertDatabaseCount('milestone_mata_kuliah', 2);
+        $this->assertDatabaseCount('milestone_mata_kuliah', 6);
         $this->assertDatabaseHas('milestone_mata_kuliah', [
-            'milestone_id' => $milestone->id,
+            'milestone_id' => $milestoneSatu->id,
             'mata_kuliah_id' => $aktifSatu->id,
         ]);
         $this->assertDatabaseHas('milestone_mata_kuliah', [
-            'milestone_id' => $milestone->id,
+            'milestone_id' => $milestoneDua->id,
+            'mata_kuliah_id' => $aktifSatu->id,
+        ]);
+        $this->assertDatabaseHas('milestone_mata_kuliah', [
+            'milestone_id' => $milestoneTiga->id,
+            'mata_kuliah_id' => $aktifSatu->id,
+        ]);
+        $this->assertDatabaseHas('milestone_mata_kuliah', [
+            'milestone_id' => $milestoneSatu->id,
+            'mata_kuliah_id' => $aktifDua->id,
+        ]);
+        $this->assertDatabaseHas('milestone_mata_kuliah', [
+            'milestone_id' => $milestoneDua->id,
+            'mata_kuliah_id' => $aktifDua->id,
+        ]);
+        $this->assertDatabaseHas('milestone_mata_kuliah', [
+            'milestone_id' => $milestoneTiga->id,
             'mata_kuliah_id' => $aktifDua->id,
         ]);
         $this->assertDatabaseMissing('milestone_mata_kuliah', [
-            'milestone_id' => $milestone->id,
             'mata_kuliah_id' => $tidakAktif->id,
         ]);
     }
 
-    public function test_mata_kuliah_baru_otomatis_memetakan_semua_milestone(): void
+    public function test_mata_kuliah_baru_mendapat_semua_milestone_global(): void
     {
         $periode = $this->buatPeriode();
         $milestoneSatu = $this->buatMilestone($periode, 1, 'M01');
         $milestoneDua = $this->buatMilestone($periode, 2, 'M02');
+        $milestoneTiga = $this->buatMilestone($periode, 3, 'M03');
+        $milestoneEmpat = $this->buatMilestone($periode, 4, 'M04');
 
         $mataKuliah = $this->buatMataKuliah('SIB301', 'Pemrograman Web Lanjut');
 
-        $this->assertDatabaseCount('milestone_mata_kuliah', 2);
+        $this->assertDatabaseCount('milestone_mata_kuliah', 4);
         $this->assertDatabaseHas('milestone_mata_kuliah', [
             'milestone_id' => $milestoneSatu->id,
             'mata_kuliah_id' => $mataKuliah->id,
         ]);
         $this->assertDatabaseHas('milestone_mata_kuliah', [
             'milestone_id' => $milestoneDua->id,
+            'mata_kuliah_id' => $mataKuliah->id,
+        ]);
+        $this->assertDatabaseHas('milestone_mata_kuliah', [
+            'milestone_id' => $milestoneTiga->id,
+            'mata_kuliah_id' => $mataKuliah->id,
+        ]);
+        $this->assertDatabaseHas('milestone_mata_kuliah', [
+            'milestone_id' => $milestoneEmpat->id,
             'mata_kuliah_id' => $mataKuliah->id,
         ]);
     }
@@ -116,7 +143,7 @@ class MilestoneMataKuliahTest extends TestCase
         $this->assertDatabaseCount('milestone_mata_kuliah', 1);
     }
 
-    public function test_nonaktif_mempertahankan_mapping_dan_aktivasi_melengkapi(): void
+    public function test_mata_kuliah_nonaktif_melepas_mapping_dan_aktivasi_memulihkan(): void
     {
         $periode = $this->buatPeriode();
         $mataKuliah = $this->buatMataKuliah('SIB301', 'Pemrograman Web Lanjut');
@@ -124,7 +151,7 @@ class MilestoneMataKuliahTest extends TestCase
 
         $mataKuliah->update(['is_aktif' => false]);
 
-        $this->assertDatabaseHas('milestone_mata_kuliah', [
+        $this->assertDatabaseMissing('milestone_mata_kuliah', [
             'milestone_id' => $milestoneSatu->id,
             'mata_kuliah_id' => $mataKuliah->id,
         ]);
@@ -148,7 +175,7 @@ class MilestoneMataKuliahTest extends TestCase
         ]);
     }
 
-    public function test_seeder_memetakan_semua_milestone_ke_semua_matkul_aktif(): void
+    public function test_seeder_memetakan_semua_milestone_ke_semua_mata_kuliah_aktif(): void
     {
         $periode = $this->buatPeriode();
         $now = now();
@@ -183,6 +210,9 @@ class MilestoneMataKuliahTest extends TestCase
         $this->seed(MilestoneMataKuliahSeeder::class);
 
         $this->assertDatabaseCount('milestone_mata_kuliah', 4);
+        $this->assertDatabaseHas('milestone_mata_kuliah', [
+            'mata_kuliah_id' => DB::table('mata_kuliah')->where('kode', 'SIB302')->value('id'),
+        ]);
         $this->assertDatabaseMissing('milestone_mata_kuliah', [
             'mata_kuliah_id' => DB::table('mata_kuliah')->where('kode', 'SIB303')->value('id'),
         ]);

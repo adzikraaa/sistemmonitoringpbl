@@ -123,6 +123,11 @@ class ProgressService
                     ->on('mmk.mata_kuliah_id', '=', 'pm.mata_kuliah_id');
             })
             ->join('mata_kuliah as mk', 'mk.id', '=', 'pm.mata_kuliah_id')
+            ->join('pengumpulan_milestone as pg', function ($join) {
+                $join->on('pg.kelompok_id', '=', 'pm.kelompok_id')
+                    ->on('pg.milestone_id', '=', 'pm.milestone_id')
+                    ->on('pg.mata_kuliah', '=', 'mk.slug');
+            })
             ->whereIn('pm.mata_kuliah_id', $mataKuliahIds)
             ->where('pm.kelompok_id', $kelompok->id)
             ->where('m.periode_id', $kelompok->periode_id)
@@ -183,6 +188,11 @@ class ProgressService
                     ->on('mmk.mata_kuliah_id', '=', 'pm.mata_kuliah_id');
             })
             ->join('mata_kuliah as mk', 'mk.id', '=', 'pm.mata_kuliah_id')
+            ->join('pengumpulan_milestone as pg', function ($join) {
+                $join->on('pg.kelompok_id', '=', 'pm.kelompok_id')
+                    ->on('pg.milestone_id', '=', 'pm.milestone_id')
+                    ->on('pg.mata_kuliah', '=', 'mk.slug');
+            })
             ->whereIn('pm.kelompok_id', $kelompokIds)
             ->where('mk.is_aktif', true)
             ->whereRaw(

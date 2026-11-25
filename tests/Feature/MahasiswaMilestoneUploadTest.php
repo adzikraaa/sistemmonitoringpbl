@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Dosen;
+use App\Models\DosenPengampu;
 use App\Models\Kelas;
 use App\Models\Kelompok;
 use App\Models\Mahasiswa;
@@ -92,6 +93,55 @@ class MahasiswaMilestoneUploadTest extends TestCase
         Storage::disk('local')->assertExists($submission->file_path);
 
         $this->assertDatabaseCount('milestone_kelompok', 0);
+    }
+
+    public function test_upload_milestone_mengirim_notifikasi_ke_dosen_terkait_saja(): void
+    {
+        Storage::fake('local');
+        $dosenPengampu = Dosen::create([
+            'nama' => 'Dosen Pengampu PWL',
+            'email' => 'pengampu-pwl@test.com',
+            'password' => 'password123',
+            'nidn' => '700000010',
+            'is_aktif' => true,
+        ]);
+        $dosenTidakTerkait = Dosen::create([
+            'nama' => 'Dosen Tidak Terkait',
+            'email' => 'tidak-terkait@test.com',
+            'password' => 'password123',
+            'nidn' => '700000011',
+            'is_aktif' => true,
+        ]);
+        DosenPengampu::create([
+            'dosen_id' => $dosenPengampu->id,
+            'mata_kuliah_id' => $this->mataKuliah->id,
+            'kelas_id' => $this->kelas->id,
+        ]);
+
+        $response = $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->post(route('mahasiswa.milestone.upload', $this->mataKuliah->slug), [
+                'milestone_id' => $this->milestone->id,
+                'catatan' => 'Laporan implementasi modul utama.',
+                'berkas' => UploadedFile::fake()->create('laporan.pdf', 100, 'application/pdf'),
+            ]);
+
+        $response->assertRedirect(route('mahasiswa.milestone.detail', $this->mataKuliah->slug));
+        $this->assertDatabaseHas('notifikasi', [
+            'penerima_type' => $this->kelompok->dosen->getMorphClass(),
+            'penerima_id' => $this->kelompok->dosen_id,
+            'judul' => 'Laporan Milestone Dikumpulkan',
+            'dibaca_pada' => null,
+        ]);
+        $this->assertDatabaseHas('notifikasi', [
+            'penerima_type' => $dosenPengampu->getMorphClass(),
+            'penerima_id' => $dosenPengampu->id,
+            'judul' => 'Laporan Milestone Dikumpulkan',
+            'dibaca_pada' => null,
+        ]);
+        $this->assertDatabaseMissing('notifikasi', [
+            'penerima_type' => $dosenTidakTerkait->getMorphClass(),
+            'penerima_id' => $dosenTidakTerkait->id,
+        ]);
     }
 
     public function test_mata_kuliah_diambil_dari_route_bukan_dari_request(): void

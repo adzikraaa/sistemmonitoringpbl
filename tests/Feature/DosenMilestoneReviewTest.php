@@ -161,11 +161,23 @@ class DosenMilestoneReviewTest extends TestCase
         $this->assertDatabaseHas('penyelesaian_milestone', [
             'kelompok_id' => $setup['kelompok']->id,
             'milestone_id' => $setup['milestone']->id,
+            'mata_kuliah_id' => $setup['mk1']->id,
             'status' => 'selesai',
         ]);
 
+        $this->assertDatabaseMissing('penyelesaian_milestone', [
+            'kelompok_id' => $setup['kelompok']->id,
+            'milestone_id' => $setup['milestone']->id,
+            'mata_kuliah_id' => $setup['mk2']->id,
+        ]);
+        $this->assertDatabaseMissing('penyelesaian_milestone', [
+            'kelompok_id' => $setup['kelompok']->id,
+            'milestone_id' => $setup['milestone']->id,
+            'mata_kuliah_id' => $setup['mk3']->id,
+        ]);
+
         $this->assertDatabaseHas('notifikasi', [
-            'penerima_type' => Mahasiswa::class,
+            'penerima_type' => $setup['mhs1']->getMorphClass(),
             'penerima_id' => $setup['mhs1']->id,
             'judul' => 'Milestone Disetujui: '.$setup['milestone']->judul,
         ]);
@@ -190,7 +202,7 @@ class DosenMilestoneReviewTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('notifikasi', [
-            'penerima_type' => Mahasiswa::class,
+            'penerima_type' => $setup['mhs1']->getMorphClass(),
             'penerima_id' => $setup['mhs1']->id,
             'judul' => 'Milestone Perlu Revisi: '.$setup['milestone']->judul,
         ]);

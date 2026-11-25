@@ -66,11 +66,14 @@
         {{-- Kanan: Notif + Identitas Dosen + Keluar --}}
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
             {{-- Ikon Notifikasi --}}
-            <div class="dosen-ps-notif" style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;color:#A3978A;transition:background 0.15s;" title="Notifikasi">
+            <a href="{{ route('dosen.notifikasi') }}" class="dosen-ps-notif" style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;color:#A3978A;transition:background 0.15s;text-decoration:none;" title="{{ $unreadDosenNotifCount ?? 0 }} notifikasi belum dibaca">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                {{-- Dot notifikasi (sembunyikan jika tidak ada notif) --}}
-                <span style="position:absolute;top:6px;right:6px;width:7px;height:7px;background:#3B7454;border-radius:50%;border:1.5px solid #fff;"></span>
-            </div>
+                @if(($unreadDosenNotifCount ?? 0) > 0)
+                    <span aria-label="{{ $unreadDosenNotifCount }} notifikasi belum dibaca" style="position:absolute;top:0;right:-2px;min-width:17px;height:17px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:#DC2626;color:#fff;border:2px solid #fff;border-radius:999px;font-size:9px;font-weight:700;line-height:1;box-sizing:border-box;">
+                        {{ $unreadDosenNotifCount > 99 ? '99+' : $unreadDosenNotifCount }}
+                    </span>
+                @endif
+            </a>
 
             {{-- Avatar Inisial --}}
             <div style="width:36px;height:36px;background:#3B7454;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:0.5px;">

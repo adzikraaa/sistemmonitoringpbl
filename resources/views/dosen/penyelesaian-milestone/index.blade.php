@@ -78,10 +78,10 @@
                     @forelse ($milestones as $milestone)
                         @php
                             $key = $kelompok->id.':'.$milestone->id.':'.$mataKuliah->id;
-                            $row = $statusMap->get($key);
-                            $status = $row?->status ?? 'belum_dimulai';
                             $pengumpulanKey = $kelompok->id.':'.$milestone->id.':'.$mataKuliah->slug;
                             $pengumpulan = $pengumpulanMap->get($pengumpulanKey);
+                            $row = $pengumpulan ? $statusMap->get($key) : null;
+                            $status = $row?->status ?? 'belum_dimulai';
                         @endphp
 
                         <div class="py-3.5 border-t border-[#F0EAE2] first:border-t-0 space-y-2.5">
@@ -102,7 +102,8 @@
                                 <div>
                                     <label class="sr-only" for="status-{{ $key }}">Status</label>
                                     <select id="status-{{ $key }}" name="status"
-                                            class="w-full bg-white border border-[#CFC7BC] rounded-lg px-2.5 py-2 text-xs">
+                                            @disabled(! $pengumpulan)
+                                            class="w-full bg-white border border-[#CFC7BC] rounded-lg px-2.5 py-2 text-xs disabled:bg-[#F5F1EB] disabled:text-[#9C9188] disabled:cursor-not-allowed">
                                         @foreach ($statusLabels as $value => $label)
                                             <option value="{{ $value }}" {{ $status === $value ? 'selected' : '' }}>
                                                 {{ $label }}
@@ -115,12 +116,14 @@
                                     <label class="sr-only" for="catatan-{{ $key }}">Catatan Dosen</label>
                                     <input id="catatan-{{ $key }}" type="text" name="catatan"
                                            value="{{ $row?->catatan }}"
+                                           @disabled(! $pengumpulan)
                                            placeholder="Catatan dosen (opsional)"
-                                           class="w-full bg-white border border-[#CFC7BC] rounded-lg px-2.5 py-2 text-xs">
+                                           class="w-full bg-white border border-[#CFC7BC] rounded-lg px-2.5 py-2 text-xs disabled:bg-[#F5F1EB] disabled:text-[#9C9188] disabled:cursor-not-allowed">
                                 </div>
 
                                 <button type="submit"
-                                        class="px-3 py-2 bg-[#2F5C4A] hover:bg-[#234739] text-white text-xs font-semibold rounded-lg">
+                                        @disabled(! $pengumpulan)
+                                        class="px-3 py-2 bg-[#2F5C4A] hover:bg-[#234739] text-white text-xs font-semibold rounded-lg disabled:bg-[#CFC7BC] disabled:cursor-not-allowed">
                                     Simpan
                                 </button>
                             </form>

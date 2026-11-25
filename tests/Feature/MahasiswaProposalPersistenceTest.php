@@ -304,7 +304,7 @@ class MahasiswaProposalPersistenceTest extends TestCase
         $this->assertSame('diajukan', $proposal->status);
         $this->assertCount(2, $proposal->riwayatProposal);
         $this->assertDatabaseHas('notifikasi', [
-            'penerima_type' => Dosen::class,
+            'penerima_type' => $this->kelompok->dosen->getMorphClass(),
             'penerima_id' => $this->kelompok->dosen_id,
             'judul' => 'Pembaruan Proposal Proyek',
         ]);
@@ -334,7 +334,7 @@ class MahasiswaProposalPersistenceTest extends TestCase
     public function test_notifikasi_dapat_ditandai_sudah_dibaca(): void
     {
         $notif = Notifikasi::create([
-            'penerima_type' => Mahasiswa::class,
+            'penerima_type' => $this->mahasiswa->getMorphClass(),
             'penerima_id' => $this->mahasiswa->id,
             'judul' => 'Uji Notifikasi',
             'isi' => 'Isi notifikasi',

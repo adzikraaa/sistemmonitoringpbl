@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Koordinator;
 
 use App\Http\Controllers\Controller;
 use App\Models\Periode;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class PeriodeController extends Controller
 {
-    public function index()
+    public function index(): View
     {
-        // Ambil periode yang sedang aktif (jika tidak ada, ambil yang terbaru)
-        $periodeAktif = Periode::where('is_aktif', true)->first() ?? Periode::latest()->first();
+        $periodeAktif = Periode::query()
+            ->where('is_aktif', true)
+            ->orderByDesc('tanggal_mulai')
+            ->orderByDesc('id')
+            ->first();
 
         // Ambil seluruh daftar riwayat semester beserta hitungan relasinya
         $riwayatPeriode = Periode::withCount(['kelas', 'kelompok', 'milestone'])
@@ -23,7 +28,7 @@ class PeriodeController extends Controller
         return view('koordinator.periode', compact('periodeAktif', 'riwayatPeriode'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'nama_periode' => 'required|string|max:255',
@@ -57,10 +62,8 @@ class PeriodeController extends Controller
         return redirect()->route('koordinator.periode.index')->with('success', $msg);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Periode $periode): RedirectResponse
     {
-        $periode = Periode::findOrFail($id);
-
         $validated = $request->validate([
             'nama_periode' => 'required|string|max:255',
             'tahun_akademik' => 'required|string|max:20',
@@ -80,18 +83,26 @@ class PeriodeController extends Controller
         return redirect()->route('koordinator.periode.index')->with('success', 'Pengaturan semester berhasil diperbarui!');
     }
 
-    public function toggleAktif($id)
+    public function activate(Periode $periode): RedirectResponse
     {
-        DB::transaction(function () use ($id) {
-            Periode::query()->update(['is_aktif' => false]);
-            if ($id > 0) {
-                $periode = Periode::findOrFail($id);
-                $periode->update(['is_aktif' => true]);
-            }
+        DB::transaction(function () use ($periode): void {
+            Periode::query()
+                ->whereKeyNot($periode->id)
+                ->where('is_aktif', true)
+                ->update(['is_aktif' => false]);
+
+            $periode->forceFill(['is_aktif' => true])->saveOrFail();
         });
 
-        $msg = $id > 0 ? 'Semester aktif berhasil diubah!' : 'Semua semester berhasil dinonaktifkan.';
+        return redirect()->route('koordinator.periode.index')
+            ->with('success', 'Semester '.$periode->labelPeriode().' berhasil diaktifkan.');
+    }
 
-        return redirect()->route('koordinator.periode.index')->with('success', $msg);
+    public function deactivate(Periode $periode): RedirectResponse
+    {
+        $periode->forceFill(['is_aktif' => false])->saveOrFail();
+
+        return redirect()->route('koordinator.periode.index')
+            ->with('success', 'Semester berhasil dinonaktifkan.');
     }
 }

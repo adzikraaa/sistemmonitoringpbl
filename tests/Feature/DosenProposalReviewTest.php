@@ -124,6 +124,12 @@ class DosenProposalReviewTest extends TestCase
         $setup['proposal']->refresh();
         $this->assertSame('disetujui', $setup['proposal']->status);
         $this->assertSame('Proposal sangat lengkap dan siap dilanjutkan ke tahap milestone berikutnya.', $setup['proposal']->catatan_revisi);
+        $this->assertDatabaseHas('notifikasi', [
+            'penerima_type' => $setup['mhs']->getMorphClass(),
+            'penerima_id' => $setup['mhs']->id,
+            'judul' => 'Proposal Disetujui',
+            'dibaca_pada' => null,
+        ]);
     }
 
     public function test_dosen_can_request_revision_proposal(): void
@@ -142,6 +148,12 @@ class DosenProposalReviewTest extends TestCase
         $setup['proposal']->refresh();
         $this->assertSame('revisi', $setup['proposal']->status);
         $this->assertSame('Harap lengkapi arsitektur sistem dan detail diagram alur kerja.', $setup['proposal']->catatan_revisi);
+        $this->assertDatabaseHas('notifikasi', [
+            'penerima_type' => $setup['mhs']->getMorphClass(),
+            'penerima_id' => $setup['mhs']->id,
+            'judul' => 'Proposal Perlu Revisi',
+            'dibaca_pada' => null,
+        ]);
     }
 
     public function test_dosen_cannot_request_revision_without_notes(): void

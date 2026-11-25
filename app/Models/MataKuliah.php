@@ -53,7 +53,7 @@ class MataKuliah extends Model
         });
 
         static::updated(function (MataKuliah $mataKuliah) {
-            if ($mataKuliah->wasChanged('is_aktif') && $mataKuliah->is_aktif) {
+            if ($mataKuliah->wasChanged('is_aktif')) {
                 app(MilestoneMataKuliahSync::class)->forMataKuliah($mataKuliah);
             }
         });

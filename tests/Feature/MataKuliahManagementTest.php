@@ -123,6 +123,22 @@ class MataKuliahManagementTest extends TestCase
         ]);
     }
 
+    public function test_form_mata_kuliah_mengarahkan_relasi_kelas_ke_penugasan_dosen(): void
+    {
+        $mataKuliah = $this->makeMataKuliah();
+
+        $response = $this->actingAs($this->koordinator, 'koordinator')
+            ->get(route('koordinator.master-data.mata-kuliah'));
+
+        $response->assertOk();
+        $response->assertSee(route('koordinator.penugasan-dosen.index'));
+        $response->assertSee('Atur penugasan dosen');
+        $response->assertDontSee('name="kelas_id[]"', false);
+        $this->assertDatabaseMissing('dosen_pengampu', [
+            'mata_kuliah_id' => $mataKuliah->id,
+        ]);
+    }
+
     public function test_update_mata_kuliah_preserves_existing_dosen_pengampu(): void
     {
         $mataKuliah = $this->makeMataKuliah(['kode' => null, 'semester' => null]);

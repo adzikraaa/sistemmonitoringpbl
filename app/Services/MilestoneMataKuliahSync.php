@@ -10,41 +10,25 @@ class MilestoneMataKuliahSync
 {
     public function forMilestone(Milestone $milestone): void
     {
-        $this->sync(
-            [(int) $milestone->id],
-            MataKuliah::where('is_aktif', true)->pluck('id')->all()
-        );
+        $this->forSemua();
     }
 
     public function forMataKuliah(MataKuliah $mataKuliah): void
     {
-        $this->sync(
-            Milestone::pluck('id')->all(),
-            [(int) $mataKuliah->id]
-        );
+        $this->forSemua();
     }
 
     public function forSemua(): void
     {
-        $this->sync(
-            Milestone::pluck('id')->all(),
-            MataKuliah::where('is_aktif', true)->pluck('id')->all()
-        );
-    }
-
-    /**
-     * @param  array<int, int>  $milestoneIds
-     * @param  array<int, int>  $mataKuliahIds
-     */
-    private function sync(array $milestoneIds, array $mataKuliahIds): void
-    {
-        if ($milestoneIds === [] || $mataKuliahIds === []) {
-            return;
-        }
-
-        DB::transaction(function () use ($milestoneIds, $mataKuliahIds) {
+        DB::transaction(function () {
             $now = now();
             $rows = [];
+            $mataKuliahIds = DB::table('mata_kuliah')
+                ->where('is_aktif', true)
+                ->orderBy('id')
+                ->pluck('id')
+                ->all();
+            $milestoneIds = DB::table('milestone')->pluck('id')->all();
 
             foreach ($milestoneIds as $milestoneId) {
                 foreach ($mataKuliahIds as $mataKuliahId) {
@@ -57,8 +41,10 @@ class MilestoneMataKuliahSync
                 }
             }
 
+            DB::table('milestone_mata_kuliah')->delete();
+
             foreach (array_chunk($rows, 500) as $chunk) {
-                DB::table('milestone_mata_kuliah')->insertOrIgnore($chunk);
+                DB::table('milestone_mata_kuliah')->insert($chunk);
             }
         });
     }

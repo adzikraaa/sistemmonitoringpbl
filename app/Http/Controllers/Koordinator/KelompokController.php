@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Koordinator;
 
 use App\Http\Controllers\Controller;
-use App\Models\Dosen;
-use App\Models\Kelompok;
+use App\Models\AnggotaKelompok;
 use App\Models\Kelas;
+use App\Models\Kelompok;
 use App\Models\Mahasiswa;
 use App\Models\Periode;
 use App\Models\RiwayatPenugasanDosen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class KelompokController extends Controller
 {
@@ -19,7 +20,7 @@ class KelompokController extends Controller
     {
         $query = Kelompok::with([
             'dosen',
-            'kelas',
+            'kelas.periode',
             'anggotaKelompok.mahasiswa',
             'periode',
             'milestoneKelompok',
@@ -37,14 +38,14 @@ class KelompokController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('nama_kelompok', 'like', "%{$search}%")
-                  ->orWhere('judul_proyek', 'like', "%{$search}%")
-                  ->orWhereHas('anggotaKelompok.mahasiswa', function ($m) use ($search) {
-                      $m->where('nama', 'like', "%{$search}%")
-                        ->orWhere('nim', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('dosen', function ($d) use ($search) {
-                      $d->where('nama', 'like', "%{$search}%");
-                  });
+                    ->orWhere('judul_proyek', 'like', "%{$search}%")
+                    ->orWhereHas('anggotaKelompok.mahasiswa', function ($m) use ($search) {
+                        $m->where('nama', 'like', "%{$search}%")
+                            ->orWhere('nim', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('dosen', function ($d) use ($search) {
+                        $d->where('nama', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -53,17 +54,13 @@ class KelompokController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $kelasList = Kelas::orderBy('nama_kelas')->get();
-        $dosenList = Dosen::where('is_aktif', true)->orderBy('nama')->get();
-        $periodeList = Periode::orderByDesc('is_aktif')
-            ->orderByDesc('tanggal_mulai')
-            ->get();
+        $kelasList = Kelas::with('periode')->orderBy('nama_kelas')->get();
+        $tahunAkademikList = Periode::query()->distinct()->orderByDesc('tahun_akademik')->pluck('tahun_akademik');
 
         return view('koordinator.kelompok', compact(
             'kelompokList',
             'kelasList',
-            'dosenList',
-            'periodeList'
+            'tahunAkademikList'
         ));
     }
 
@@ -73,24 +70,21 @@ class KelompokController extends Controller
             'nama_kelompok' => 'required|string|max:120',
             'judul_proyek' => 'nullable|string|max:255',
             'kelas_id' => 'required|exists:kelas,id',
-            'periode_id' => 'required|exists:periode,id',
-            'dosen_id' => 'nullable|exists:dosen,id',
+            'tahun_akademik' => 'required|string|exists:periode,tahun_akademik',
             'mahasiswa_ids' => 'nullable|array',
             'mahasiswa_ids.*' => 'exists:mahasiswa,id',
         ]);
 
-        $dosenId = $request->filled('dosen_id')
-            ? $request->dosen_id
-            : Dosen::where('is_aktif', true)->value('id');
+        $kelas = $this->kelasUntukTahunAkademik($request);
+        $dosenId = $this->dosenPengampuKelompok($kelas);
 
-        DB::transaction(function () use ($request, $dosenId) {
+        DB::transaction(function () use ($request, $kelas, $dosenId) {
             $kelompok = Kelompok::create([
                 'nama_kelompok' => $request->nama_kelompok,
                 'judul_proyek' => $request->judul_proyek ?: $request->nama_kelompok,
                 'dosen_id' => $dosenId,
                 'kelas_id' => $request->kelas_id,
-                'periode_id' => $request->periode_id,
-                'jadwal_bimbingan' => $request->jadwal_bimbingan,
+                'periode_id' => $kelas->periode_id,
                 'status' => 'Aktif',
                 'tanggal_dibuat' => now()->toDateString(),
             ]);
@@ -101,7 +95,7 @@ class KelompokController extends Controller
                     'kelompok_id' => $kelompok->id,
                     'dosen_id' => $dosenId,
                     'dosen_sebelumnya_id' => null,
-                    'periode_id' => $request->periode_id,
+                    'periode_id' => $kelas->periode_id,
                     'koordinator_id' => Auth::guard('koordinator')->id(),
                     'aksi' => 'penugasan_baru',
                     'catatan' => 'Penugasan dosen awal saat kelompok dibuat.',
@@ -134,13 +128,14 @@ class KelompokController extends Controller
             'nama_kelompok' => 'required|string|max:120',
             'judul_proyek' => 'nullable|string|max:255',
             'kelas_id' => 'required|exists:kelas,id',
-            'periode_id' => 'required|exists:periode,id',
-            'dosen_id' => 'nullable|exists:dosen,id',
+            'tahun_akademik' => 'required|string|exists:periode,tahun_akademik',
             'mahasiswa_ids' => 'nullable|array',
             'mahasiswa_ids.*' => 'exists:mahasiswa,id',
         ]);
 
-        DB::transaction(function () use ($request, $id) {
+        $kelas = $this->kelasUntukTahunAkademik($request);
+
+        DB::transaction(function () use ($request, $id, $kelas) {
             // Mengunci baris kelompok selama proses perubahan.
             $kelompok = Kelompok::lockForUpdate()->findOrFail($id);
 
@@ -148,18 +143,14 @@ class KelompokController extends Controller
                 ? (int) $kelompok->dosen_id
                 : null;
 
-            // Jika dosen tidak dipilih, pertahankan dosen sebelumnya.
-            $dosenBaruId = $request->filled('dosen_id')
-                ? (int) $request->dosen_id
-                : $dosenSebelumnyaId;
+            $dosenBaruId = $this->dosenPengampuKelompok($kelas, $dosenSebelumnyaId);
 
             $kelompok->update([
                 'nama_kelompok' => $request->nama_kelompok,
                 'judul_proyek' => $request->judul_proyek ?: $request->nama_kelompok,
                 'dosen_id' => $dosenBaruId,
                 'kelas_id' => $request->kelas_id,
-                'periode_id' => $request->periode_id,
-                'jadwal_bimbingan' => $request->jadwal_bimbingan,
+                'periode_id' => $kelas->periode_id,
             ]);
 
             // Catat hanya jika dosen pembimbing benar-benar berubah.
@@ -168,11 +159,13 @@ class KelompokController extends Controller
                     'kelompok_id' => $kelompok->id,
                     'dosen_id' => $dosenBaruId,
                     'dosen_sebelumnya_id' => $dosenSebelumnyaId,
-                    'periode_id' => $request->periode_id,
+                    'periode_id' => $kelas->periode_id,
                     'koordinator_id' => Auth::guard('koordinator')->id(),
-                    'aksi' => $dosenSebelumnyaId === null
-                        ? 'penugasan_baru'
-                        : 'perubahan_dosen',
+                    'aksi' => match (true) {
+                        $dosenBaruId === null => 'pembatalan',
+                        $dosenSebelumnyaId === null => 'penugasan_baru',
+                        default => 'perubahan_dosen',
+                    },
                     'catatan' => $dosenSebelumnyaId === null
                         ? 'Penugasan dosen pembimbing pada kelompok.'
                         : 'Perubahan dosen pembimbing kelompok.',
@@ -210,6 +203,33 @@ class KelompokController extends Controller
             ->with('success', 'Kelompok berhasil diperbarui.');
     }
 
+    private function kelasUntukTahunAkademik(Request $request): Kelas
+    {
+        $kelas = Kelas::with('periode')->findOrFail($request->input('kelas_id'));
+
+        if ($kelas->periode?->tahun_akademik !== $request->input('tahun_akademik')) {
+            throw ValidationException::withMessages([
+                'kelas_id' => 'Pilih kelas yang terdaftar pada tahun akademik tersebut.',
+            ]);
+        }
+
+        return $kelas;
+    }
+
+    private function dosenPengampuKelompok(Kelas $kelas, ?int $dosenSaatIni = null): ?int
+    {
+        $dosenIds = $kelas->dosenPengampu()
+            ->whereHas('dosen', fn ($query) => $query->where('is_aktif', true))
+            ->distinct()
+            ->pluck('dosen_id');
+
+        if ($dosenIds->count() === 1) {
+            return (int) $dosenIds->first();
+        }
+
+        return $dosenIds->contains($dosenSaatIni) ? $dosenSaatIni : null;
+    }
+
     public function show($id)
     {
         $kelompok = Kelompok::with([
@@ -221,18 +241,18 @@ class KelompokController extends Controller
         ])->findOrFail($id);
 
         $mahasiswaList = Mahasiswa::query()
-    ->where('kelas_id', $kelompok->kelas_id)
-    ->where('is_aktif', true)
-    ->whereNotIn(
-        'id',
-        \App\Models\AnggotaKelompok::query()
-            ->whereHas('kelompok', function ($query) use ($kelompok) {
-                $query->where('periode_id', $kelompok->periode_id);
-            })
-            ->select('mahasiswa_id')
-    )
-    ->orderBy('nama')
-    ->get();
+            ->where('kelas_id', $kelompok->kelas_id)
+            ->where('is_aktif', true)
+            ->whereNotIn(
+                'id',
+                AnggotaKelompok::query()
+                    ->whereHas('kelompok', function ($query) use ($kelompok) {
+                        $query->where('periode_id', $kelompok->periode_id);
+                    })
+                    ->select('mahasiswa_id')
+            )
+            ->orderBy('nama')
+            ->get();
 
         return view('koordinator.kelompok-detail', compact(
             'kelompok',
@@ -249,18 +269,18 @@ class KelompokController extends Controller
 
         $kelompok = Kelompok::with('anggotaKelompok')->findOrFail($id);
 
-       $mahasiswaSudahTerdaftar = \App\Models\AnggotaKelompok::query()
-    ->where('mahasiswa_id', $request->mahasiswa_id)
-    ->whereHas('kelompok', function ($query) use ($kelompok) {
-        $query->where('periode_id', $kelompok->periode_id);
-    })
-    ->exists();
+        $mahasiswaSudahTerdaftar = AnggotaKelompok::query()
+            ->where('mahasiswa_id', $request->mahasiswa_id)
+            ->whereHas('kelompok', function ($query) use ($kelompok) {
+                $query->where('periode_id', $kelompok->periode_id);
+            })
+            ->exists();
 
-if ($mahasiswaSudahTerdaftar) {
-    return back()->withErrors([
-        'mahasiswa_id' => 'Mahasiswa sudah tergabung dalam kelompok lain pada periode ini.',
-    ]);
-}
+        if ($mahasiswaSudahTerdaftar) {
+            return back()->withErrors([
+                'mahasiswa_id' => 'Mahasiswa sudah tergabung dalam kelompok lain pada periode ini.',
+            ]);
+        }
 
         if ($kelompok->anggotaKelompok()->count() >= 4) {
             return back()->withErrors([

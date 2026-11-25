@@ -20,10 +20,30 @@ class Periode extends Model
     protected function casts(): array
     {
         return [
-            'tanggal_mulai'   => 'date',
+            'tanggal_mulai' => 'date',
             'tanggal_selesai' => 'date',
-            'is_aktif'        => 'boolean',
+            'is_aktif' => 'boolean',
         ];
+    }
+
+    public function namaSemester(): string
+    {
+        if (preg_match('/^(Ganjil|Genap)\b/i', trim($this->nama_periode), $matches) === 1) {
+            return ucfirst(strtolower($matches[1]));
+        }
+
+        return trim($this->nama_periode);
+    }
+
+    public function labelPeriode(): string
+    {
+        $namaPeriode = trim($this->nama_periode);
+
+        if (str_contains($namaPeriode, $this->tahun_akademik)) {
+            return $namaPeriode;
+        }
+
+        return trim($namaPeriode.' '.$this->tahun_akademik);
     }
 
     public function kelas(): HasMany

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Koordinator;
 
 use App\Http\Controllers\Controller;
 use App\Models\DosenPengampu;
-use App\Models\Kelas;
 use App\Models\MataKuliah;
 use App\Models\PengumpulanMilestone;
 use App\Models\PenyelesaianMilestone;
@@ -41,10 +40,6 @@ class MataKuliahController extends Controller
 
         $mataKuliahList = $query->orderBy('kode')->paginate(10)->withQueryString();
 
-        $kelasList = Kelas::where('is_aktif', true)
-            ->orderBy('nama_kelas')
-            ->get();
-
         $semesterList = MataKuliah::whereNotNull('semester')
             ->distinct()
             ->orderBy('semester')
@@ -55,7 +50,6 @@ class MataKuliahController extends Controller
 
         return view('koordinator.master-data.mata kuliah.index', compact(
             'mataKuliahList',
-            'kelasList',
             'semesterList',
             'totalMk',
             'totalSks',

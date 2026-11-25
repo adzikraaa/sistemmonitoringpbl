@@ -281,7 +281,7 @@
                                         {{ $dosen['subtitle'] }}
                                     </div>
                                     <div style="font-size: 11px; color: #786F65; margin-top: 4px;">
-                                        {{ $dosen['assigned_count'] }}/3 mata kuliah · {{ $dosen['slot_tersedia'] }} slot tersedia
+                                        {{ $dosen['assigned_count'] }}/1 mata kuliah · {{ $dosen['slot_tersedia'] }} slot tersedia
                                     </div>
                                     {{-- Progress Bar --}}
                                     <div style="width: 100%; height: 4px; background: #EFEBE4; border-radius: 2px; margin-top: 4px; overflow: hidden;">
@@ -387,7 +387,7 @@
                                 </div>
                                 <div style="min-width: 0;">
                                     <div style="font-size: 12.5px; font-weight: 700; color: #2D2621; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                        {{ $dosen['nama'] }} · {{ $dosen['assigned_count'] }}/3 penugasan
+                                        {{ $dosen['nama'] }} · {{ $dosen['assigned_count'] }}/1 penugasan
                                     </div>
                                     <div style="font-size: 11px; color: #786F65;">
                                         {{ $dosen['nidn'] }} · mendapat {{ $dosen['assigned_count'] }} penugasan
@@ -448,7 +448,7 @@
                             <input type="checkbox"
                                    name="mata_kuliah_ids[]"
                                    value="{{ $mk->id }}"
-                                   onchange="onMkCheckboxChange()"
+                                   onchange="onMkCheckboxChange(this)"
                                    style="width: 16px; height: 16px; accent-color: #5C3E21;">
                             <span style="font-size: 13px; font-weight: 600; color: #2D2621;">
                                 {{ $mk->nama_matkul }}
@@ -471,7 +471,7 @@
                     <div id="capacityProgressBar" style="width: 0%; height: 100%; background: #875529; border-radius: 3px; transition: width 0.2s;"></div>
                 </div>
                 <div style="font-size: 11px; color: #A3978A; margin-top: 6px;">
-                    Batas 3 mata kuliah per dosen · tidak melebihi kapasitas
+                    Batas 1 mata kuliah per dosen
                 </div>
             </div>
 
@@ -582,7 +582,7 @@
         document.getElementById('drawerForm').reset();
         document.querySelectorAll('.drawer-dosen-card').forEach(card => {
             card.style.borderColor = '#E8E2D8';
-            card.style.background = card.getAttribute('data-assigned') >= 3 ? '#F9F7F5' : '#FFFFFF';
+            card.style.background = card.getAttribute('data-assigned') >= 1 ? '#F9F7F5' : '#FFFFFF';
             const ind = card.querySelector('.radio-indicator');
             if (ind) {
                 ind.style.borderColor = '#CFC7BC';
@@ -613,7 +613,7 @@
                 selectedDosenAssigned = parseInt(card.getAttribute('data-assigned') || '0');
             } else {
                 card.style.borderColor = '#E8E2D8';
-                card.style.background = card.getAttribute('data-assigned') >= 3 ? '#F9F7F5' : '#FFFFFF';
+                card.style.background = card.getAttribute('data-assigned') >= 1 ? '#F9F7F5' : '#FFFFFF';
                 if (ind) {
                     ind.style.borderColor = '#CFC7BC';
                     ind.style.background = '#FFFFFF';
@@ -624,7 +624,12 @@
         updateCapacityPreview();
     }
 
-    function onMkCheckboxChange() {
+    function onMkCheckboxChange(changedCheckbox = null) {
+        if (changedCheckbox && changedCheckbox.checked) {
+            document.querySelectorAll('input[name="mata_kuliah_ids[]"]').forEach(checkbox => {
+                if (checkbox !== changedCheckbox) checkbox.checked = false;
+            });
+        }
         document.querySelectorAll('.mk-checkbox-card').forEach(card => {
             const cb = card.querySelector('input[type="checkbox"]');
             if (cb && cb.checked) {
@@ -656,11 +661,11 @@
             return;
         }
 
-        calcEl.innerText = `${selectedDosenAssigned} saat ini + ${checkedMkCount} penugasan baru = ${totalAfter} / 3 penugasan`;
-        const percent = Math.min(100, Math.round((totalAfter / 3) * 100));
+        calcEl.innerText = `${selectedDosenAssigned} saat ini + ${checkedMkCount} penugasan baru = ${totalAfter} / 1 penugasan`;
+        const percent = Math.min(100, Math.round(totalAfter * 100));
         barEl.style.width = `${percent}%`;
 
-        if (totalAfter > 3) {
+        if (totalAfter > 1) {
             statusEl.innerText = '• Melebihi Kapasitas';
             statusEl.style.color = '#9B2C2C';
             barEl.style.background = '#9B2C2C';

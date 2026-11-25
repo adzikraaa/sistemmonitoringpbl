@@ -160,15 +160,14 @@
 /* ── Two-column Charts Row ── */
 .krd-charts-row {
     display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
     margin-bottom: 24px;
 }
 .krd-chart-card {
     background: #fff;
     border: 1.5px solid var(--krd-border-warm);
     border-radius: 12px;
-    padding: 24px;
+    padding: 28px 30px;
 }
 .krd-chart-title {
     font-family: 'DM Serif Display', Georgia, serif;
@@ -185,20 +184,22 @@
 
 /* ── Bar Chart (Milestone Progress) ── */
 .krd-bar-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(140px, 220px) minmax(0, 1fr) 56px;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 16px;
+    margin-bottom: 18px;
 }
 .krd-bar-label {
-    font-size: 12.5px;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--krd-text-dark);
-    min-width: 110px;
-    flex-shrink: 0;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 .krd-bar-track {
-    flex: 1;
-    height: 10px;
+    width: 100%;
+    height: 14px;
     background: #F0EBE4;
     border-radius: 999px;
     overflow: hidden;
@@ -208,18 +209,17 @@
     border-radius: 999px;
 }
 .krd-bar-val {
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 600;
     color: var(--krd-text-dark);
-    min-width: 36px;
     text-align: right;
-    flex-shrink: 0;
 }
 .krd-bar-axis {
     display: flex;
     justify-content: space-between;
-    padding-left: 120px;
-    margin-top: 6px;
+    padding-left: 236px;
+    padding-right: 72px;
+    margin-top: 2px;
 }
 .krd-bar-axis span {
     font-size: 10px;
@@ -227,79 +227,6 @@
 }
 
 /* ── Donut Chart (Capaian Program) ── */
-.krd-donut-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-}
-.krd-donut-chart {
-    position: relative;
-    width: 150px;
-    height: 150px;
-}
-.krd-donut-svg {
-    transform: rotate(-90deg);
-    width: 150px;
-    height: 150px;
-}
-.krd-donut-label {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 26px;
-    color: var(--krd-brown-dark);
-    line-height: 1;
-}
-.krd-donut-label small {
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    color: var(--krd-text-muted);
-    font-weight: 400;
-    margin-top: 2px;
-    display: block;
-}
-.krd-donut-info {
-    text-align: center;
-}
-.krd-donut-score {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 20px;
-    color: var(--krd-brown-dark);
-}
-.krd-donut-score small {
-    font-family: 'Inter', sans-serif;
-    font-size: 11.5px;
-    color: var(--krd-text-muted);
-    font-weight: 400;
-    display: block;
-    margin-top: 2px;
-}
-.krd-badge-sisa {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    background: #FFF3E0;
-    color: #B45309;
-    font-size: 11.5px;
-    font-weight: 600;
-    border-radius: 999px;
-    margin-top: 6px;
-}
-.krd-donut-note {
-    font-size: 10.5px;
-    color: var(--krd-text-muted);
-    text-align: center;
-    margin: 0;
-    line-height: 1.5;
-}
-
 /* ── Table Rekapitulasi ── */
 .krd-rekap-card {
     background: #fff;
@@ -552,6 +479,19 @@
     .krd-dash-title {
         font-size: 24px;
     }
+    .krd-chart-card {
+        padding: 20px 16px;
+    }
+    .krd-bar-row {
+        grid-template-columns: minmax(0, 1fr) 48px;
+        gap: 8px 12px;
+    }
+    .krd-bar-label {
+        grid-column: 1 / -1;
+    }
+    .krd-bar-axis {
+        display: none;
+    }
     .krd-rekap-table th:nth-child(5),
     .krd-rekap-table td:nth-child(5) {
         display: none;
@@ -665,62 +605,27 @@
     {{-- Bar Chart: Penyelesaian Milestone Global --}}
     <div class="krd-chart-card">
         <h2 class="krd-chart-title">Penyelesaian milestone global</h2>
-        <p class="krd-chart-subtitle">Jumlah kelompok selesai per tahapan &middot; dari {{ $totalKelompok }} kelompok</p>
+        <p class="krd-chart-subtitle">Target selesai per tahapan berdasarkan {{ $totalKelompok }} kelompok dan seluruh mata kuliah aktif.</p>
 
-        @foreach($milestoneChartData as $row)
-        <div class="krd-bar-row">
-            <span class="krd-bar-label">{!! $row['label'] !!}</span>
-            <div class="krd-bar-track">
-                <div class="krd-bar-fill" style="width: {{ $row['pct'] }}%; background-color: {{ $row['color'] }};"></div>
+        @forelse($milestoneChartData as $row)
+            <div class="krd-bar-row">
+                <span class="krd-bar-label">{{ $row['label'] }}</span>
+                <div class="krd-bar-track">
+                    <div class="krd-bar-fill" style="width: {{ $row['pct'] }}%; background-color: {{ $row['color'] }};"></div>
+                </div>
+                <span class="krd-bar-val">{{ $row['val'] }}/{{ $row['max'] }}</span>
             </div>
-            <span class="krd-bar-val">{{ $row['val'] }}/{{ $row['max'] }}</span>
-        </div>
-        @endforeach
+        @empty
+            <p class="krd-chart-subtitle" style="padding: 24px 0; text-align: center;">Belum ada milestone global pada periode aktif.</p>
+        @endforelse
 
-        <div class="krd-bar-axis">
-            <span>0</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
-        </div>
+        @if($milestoneChartData !== [])
+            <div class="krd-bar-axis">
+                <span>0</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+            </div>
+        @endif
     </div>
 
-    {{-- Donut Chart: Capaian Seluruh Program --}}
-    <div class="krd-chart-card">
-        <h2 class="krd-chart-title">Capaian seluruh program</h2>
-        <p class="krd-chart-subtitle">Setiap milestone memiliki bobot yang sama.</p>
-
-        @php
-            $circumference = 2 * M_PI * 54; // r=54
-            $offset = $circumference * (1 - $pctCapaian / 100);
-        @endphp
-
-        <div class="krd-donut-wrap">
-            <div class="krd-donut-chart">
-                <svg class="krd-donut-svg" viewBox="0 0 120 120">
-                    {{-- Track --}}
-                    <circle cx="60" cy="60" r="54" fill="none" stroke="#F0EBE4" stroke-width="11"/>
-                    {{-- Fill --}}
-                    <circle cx="60" cy="60" r="54" fill="none"
-                        stroke="#4A3222"
-                        stroke-width="11"
-                        stroke-linecap="round"
-                        stroke-dasharray="{{ $circumference }}"
-                        stroke-dashoffset="{{ $offset }}"/>
-                </svg>
-                <div class="krd-donut-label">
-                    {{ $pctCapaian }}%
-                </div>
-            </div>
-            <div class="krd-donut-info">
-                <div class="krd-donut-score">
-                    {{ $totalSelesaiSemua }} / {{ $totalTargetSemua }}
-                    <small>target telah selesai</small>
-                </div>
-                <div class="krd-badge-sisa">
-                    &bull; {{ max(0, $totalTargetSemua - $totalSelesaiSemua) }} target tersisa
-                </div>
-            </div>
-            <p class="krd-donut-note">{{ $totalKelompok }} kelompok &times; {{ count($milestoneChartData) }} milestone.<br>Capaian dihitung dari penyelesaian,<br>bukan penilaian akademik.</p>
-        </div>
-    </div>
 </div>
 
 {{-- ─── Rekapitulasi Seluruh Kelas ─────────────────── --}}
@@ -834,8 +739,16 @@
             <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
         <div>
-            <p class="krd-alert-title">2 kelompok melewati tenggat proposal &middot; 16 Oktober 2026</p>
-            <p class="krd-alert-desc">SIB 3B-06 dan SIB 3C-06 belum menyelesaikan proposal. Jadwal global tetap berlaku untuk seluruh kelompok.</p>
+            @if($overdueAlert)
+                <p class="krd-alert-title">{{ $overdueAlert['remaining'] }} target melewati tenggat {{ $overdueAlert['label'] }} &middot; {{ $overdueAlert['deadline']->format('d M Y') }}</p>
+                <p class="krd-alert-desc">Target berasal dari kelompok dan mata kuliah pada lingkup filter yang belum dinyatakan selesai oleh dosen.</p>
+            @elseif($milestoneChartData === [])
+                <p class="krd-alert-title">Milestone global belum tersedia</p>
+                <p class="krd-alert-desc">Tambahkan milestone global agar capaian program dapat dihitung dari data pelaksanaan.</p>
+            @else
+                <p class="krd-alert-title">Tidak ada target milestone yang melewati tenggat</p>
+                <p class="krd-alert-desc">Seluruh target yang telah jatuh tempo pada lingkup filter sudah selesai.</p>
+            @endif
         </div>
     </div>
     <a href="{{ route('koordinator.milestone-global.index') }}" class="krd-btn-kelola-milestone">

@@ -204,7 +204,9 @@
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
                     @if($unreadDosenNotif > 0)
-                        <span style="position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: #DC2626; border-radius: 50%; border: 2px solid #FFFFFF;"></span>
+                        <span aria-label="{{ $unreadDosenNotif }} notifikasi belum dibaca" style="position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:#DC2626;color:#fff;border:2px solid #fff;border-radius:999px;font-size:9px;font-weight:700;line-height:1;box-sizing:border-box;">
+                            {{ $unreadDosenNotif > 99 ? '99+' : $unreadDosenNotif }}
+                        </span>
                     @endif
                 </a>
 
@@ -244,6 +246,7 @@
     </div>
 
     @stack('scripts')
+    @include('partials.session-flash-behavior')
 
     <script>
         function toggleSidebar() {
