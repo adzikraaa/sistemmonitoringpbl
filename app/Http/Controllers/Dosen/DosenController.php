@@ -35,8 +35,10 @@ class DosenController extends Controller
 
     private function semesterData(): array
     {
-        $periodes = Periode::query()->orderByDesc('tanggal_mulai')->get();
-
+       $periodes = Periode::query()
+    ->where('is_aktif', true)
+    ->orderByDesc('tanggal_mulai')
+    ->get();
         if ($periodes->isEmpty()) {
             return [
                 [
