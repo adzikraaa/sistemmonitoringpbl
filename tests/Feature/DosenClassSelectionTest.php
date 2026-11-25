@@ -27,7 +27,9 @@ class DosenClassSelectionTest extends TestCase
 
         $this->actingAs($dosen, 'dosen')
             ->get(route('dosen.pilih-semester'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('id="dp-logout-form" method="POST" action="'.route('logout').'"', false)
+            ->assertSee('type="submit" form="dp-logout-form" class="dp-bottom__back"', false);
 
         $this->actingAs($dosen, 'dosen')
             ->get(route('dosen.laporan-aktivitas'))

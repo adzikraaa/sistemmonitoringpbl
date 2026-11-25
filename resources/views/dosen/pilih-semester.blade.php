@@ -310,6 +310,11 @@
 }
 .dp-bottom__back {
     display: inline-flex;
+    background: none;
+    border: 0;
+    padding: 0;
+    font-family: inherit;
+    cursor: pointer;
     align-items: center;
     gap: 6px;
     font-size: 13.5px;
@@ -423,6 +428,10 @@
     </div>
 
     {{-- ══════════════ FORM + CARDS ══════════════ --}}
+    <form id="dp-logout-form" method="POST" action="{{ route('logout') }}">
+        @csrf
+    </form>
+
     <form id="dp-form" method="POST" action="{{ route('dosen.set-semester') }}">
         @csrf
         <input type="hidden" name="semester_id" id="dp-semester-input" value="">
@@ -515,10 +524,10 @@
         {{-- ══════════════ BOTTOM BAR ══════════════ --}}
         <div class="dp-bottom">
             <div class="dp-bottom__nav">
-                <a href="{{ route('login') }}" class="dp-bottom__back">
+                <button type="submit" form="dp-logout-form" class="dp-bottom__back">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                     Kembali ke Login
-                </a>
+                </button>
                 <div class="dp-bottom__actions">
                     <button type="submit" id="dp-btn-lanjutkan" class="dp-btn-lanjutkan" onclick="return validateForm()">
                         Lanjutkan ke Dashboard
