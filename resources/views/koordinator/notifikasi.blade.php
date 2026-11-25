@@ -248,6 +248,9 @@
         background: #F8F4EE;
         border-radius: 6px;
         transition: all 0.15s ease;
+        border: 0;
+        cursor: pointer;
+        font-family: inherit;
     }
 
     .notif-action-btn:hover {
@@ -298,7 +301,7 @@
         <div>
             <p class="notif-eyebrow">RUANG KOORDINATOR · PUSAT PEMBERITAHUAN</p>
             <h1 class="notif-title">Notifikasi & Aktivitas Sistem</h1>
-            <p class="notif-desc">Pantau pengajuan proposal, penugasan dosen penilai, progres kelompok, dan pembaruan sistem.</p>
+            <p class="notif-desc">Pantau aktivitas review, revisi, persetujuan, dan pembaruan progres yang dilakukan dosen.</p>
         </div>
 
         @if($unreadCount > 0)
@@ -393,10 +396,13 @@
                         <span class="notif-time">{{ $item['waktu'] }}</span>
 
                         @if(!empty($item['action_url']))
-                            <a href="{{ $item['action_url'] }}" class="notif-action-btn">
-                                <span>{{ $item['action_label'] }}</span>
-                                <span style="font-size: 13px;">→</span>
-                            </a>
+                            <form method="POST" action="{{ route('koordinator.notifikasi.mark-read', $item['id']) }}">
+                                @csrf
+                                <button type="submit" class="notif-action-btn">
+                                    <span>{{ $item['action_label'] }}</span>
+                                    <span style="font-size: 13px;">→</span>
+                                </button>
+                            </form>
                         @endif
                     </div>
                 </div>

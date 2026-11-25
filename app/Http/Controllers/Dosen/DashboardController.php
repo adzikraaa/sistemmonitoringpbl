@@ -8,7 +8,6 @@ use App\Models\Dosen;
 use App\Models\Kelas;
 use App\Models\Kelompok;
 use App\Models\LogbookMilestone;
-use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
 use App\Models\Milestone;
 use App\Models\Notifikasi;
@@ -16,6 +15,7 @@ use App\Models\PengumpulanMilestone;
 use App\Models\PenyelesaianMilestone;
 use App\Models\Periode;
 use App\Models\Proposal;
+use App\Services\CoordinatorActivityNotificationService;
 use App\Services\ProgressService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -364,7 +364,7 @@ class DashboardController extends Controller
     /**
      * Menyimpan hasil review dosen (setujui atau minta revisi).
      */
-    public function reviewLogbook(Request $request, int|string $id)
+    public function reviewLogbook(Request $request, int|string $id, CoordinatorActivityNotificationService $coordinatorNotifications)
     {
         $request->validate([
             'action' => 'required|in:setujui,revisi',
@@ -400,7 +400,7 @@ class DashboardController extends Controller
 
             foreach ($recipients->unique('id') as $mhs) {
                 Notifikasi::create([
-                    'penerima_type' => Mahasiswa::class,
+                    'penerima_type' => $mhs->getMorphClass(),
                     'penerima_id' => $mhs->id,
                     'judul' => ($action === 'setujui') ? 'Logbook Disetujui' : 'Logbook Perlu Revisi',
                     'isi' => ($action === 'setujui')
@@ -409,6 +409,16 @@ class DashboardController extends Controller
                     'tautan' => route('mahasiswa.logbook'),
                     'dibaca_pada' => null,
                 ]);
+            }
+
+            $dosen = Auth::guard('dosen')->user();
+            if ($dosen && $logbook->kelompok) {
+                $coordinatorNotifications->kirim(
+                    $dosen,
+                    $action === 'setujui' ? 'Dosen Menyetujui Logbook' : 'Dosen Meminta Revisi Logbook',
+                    'Logbook "'.$logbook->judul.'" milik '.$logbook->kelompok->nama_kelompok.' telah direview.',
+                    route('koordinator.kelompok.show', $logbook->kelompok)
+                );
             }
         } catch (\Throwable $e) {
             // Failsafe notifikasi
@@ -441,7 +451,7 @@ class DashboardController extends Controller
     /**
      * Menyimpan hasil review dosen untuk proposal (setujui atau minta revisi).
      */
-    public function reviewProposal(Request $request, int|string $id)
+    public function reviewProposal(Request $request, int|string $id, CoordinatorActivityNotificationService $coordinatorNotifications)
     {
         $request->validate([
             'action' => 'required|in:setujui,revisi',
@@ -481,7 +491,7 @@ class DashboardController extends Controller
 
             foreach ($recipients->unique('id') as $mhs) {
                 Notifikasi::create([
-                    'penerima_type' => Mahasiswa::class,
+                    'penerima_type' => $mhs->getMorphClass(),
                     'penerima_id' => $mhs->id,
                     'judul' => ($action === 'setujui') ? 'Proposal Disetujui' : 'Proposal Perlu Revisi',
                     'isi' => ($action === 'setujui')
@@ -490,6 +500,16 @@ class DashboardController extends Controller
                     'tautan' => route('mahasiswa.proposal'),
                     'dibaca_pada' => null,
                 ]);
+            }
+
+            $dosen = Auth::guard('dosen')->user();
+            if ($dosen && $proposal->kelompok) {
+                $coordinatorNotifications->kirim(
+                    $dosen,
+                    $action === 'setujui' ? 'Dosen Menyetujui Proposal' : 'Dosen Meminta Revisi Proposal',
+                    'Proposal "'.$proposal->judul.'" milik '.$proposal->kelompok->nama_kelompok.' telah direview.',
+                    route('koordinator.kelompok.show', $proposal->kelompok)
+                );
             }
         } catch (\Throwable $e) {
             // Failsafe notifikasi
@@ -592,9 +612,9 @@ class DashboardController extends Controller
                     $latestSubmissionDate = $pengumpulan->created_at;
                 }
             }
-            if ($penyelesaian && $penyelesaian->status === 'selesai') {
+            if ($pengumpulan && $penyelesaian && $penyelesaian->status === 'selesai') {
                 $statusRaw = 'disetujui';
-            } elseif ($penyelesaian && $penyelesaian->status === 'revisi') {
+            } elseif ($pengumpulan && $penyelesaian && $penyelesaian->status === 'revisi') {
                 $statusRaw = 'revisi';
             }
 
@@ -659,7 +679,7 @@ class DashboardController extends Controller
     /**
      * Menyimpan hasil review dosen untuk pengumpulan milestone terpadu.
      */
-    public function reviewMilestone(Request $request, Kelompok $kelompok, Milestone $milestone)
+    public function reviewMilestone(Request $request, Kelompok $kelompok, Milestone $milestone, CoordinatorActivityNotificationService $coordinatorNotifications)
     {
         $request->validate([
             'action' => 'required|in:setujui,revisi',
@@ -679,28 +699,40 @@ class DashboardController extends Controller
         $dosen = Auth::guard('dosen')->user();
         $dosenId = $dosen?->id;
 
-        $mataKuliahList = MataKuliah::query()
-            ->where('is_aktif', true)
-            ->whereIn('nama_matkul', MahasiswaController::MATA_KULIAH_SIM_PBL)
+        $pengumpulanList = PengumpulanMilestone::query()
+            ->where('kelompok_id', $kelompok->id)
+            ->where('milestone_id', $milestone->id)
             ->get();
+
+        if ($pengumpulanList->isEmpty()) {
+            return back()->withErrors([
+                'milestone' => 'Belum ada laporan mata kuliah yang dapat direview untuk milestone ini.',
+            ]);
+        }
+
+        $mataKuliahBySlug = MataKuliah::query()
+            ->where('is_aktif', true)
+            ->whereIn('slug', $pengumpulanList->pluck('mata_kuliah')->filter()->unique())
+            ->get()
+            ->keyBy('slug');
 
         $statusPengumpulan = ($action === 'setujui') ? 'disetujui' : 'revisi';
         $statusPenyelesaian = ($action === 'setujui') ? 'selesai' : 'berjalan';
 
-        DB::transaction(function () use ($kelompok, $milestone, $mataKuliahList, $dosenId, $statusPengumpulan, $statusPenyelesaian, $catatan) {
-            foreach ($mataKuliahList as $mk) {
-                PengumpulanMilestone::query()
-                    ->where('kelompok_id', $kelompok->id)
-                    ->where('milestone_id', $milestone->id)
-                    ->where('mata_kuliah', $mk->slug)
-                    ->update([
-                        'status' => $statusPengumpulan,
-                    ]);
+        DB::transaction(function () use ($pengumpulanList, $kelompok, $milestone, $mataKuliahBySlug, $dosenId, $statusPengumpulan, $statusPenyelesaian, $catatan) {
+            foreach ($pengumpulanList as $pengumpulan) {
+                $mataKuliah = $mataKuliahBySlug->get($pengumpulan->mata_kuliah);
+
+                if (! $mataKuliah) {
+                    continue;
+                }
+
+                $pengumpulan->update(['status' => $statusPengumpulan]);
 
                 $penyelesaian = PenyelesaianMilestone::firstOrNew([
                     'kelompok_id' => $kelompok->id,
                     'milestone_id' => $milestone->id,
-                    'mata_kuliah_id' => $mk->id,
+                    'mata_kuliah_id' => $mataKuliah->id,
                 ]);
 
                 $penyelesaian->status = $statusPenyelesaian;
@@ -721,23 +753,32 @@ class DashboardController extends Controller
 
             foreach ($recipients->unique('id') as $mhs) {
                 Notifikasi::create([
-                    'penerima_type' => Mahasiswa::class,
+                    'penerima_type' => $mhs->getMorphClass(),
                     'penerima_id' => $mhs->id,
                     'judul' => ($action === 'setujui') ? 'Milestone Disetujui: '.$milestone->judul : 'Milestone Perlu Revisi: '.$milestone->judul,
                     'isi' => ($action === 'setujui')
-                        ? 'Laporan '.$milestone->judul.' untuk seluruh mata kuliah telah disetujui oleh dosen pembimbing.'
+                        ? 'Laporan '.$milestone->judul.' yang telah dikumpulkan telah disetujui oleh dosen pembimbing.'
                         : 'Laporan '.$milestone->judul.' memerlukan perbaikan: '.Str::limit((string) $catatan, 120),
                     'tautan' => route('mahasiswa.milestone'),
                     'dibaca_pada' => null,
                 ]);
+            }
+
+            if ($dosen) {
+                $coordinatorNotifications->kirim(
+                    $dosen,
+                    $action === 'setujui' ? 'Dosen Menyetujui Laporan Milestone' : 'Dosen Meminta Revisi Laporan Milestone',
+                    'Laporan '.$milestone->judul.' milik '.$kelompok->nama_kelompok.' telah direview.',
+                    route('koordinator.kelompok.show', $kelompok)
+                );
             }
         } catch (\Throwable $e) {
             // Failsafe notifikasi
         }
 
         $pesan = ($action === 'setujui')
-            ? 'Laporan milestone berhasil disetujui untuk seluruh mata kuliah.'
-            : 'Permintaan revisi milestone berhasil dikirimkan ke kelompok mahasiswa.';
+            ? 'Laporan milestone yang telah dikumpulkan berhasil disetujui.'
+            : 'Permintaan revisi untuk laporan yang telah dikumpulkan berhasil dikirimkan ke kelompok mahasiswa.';
 
         return redirect()->route('dosen.laporan-aktivitas.milestone', [$kelompok->id, $milestone->id])->with('success', $pesan);
     }

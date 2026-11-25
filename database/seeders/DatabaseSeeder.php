@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             MilestoneSeeder::class,  // milestone & deliverable (bergantung pada periode aktif)
             MilestoneMataKuliahSeeder::class, // pivot milestone x mata kuliah aktif
             RoleSeeder::class,       // koordinator, dosen, mahasiswa
+            DosenUatSeeder::class,   // akun dosen UAT aktif tanpa penugasan otomatis
             KelompokSeeder::class,   // kelompok, anggota_kelompok, dosen_pengampu
         ]);
     }

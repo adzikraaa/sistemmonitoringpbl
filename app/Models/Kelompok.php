@@ -17,7 +17,6 @@ use Illuminate\Support\Collection;
  * @property int|null $dosen_id
  * @property int|null $kelas_id
  * @property int|null $periode_id
- * @property string|null $jadwal_bimbingan
  * @property string|null $status
  * @property Carbon|null $tanggal_dibuat
  * @property Carbon|null $created_at
@@ -28,6 +27,7 @@ use Illuminate\Support\Collection;
  * @property Periode|null $periode
  * @property \Illuminate\Database\Eloquent\Collection<int, AnggotaKelompok> $anggotaKelompok
  * @property \Illuminate\Database\Eloquent\Collection<int, LogbookMilestone> $logbookMilestone
+ * @property \Illuminate\Database\Eloquent\Collection<int, PengumpulanMilestone> $pengumpulanMilestone
  * @property \Illuminate\Database\Eloquent\Collection<int, Proposal> $proposal
  */
 class Kelompok extends Model
@@ -40,7 +40,6 @@ class Kelompok extends Model
         'dosen_id',
         'kelas_id',
         'periode_id',
-        'jadwal_bimbingan',
         'status',
         'tanggal_dibuat',
     ];
@@ -150,6 +149,11 @@ class Kelompok extends Model
     public function logbookMilestone(): HasMany
     {
         return $this->hasMany(LogbookMilestone::class);
+    }
+
+    public function pengumpulanMilestone(): HasMany
+    {
+        return $this->hasMany(PengumpulanMilestone::class);
     }
 
     public function milestoneKelompok(): HasMany

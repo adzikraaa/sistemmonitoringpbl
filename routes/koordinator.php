@@ -1,15 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Koordinator\DashboardController;
 use App\Http\Controllers\Koordinator\KelasController;
-use App\Http\Controllers\Koordinator\PenggunaController;
+use App\Http\Controllers\Koordinator\KelompokController;
 use App\Http\Controllers\Koordinator\MataKuliahController;
+use App\Http\Controllers\Koordinator\MilestoneController;
+use App\Http\Controllers\Koordinator\NotifikasiController;
+use App\Http\Controllers\Koordinator\PenggunaController;
 use App\Http\Controllers\Koordinator\PenugasanDosenController;
 use App\Http\Controllers\Koordinator\PeriodeController;
-use App\Http\Controllers\Koordinator\MilestoneController;
-use App\Http\Controllers\Koordinator\KelompokController;
-use App\Http\Controllers\Koordinator\NotifikasiController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('koordinator')->name('koordinator.')->group(function () {
     Route::middleware('auth:koordinator')->group(function () {
@@ -23,6 +23,7 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
 
         // Notifikasi Koordinator
         Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi');
+        Route::post('/notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
         Route::post('/notifikasi/mark-all-read', [NotifikasiController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 
         // Master Data Kelas
@@ -53,7 +54,6 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::patch('/master-data/mata-kuliah/{mataKuliah}/toggle', [MataKuliahController::class, 'toggleStatus'])->name('master-data.mata-kuliah.toggle');
         Route::delete('/master-data/mata-kuliah/{mataKuliah}', [MataKuliahController::class, 'destroy'])->name('master-data.mata-kuliah.destroy');
 
-
         // Kelompok PBL
         Route::get('/kelompok-pbl', [KelompokController::class, 'index'])->name('kelompok.index');
         Route::get('/kelompok', [KelompokController::class, 'index'])->name('kelompok');
@@ -71,16 +71,17 @@ Route::prefix('koordinator')->name('koordinator.')->group(function () {
         Route::delete('/penugasan-dosen/{dosenPengampu}', [PenugasanDosenController::class, 'destroy'])->name('penugasan-dosen.destroy');
         Route::get('/penugasan-dosen/api/data', [PenugasanDosenController::class, 'apiData'])->name('penugasan-dosen.api-data');
 
-
         // Route Fitur Semester & Periode
         Route::get('/periode', [PeriodeController::class, 'index'])->name('periode.index');
         Route::post('/periode', [PeriodeController::class, 'store'])->name('periode.store');
-        Route::match(['put', 'patch'], '/periode/{id}', [PeriodeController::class, 'update'])->name('periode.update');
-        Route::match(['post', 'put', 'patch'], '/periode/{id}/toggle-aktif', [PeriodeController::class, 'toggleAktif'])->name('periode.toggle-aktif');
+        Route::put('/periode/{periode}', [PeriodeController::class, 'update'])->name('periode.update');
+        Route::post('/periode/{periode}/aktifkan', [PeriodeController::class, 'activate'])->name('periode.activate');
+        Route::post('/periode/{periode}/nonaktifkan', [PeriodeController::class, 'deactivate'])->name('periode.deactivate');
 
         // Milestone Global
         Route::get('/milestone-global', [MilestoneController::class, 'index'])->name('milestone-global.index');
         Route::post('/milestone-global', [MilestoneController::class, 'store'])->name('milestone-global.store');
         Route::put('/milestone-global/{milestone}', [MilestoneController::class, 'update'])->name('milestone-global.update');
+        Route::delete('/milestone-global/{milestone}', [MilestoneController::class, 'destroy'])->name('milestone-global.destroy');
     });
 });

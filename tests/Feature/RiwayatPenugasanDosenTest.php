@@ -6,6 +6,7 @@ use App\Models\Dosen;
 use App\Models\Kelas;
 use App\Models\Kelompok;
 use App\Models\Koordinator;
+use App\Models\MataKuliah;
 use App\Models\Periode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -15,9 +16,13 @@ class RiwayatPenugasanDosenTest extends TestCase
     use RefreshDatabase;
 
     protected Koordinator $koordinator;
+
     protected Kelas $kelas;
+
     protected Periode $periode;
+
     protected Dosen $dosenAwal;
+
     protected Dosen $dosenBaru;
 
     protected function setUp(): void
@@ -59,6 +64,12 @@ class RiwayatPenugasanDosenTest extends TestCase
             'password' => 'password123',
             'is_aktif' => true,
         ]);
+
+        $this->kelas->update(['periode_id' => $this->periode->id]);
+        $this->kelas->dosenPengampu()->create([
+            'dosen_id' => $this->dosenAwal->id,
+            'mata_kuliah_id' => MataKuliah::create(['nama_matkul' => 'Pemrograman Web'])->id,
+        ]);
     }
 
     private function dataKelompok(array $tambahan = []): array
@@ -67,9 +78,8 @@ class RiwayatPenugasanDosenTest extends TestCase
             'nama_kelompok' => 'Kelompok Riwayat',
             'judul_proyek' => 'Proyek Pengujian Riwayat',
             'kelas_id' => $this->kelas->id,
-            'periode_id' => $this->periode->id,
-            'dosen_id' => $this->dosenAwal->id,
-            'jadwal_bimbingan' => 'Senin, 10.00',
+            'tahun_akademik' => $this->periode->tahun_akademik,
+            'dosen_id' => $this->dosenBaru->id,
         ], $tambahan);
     }
 
@@ -106,10 +116,11 @@ class RiwayatPenugasanDosenTest extends TestCase
             'kelas_id' => $this->kelas->id,
             'periode_id' => $this->periode->id,
             'dosen_id' => $this->dosenAwal->id,
-            'jadwal_bimbingan' => 'Selasa, 10.00',
             'tanggal_dibuat' => now()->toDateString(),
             'status' => 'Aktif',
         ]);
+
+        $this->kelas->dosenPengampu()->update(['dosen_id' => $this->dosenBaru->id]);
 
         $response = $this->actingAs($this->koordinator, 'koordinator')
             ->put(
@@ -146,7 +157,6 @@ class RiwayatPenugasanDosenTest extends TestCase
             'kelas_id' => $this->kelas->id,
             'periode_id' => $this->periode->id,
             'dosen_id' => $this->dosenAwal->id,
-            'jadwal_bimbingan' => 'Rabu, 10.00',
             'tanggal_dibuat' => now()->toDateString(),
             'status' => 'Aktif',
         ]);

@@ -80,7 +80,7 @@
     /* ── Cards & Grid System ── */
     .figma-bottom-grid {
         display: grid;
-        grid-template-columns: 1.65fr 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 24px;
         align-items: stretch;
     }
@@ -270,10 +270,6 @@
 {{-- Flash Message Success --}}
 @if(session('success'))
 <div class="figma-alert figma-alert--success">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-        <polyline points="22 4 12 14.01 9 11.01"/>
-    </svg>
     <span>{{ session('success') }}</span>
 </div>
 @endif
@@ -287,11 +283,7 @@
     </div>
 
     <button type="button" class="btn-figma-primary" onclick="openModalTambah()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        <span>Tambah semester</span>
+        Tambah semester
     </button>
 </div>
 
@@ -329,16 +321,13 @@
                 <div class="figma-form-group" style="margin: 0;">
                     <label class="figma-form-label">Nama semester</label>
                     <select name="nama_periode" class="figma-input-select" required>
-                        <option value="Ganjil" {{ old('nama_periode', $periodeAktif->nama_periode ?? '') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                        <option value="Genap" {{ old('nama_periode', $periodeAktif->nama_periode ?? '') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                        <option value="Ganjil" {{ old('nama_periode', $periodeAktif->namaSemester()) === 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                        <option value="Genap" {{ old('nama_periode', $periodeAktif->namaSemester()) === 'Genap' ? 'selected' : '' }}>Genap</option>
                     </select>
                 </div>
                 <div class="figma-form-group" style="margin: 0;">
                     <label class="figma-form-label">Tahun akademik</label>
-                    <select name="tahun_akademik" class="figma-input-select">
-                        <option value="2026/2027" {{ $periodeAktif->tahun_akademik == '2026/2027' ? 'selected' : '' }}>2026/2027</option>
-                        <option value="2025/2026" {{ $periodeAktif->tahun_akademik == '2025/2026' ? 'selected' : '' }}>2025/2026</option>
-                    </select>
+                    <input type="text" name="tahun_akademik" value="{{ old('tahun_akademik', $periodeAktif->tahun_akademik) }}" placeholder="Contoh: 2026/2027" class="figma-input" required>
                 </div>
             </div>
 
@@ -354,7 +343,7 @@
             </div>
 
 
-            <!-- Info: Status aktif diubah via tombol Aktifkan di tabel -->
+            {{-- Informasi dekoratif lama dihapus dari tampilan.
             <div style="background: var(--sim-cream-head); border: 1px solid var(--sim-border-warm); border-radius: 12px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px;">
                 <span style="font-size: 16px;">ℹ️</span>
                 <div>
@@ -376,6 +365,7 @@
                 </div>
             </div>
 
+            --}}
             <!-- Action Buttons -->
             <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--sim-border-warm);">
                @if($periodeAktif && $periodeAktif->is_aktif)
@@ -390,25 +380,26 @@
                     <!-- DIPERBAIKI: Menggunakan window.location.reload() agar tombol batal mereset form -->
                     <button type="button" class="btn-figma-outline" onclick="window.location.reload();">Batal</button>
                     <button type="submit" class="btn-figma-primary">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        <span>Simpan perubahan</span>
+                        Simpan perubahan
                     </button>
                 </div>
             </div>
         </form>
 
         @if($periodeAktif && $periodeAktif->is_aktif)
-            <form id="form-nonaktifkan-periode" action="{{ route('koordinator.periode.toggle-aktif', 0) }}" method="POST" style="display: none;">
+            <form id="form-nonaktifkan-periode" action="{{ route('koordinator.periode.deactivate', $periodeAktif) }}" method="POST" style="display: none;">
                 @csrf
-                @method('PATCH')
             </form>
         @endif
+        @else
+            <div style="padding: 32px 0; text-align: center; color: var(--sim-text-muted);">
+                <p style="margin: 0 0 6px; font-weight: 600; color: var(--sim-brown-dark);">Belum ada semester aktif</p>
+                <p style="margin: 0; font-size: 12.5px;">Aktifkan salah satu semester pada tabel riwayat atau tambahkan semester baru.</p>
+            </div>
         @endif
     </div>
 
-    <!-- KOLOM KANAN: Sidebar Info Satu Periode Satu Acuan -->
+    {{-- Kartu penjelasan dan angka fallback "Satu periode, satu acuan" dihapus dari tampilan.
     <div style="display: flex; flex-direction: column; gap: 18px;">
         <div class="figma-card" style="padding: 24px;">
             <h3 style="font-family: 'DM Serif Display', Georgia, serif; font-size: 20px; color: var(--sim-brown-dark); margin: 0 0 8px 0;">Satu periode, satu acuan</h3>
@@ -433,6 +424,7 @@
             </p>
         </div>
     </div>
+    --}}
 
 </div>
 
@@ -457,7 +449,7 @@
             @foreach($riwayatPeriode as $row)
                 <tr>
                     <td style="font-weight: 700; color: var(--sim-brown-dark);">
-                        {{ $row->nama_periode }} {{ $row->tahun_akademik }}
+                        {{ $row->labelPeriode() }}
                     </td>
                     <td style="color: var(--sim-text-muted);">
                         {{ $row->tanggal_mulai->format('d M Y') }} – {{ $row->tanggal_selesai->format('d M Y') }}
@@ -480,9 +472,8 @@
                     </td>
                     <td class="col-aksi">
                         @if(!$row->is_aktif)
-                            <form action="{{ route('koordinator.periode.toggle-aktif', $row->id) }}" method="POST" style="display: inline;">
+                            <form action="{{ route('koordinator.periode.activate', $row) }}" method="POST" style="display: inline;">
                                 @csrf
-                                @method('PUT')
                                 <button type="submit" style="background: none; border: none; color: var(--sim-brown-btn); font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: underline;">
                                     Aktifkan
                                 </button>
@@ -546,10 +537,7 @@
             <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 24px;">
                 <button type="button" class="btn-figma-outline" onclick="closeModalTambah()">Batal</button>
                 <button type="submit" class="btn-figma-primary">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    <span>Simpan</span>
+                    Simpan
                 </button>
             </div>
         </form>

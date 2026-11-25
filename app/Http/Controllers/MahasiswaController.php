@@ -409,7 +409,7 @@ class MahasiswaController extends Controller
     {
         $mahasiswa = Auth::guard('mahasiswa')->user();
 
-        if ($mahasiswa && $notifikasi->penerima_type === Mahasiswa::class && (int) $notifikasi->penerima_id === (int) $mahasiswa->id) {
+        if ($mahasiswa && $notifikasi->penerima_type === $mahasiswa->getMorphClass() && (int) $notifikasi->penerima_id === (int) $mahasiswa->id) {
             $notifikasi->update(['dibaca_pada' => now()]);
         }
 
@@ -622,7 +622,7 @@ class MahasiswaController extends Controller
 
             foreach ($uniqueDosenIds as $dosenId) {
                 Notifikasi::create([
-                    'penerima_type' => Dosen::class,
+                    'penerima_type' => (new Dosen)->getMorphClass(),
                     'penerima_id' => $dosenId,
                     'judul' => $judul,
                     'isi' => $isi,

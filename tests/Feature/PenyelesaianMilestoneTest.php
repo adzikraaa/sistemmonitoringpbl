@@ -41,6 +41,8 @@ class PenyelesaianMilestoneTest extends TestCase
 
     private Dosen $dosenTanpaPengampu;
 
+    private Dosen $dosenMataKuliahB;
+
     private MataKuliah $mataKuliahA;
 
     private MataKuliah $mataKuliahB;
@@ -93,6 +95,13 @@ class PenyelesaianMilestoneTest extends TestCase
             'nidn' => '9000000003',
             'is_aktif' => true,
         ]);
+        $this->dosenMataKuliahB = Dosen::create([
+            'nama' => 'Dosen Mata Kuliah B',
+            'email' => 'dosen.matkul.b@test.com',
+            'password' => 'password123',
+            'nidn' => '9000000004',
+            'is_aktif' => true,
+        ]);
 
         $this->mataKuliahA = MataKuliah::create([
             'kode' => 'SIB301',
@@ -126,7 +135,7 @@ class PenyelesaianMilestoneTest extends TestCase
             'kelas_id' => $this->kelasA->id,
         ]);
         DosenPengampu::create([
-            'dosen_id' => $this->dosenA->id,
+            'dosen_id' => $this->dosenMataKuliahB->id,
             'mata_kuliah_id' => $this->mataKuliahB->id,
             'kelas_id' => $this->kelasA->id,
         ]);
@@ -134,6 +143,15 @@ class PenyelesaianMilestoneTest extends TestCase
             'dosen_id' => $this->dosenB->id,
             'mata_kuliah_id' => $this->mataKuliahA->id,
             'kelas_id' => $this->kelasB->id,
+        ]);
+
+        PengumpulanMilestone::create([
+            'milestone_id' => $this->milestone->id,
+            'kelompok_id' => $this->kelompokA->id,
+            'mata_kuliah' => $this->mataKuliahA->slug,
+            'file_name' => 'laporan_pwl.pdf',
+            'file_path' => 'milestone-submissions/test/laporan_pwl.pdf',
+            'status' => 'diajukan',
         ]);
     }
 
@@ -323,6 +341,25 @@ class PenyelesaianMilestoneTest extends TestCase
         );
     }
 
+    public function test_status_mata_kuliah_tanpa_laporan_ditolak(): void
+    {
+        MilestoneMataKuliah::firstOrCreate([
+            'milestone_id' => $this->milestone->id,
+            'mata_kuliah_id' => $this->mataKuliahB->id,
+        ]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Laporan mata kuliah belum dikumpulkan.');
+
+        $this->service->ubahStatus(
+            $this->kelompokA,
+            $this->milestone,
+            $this->mataKuliahB,
+            $this->dosenMataKuliahB,
+            'selesai'
+        );
+    }
+
     public function test_route_dosen_pengampu_dapat_mengubah_status(): void
     {
         $this->actingAs($this->dosenA, 'dosen')
@@ -359,10 +396,11 @@ class PenyelesaianMilestoneTest extends TestCase
 
     public function test_halaman_index_menampilkan_laporan_mahasiswa_sesuai_mata_kuliah(): void
     {
-        PengumpulanMilestone::create([
+        PengumpulanMilestone::query()->updateOrCreate([
             'milestone_id' => $this->milestone->id,
             'kelompok_id' => $this->kelompokA->id,
             'mata_kuliah' => $this->mataKuliahA->slug,
+        ], [
             'file_name' => 'laporan_pwl.pdf',
             'file_path' => 'milestone-submissions/test/laporan_pwl.pdf',
             'catatan' => 'Catatan PWL mahasiswa',
@@ -388,10 +426,11 @@ class PenyelesaianMilestoneTest extends TestCase
         $filePath = 'milestone-submissions/test/laporan_pwl.pdf';
         Storage::disk('local')->put($filePath, 'konten file laporan');
 
-        PengumpulanMilestone::create([
+        PengumpulanMilestone::query()->updateOrCreate([
             'milestone_id' => $this->milestone->id,
             'kelompok_id' => $this->kelompokA->id,
             'mata_kuliah' => $this->mataKuliahA->slug,
+        ], [
             'file_name' => 'laporan_asli.pdf',
             'file_path' => $filePath,
             'status' => 'dikumpulkan',
@@ -414,10 +453,11 @@ class PenyelesaianMilestoneTest extends TestCase
         $filePath = 'milestone-submissions/test/laporan_pwl.pdf';
         Storage::disk('local')->put($filePath, 'konten file');
 
-        PengumpulanMilestone::create([
+        PengumpulanMilestone::query()->updateOrCreate([
             'milestone_id' => $this->milestone->id,
             'kelompok_id' => $this->kelompokA->id,
             'mata_kuliah' => $this->mataKuliahA->slug,
+        ], [
             'file_name' => 'laporan_asli.pdf',
             'file_path' => $filePath,
             'status' => 'dikumpulkan',
@@ -438,10 +478,11 @@ class PenyelesaianMilestoneTest extends TestCase
     {
         Storage::fake('local');
 
-        PengumpulanMilestone::create([
+        PengumpulanMilestone::query()->updateOrCreate([
             'milestone_id' => $this->milestone->id,
             'kelompok_id' => $this->kelompokA->id,
             'mata_kuliah' => $this->mataKuliahA->slug,
+        ], [
             'file_name' => 'laporan_hilang.pdf',
             'file_path' => 'milestone-submissions/test/laporan_hilang.pdf',
             'status' => 'dikumpulkan',

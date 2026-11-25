@@ -386,10 +386,15 @@
     }
 
     .sim-kelompok-member-results {
-        margin-top: 8px;
+        position: absolute;
+        z-index: 30;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
         border: 1px solid #d7cab9;
         border-radius: 10px;
-        background: rgba(255,255,255,0.4);
+        background: #fff;
+        box-shadow: 0 12px 28px rgba(45, 41, 39, 0.14);
         max-height: 190px;
         overflow-y: auto;
         display: none;
@@ -881,9 +886,7 @@
                                         data-kelompok-name="{{ $item->nama_kelompok }}"
                                         data-kelompok-judul="{{ $item->judul_proyek }}"
                                         data-kelompok-kelas="{{ $item->kelas_id }}"
-                                        data-kelompok-periode="{{ $item->periode_id }}"
-                                        data-kelompok-dosen="{{ $item->dosen_id }}"
-                                        data-kelompok-jadwal="{{ $item->jadwal_bimbingan }}"
+                                        data-kelompok-tahun="{{ $item->kelas?->periode?->tahun_akademik }}"
                                         data-kelompok-members="{{ $item->anggotaKelompok->pluck('mahasiswa_id')->implode(',') }}"
                                         aria-label="Edit {{ $item->nama_kelompok }}"
                                     >
@@ -1033,57 +1036,27 @@
                     </div>
 
                     <div class="sim-kelompok-form-group">
+                        <label for="tahun_akademik" class="sim-kelompok-label">Tahun Akademik</label>
+                        <select id="tahun_akademik" name="tahun_akademik" class="sim-kelompok-select" required>
+                            <option value="">Pilih tahun akademik</option>
+                            @foreach($tahunAkademikList as $tahun)
+                                <option value="{{ $tahun }}">{{ $tahun }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="sim-kelompok-form-group">
                         <label for="kelas_id" class="sim-kelompok-label">
                             Kelas
                         </label>
                         <select id="kelas_id" name="kelas_id" class="sim-kelompok-select" required>
                             <option value="">Pilih kelas</option>
                             @foreach($kelasList as $kelas)
-                                <option value="{{ $kelas->id }}">
-                                    {{ $kelas->nama_kelas }}
+                                <option value="{{ $kelas->id }}" data-tahun="{{ $kelas->periode?->tahun_akademik }}" hidden disabled>
+                                    {{ $kelas->nama_kelas }} · {{ $kelas->periode?->nama_periode }}
                                 </option>
                             @endforeach
                         </select>
-                    </div>
-
-                    <div class="sim-kelompok-form-group">
-                        <label for="periode_id" class="sim-kelompok-label">
-                            Semester / Periode
-                        </label>
-                        <select id="periode_id" name="periode_id" class="sim-kelompok-select" required>
-                            <option value="">Pilih periode</option>
-                            @foreach($periodeList as $periode)
-                                <option value="{{ $periode->id }}">
-                                    {{ $periode->nama_periode }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="sim-kelompok-form-group full">
-                        <label for="dosen_id" class="sim-kelompok-label">
-                            Dosen Pembimbing
-                        </label>
-                        <select id="dosen_id" name="dosen_id" class="sim-kelompok-select">
-                            <option value="">Belum ditugaskan</option>
-                            @foreach($dosenList as $dosen)
-                                <option value="{{ $dosen->id }}">
-                                    {{ $dosen->nama }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="sim-kelompok-form-group full">
-                        <label for="jadwal_bimbingan" class="sim-kelompok-label">
-                            Jadwal Bimbingan
-                        </label>
-                        <textarea
-                            id="jadwal_bimbingan"
-                            name="jadwal_bimbingan"
-                            class="sim-kelompok-textarea"
-                            placeholder="Contoh: Senin, 13.00 - 15.00"
-                        ></textarea>
                     </div>
 
                     <div class="sim-kelompok-form-group full">
@@ -1098,6 +1071,8 @@
                                 class="sim-kelompok-input"
                                 placeholder="Cari mahasiswa berdasarkan nama atau NIM..."
                                 autocomplete="off"
+                                aria-controls="kelompokMahasiswaResults"
+                                aria-expanded="false"
                             >
 
                             <div
@@ -1298,6 +1273,7 @@
 
     function renderKelompokSearchResults(keyword = '') {
         const resultsEl = document.getElementById('kelompokMahasiswaResults');
+        const searchEl = document.getElementById('kelompokMahasiswaSearch');
         if (!resultsEl) return;
 
         const searchTerm = (keyword || '').trim().toLowerCase();
@@ -1314,6 +1290,7 @@
                 '<div style="padding: 12px; color: #6b625d; font-size: 13px;">Mahasiswa tidak ditemukan.</div>';
 
             resultsEl.classList.add('open');
+            searchEl?.setAttribute('aria-expanded', 'true');
             return;
         }
 
@@ -1356,10 +1333,15 @@
                 }
 
                 renderKelompokSearchResults('');
+
+                window.requestAnimationFrame(function () {
+                    search?.focus();
+                });
             });
         });
 
         resultsEl.classList.add('open');
+        searchEl?.setAttribute('aria-expanded', 'true');
     }
 
     function escapeKelompokHtml(value) {
@@ -1380,14 +1362,35 @@
         kelompokSelectedMembers.clear();
 
         const search = document.getElementById('kelompokMahasiswaSearch');
+        const results = document.getElementById('kelompokMahasiswaResults');
 
         if (search) {
             search.value = '';
+            search.setAttribute('aria-expanded', 'false');
         }
 
-        renderKelompokSearchResults('');
+        if (results) {
+            results.innerHTML = '';
+            results.classList.remove('open');
+        }
+
         syncKelompokSelectedInputs();
     }
+
+    function filterKelasKelompok(kelasId = '') {
+        const tahun = document.getElementById('tahun_akademik').value;
+        const kelas = document.getElementById('kelas_id');
+
+        for (const option of kelas.options) {
+            if (!option.value) continue;
+
+            option.disabled = option.hidden = !tahun || option.dataset.tahun !== tahun;
+        }
+
+        kelas.value = kelasId;
+    }
+
+    document.getElementById('tahun_akademik').addEventListener('change', () => filterKelasKelompok());
 
     function openKelompokModal() {
         const modal = document.getElementById('kelompokModal');
@@ -1408,6 +1411,7 @@
         document.getElementById('modal-title-kelompok').textContent = 'Buat Kelompok';
 
         form.reset();
+        filterKelasKelompok();
         resetKelompokMemberSelection();
     }
 
@@ -1421,9 +1425,7 @@
         const name = button.dataset.kelompokName || '';
         const judul = button.dataset.kelompokJudul || '';
         const kelasId = button.dataset.kelompokKelas || '';
-        const periodeId = button.dataset.kelompokPeriode || '';
-        const dosenId = button.dataset.kelompokDosen || '';
-        const jadwal = button.dataset.kelompokJadwal || '';
+        const tahun = button.dataset.kelompokTahun || '';
 
         const memberIds = (button.dataset.kelompokMembers || '')
             .split(',')
@@ -1439,10 +1441,8 @@
 
         document.getElementById('nama_kelompok').value = name;
         document.getElementById('judul_proyek').value = judul;
-        document.getElementById('kelas_id').value = kelasId;
-        document.getElementById('periode_id').value = periodeId;
-        document.getElementById('dosen_id').value = dosenId;
-        document.getElementById('jadwal_bimbingan').value = jadwal;
+        document.getElementById('tahun_akademik').value = tahun;
+        filterKelasKelompok(kelasId);
 
         kelompokSelectedMembers.clear();
 
@@ -1460,9 +1460,15 @@
 
         if (search) {
             search.value = '';
+            search.setAttribute('aria-expanded', 'false');
         }
 
-        renderKelompokSearchResults('');
+        const results = document.getElementById('kelompokMahasiswaResults');
+        if (results) {
+            results.innerHTML = '';
+            results.classList.remove('open');
+        }
+
         syncKelompokSelectedInputs();
 
         modal.classList.add('open');
@@ -1471,11 +1477,16 @@
 
     function closeKelompokModal() {
         const modal = document.getElementById('kelompokModal');
+        const results = document.getElementById('kelompokMahasiswaResults');
+        const search = document.getElementById('kelompokMahasiswaSearch');
 
         if (modal) {
             modal.classList.remove('open');
             modal.setAttribute('aria-hidden', 'true');
         }
+
+        results?.classList.remove('open');
+        search?.setAttribute('aria-expanded', 'false');
     }
 
     function openKelompokStatusModal(button) {
@@ -1535,20 +1546,25 @@
             renderKelompokSearchResults(this.value);
         });
 
-        document.addEventListener('click', function (event) {
-            const clickedInside =
-                event.target.closest('#kelompokMahasiswaSearch') ||
-                event.target.closest('#kelompokMahasiswaResults');
+        document.addEventListener('pointerdown', function (event) {
+            const searchWrap = event.target.closest('.sim-kelompok-member-search-wrap');
 
-            if (!clickedInside && kelompokMahasiswaResults) {
+            if (!searchWrap && kelompokMahasiswaResults) {
                 kelompokMahasiswaResults.classList.remove('open');
+                kelompokMahasiswaSearch.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        kelompokMahasiswaSearch.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && kelompokMahasiswaResults) {
+                kelompokMahasiswaResults.classList.remove('open');
+                kelompokMahasiswaSearch.setAttribute('aria-expanded', 'false');
             }
         });
     }
 
     // INISIALISASI PILIHAN ANGGOTA
     syncKelompokSelectedInputs();
-    renderKelompokSearchResults('');
 
     // SUBMIT PERUBAHAN STATUS
     document.getElementById('confirmKelompokStatus')?.addEventListener('click', function () {

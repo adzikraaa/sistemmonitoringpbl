@@ -669,6 +669,7 @@
                             <div class="td-mk-kelas-sub">{{ $kelasCount }} kelas terhubung</div>
                         @else
                             <div class="td-mk-kelas" style="color: var(--sim-text-muted);">Belum ada kelas</div>
+                            <a href="{{ route('koordinator.penugasan-dosen.index') }}" class="td-mk-kelas-sub" style="color: var(--sim-brown-btn);">Atur penugasan dosen</a>
                         @endif
                     </td>
 
@@ -685,8 +686,7 @@
                                         '{{ addslashes($mk->nama_matkul) }}',
                                         {{ $mk->sks }},
                                         {{ $semesterValue }},
-                                        {{ $mk->is_aktif ? 'true' : 'false' }},
-                                        '{{ $kelasTerhubung->implode(',') }}'
+                                        {{ $mk->is_aktif ? 'true' : 'false' }}
                                     )">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -919,14 +919,10 @@
                 </select>
             </div>
 
-            <div class="figma-form-group">
-                <label class="figma-form-label" for="t-kelas">Kelas yang terhubung</label>
-                <select id="t-kelas" name="kelas_id[]" class="figma-input-select" multiple size="4">
-                    @foreach($kelasList as $kls)
-                        <option value="{{ $kls->id }}">{{ $kls->nama_kelas }}</option>
-                    @endforeach
-                </select>
-                <p style="font-size: 11px; color: var(--sim-text-muted); margin-top: 6px;">Tekan Ctrl (Windows) / Cmd (Mac) untuk memilih lebih dari satu kelas.</p>
+            <div class="figma-form-group" style="font-size: 12px; color: var(--sim-text-muted);">
+                Hubungan mata kuliah dengan kelas mengikuti
+                <a href="{{ route('koordinator.penugasan-dosen.index') }}" style="color: var(--sim-brown-btn); font-weight: 600;">Penugasan Dosen</a>
+                agar setiap kelas selalu memiliki dosen pengampu yang jelas.
             </div>
 
             <div class="figma-form-actions" style="margin-top: 24px;">
@@ -949,7 +945,7 @@
 @push('scripts')
 <script>
     {{-- Fungsi Interaktif Edit Mata Kuliah dari Baris Tabel --}}
-    function pilihMkEdit(id, kode, nama, sks, semester, isAktif, kelasList) {
+    function pilihMkEdit(id, kode, nama, sks, semester, isAktif) {
         const kodeLabel = kode || '(tanpa kode)';
         // Update header form edit
         document.getElementById('edit-mk-title').textContent = 'Edit mata kuliah ' + kodeLabel;

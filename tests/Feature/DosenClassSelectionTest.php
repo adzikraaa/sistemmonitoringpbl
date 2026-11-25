@@ -118,12 +118,6 @@ class DosenClassSelectionTest extends TestCase
         DosenPengampu::create([
             'dosen_id' => $dosen->id,
             'mata_kuliah_id' => $matkul->id,
-            'kelas_id' => $kelasA->id,
-        ]);
-
-        DosenPengampu::create([
-            'dosen_id' => $dosen->id,
-            'mata_kuliah_id' => $matkul->id,
             'kelas_id' => $kelasB->id,
         ]);
 
@@ -132,7 +126,6 @@ class DosenClassSelectionTest extends TestCase
             'dosen_id' => $dosen->id,
             'kelas_id' => $kelasB->id,
             'periode_id' => $periode->id,
-            'jadwal_bimbingan' => 'Senin, 09:00',
             'tanggal_dibuat' => now()->toDateString(),
         ]);
 

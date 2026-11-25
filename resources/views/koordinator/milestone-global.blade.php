@@ -79,7 +79,7 @@
 
     .sim-page-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.85fr);
+        grid-template-columns: minmax(0, 2fr) minmax(360px, 0.95fr);
         gap: 24px;
         align-items: start;
     }
@@ -123,7 +123,9 @@
         border-radius: 14px;
         padding: 18px 20px 16px;
         box-shadow: 0 1px 3px rgba(44, 26, 14, 0.02);
-        display: block;
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+        gap: 16px;
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
@@ -165,6 +167,7 @@
         font-size: 18px;
         font-weight: 600;
         color: #2B221D;
+        overflow-wrap: anywhere;
     }
 
     .sim-edit-btn {
@@ -255,7 +258,12 @@
         padding: 20px 20px 18px;
         box-shadow: 0 1px 3px rgba(44, 26, 14, 0.02);
         position: sticky;
-        top: 18px;
+        top: 74px;
+        max-height: calc(100dvh - 90px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+        scroll-margin-top: 74px;
     }
 
     .sim-form-title {
@@ -357,7 +365,7 @@
         margin-top: 18px;
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 1180px) {
         .sim-page-grid {
             grid-template-columns: 1fr;
         }
@@ -365,6 +373,8 @@
         .sim-form-panel {
             position: relative;
             top: 0;
+            max-height: none;
+            overflow: visible;
         }
     }
 
@@ -374,12 +384,48 @@
             align-items: flex-start;
         }
 
+        .sim-page-header .sim-primary-btn {
+            width: 100%;
+        }
+
+        .sim-list-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
         .sim-form-row {
             grid-template-columns: 1fr;
         }
 
         .sim-list-item {
-            padding: 16px;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 12px;
+            padding: 14px;
+        }
+
+        .sim-step-badge {
+            width: 42px;
+            height: 42px;
+            font-size: 15px;
+        }
+
+        .sim-item-top {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .sim-item-top > div {
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        .sim-form-actions {
+            align-items: stretch;
+            flex-direction: column-reverse;
+        }
+
+        .sim-form-actions button {
+            width: 100%;
         }
     }
 </style>
@@ -412,14 +458,20 @@
                 @foreach ($milestones as $milestone)
                     @php
                         $selected = $selectedMilestone && $selectedMilestone->id === $milestone->id;
+                        $tanggalMulai = $milestone->tanggal_mulai?->format('d M Y') ?? 'Belum ditetapkan';
                         $deadline = $milestone->deadline ? \Illuminate\Support\Facades\Date::parse($milestone->deadline)->format('d M Y') : 'Belum ditetapkan';
-                        // Status: hanya Belum Ditetapkan atau Berjalan — tidak ada "Terlambat"
-                        if ($milestone->deadline) {
-                            $statusClass = 'sim-badge--success';
-                            $statusText  = 'Berjalan';
-                        } else {
+                        if (! $milestone->tanggal_mulai || ! $milestone->deadline) {
                             $statusClass = 'sim-badge--warning';
-                            $statusText  = 'Belum Ditetapkan';
+                            $statusText = 'Belum Ditetapkan';
+                        } elseif ($milestone->tanggal_mulai->isFuture()) {
+                            $statusClass = 'sim-badge--warning';
+                            $statusText = 'Dijadwalkan';
+                        } elseif ($milestone->deadline->isPast()) {
+                            $statusClass = 'sim-badge--warning';
+                            $statusText = 'Terlambat';
+                        } else {
+                            $statusClass = 'sim-badge--success';
+                            $statusText = 'Berjalan';
                         }
                         // Progress dinamis
                         $selesai = $progressMap[$milestone->id] ?? 0;
@@ -430,18 +482,30 @@
                         <div>
                             <div class="sim-item-top">
                                 <h3 class="sim-item-title">{{ $milestone->judul }}</h3>
-                                <button type="button" class="sim-edit-btn"
-                                    data-id="{{ $milestone->id }}"
-                                    data-judul="{{ e($milestone->judul) }}"
-                                    data-deskripsi="{{ e($milestone->deskripsi ?? '') }}"
-                                    data-deadline="{{ $milestone->deadline?->format('Y-m-d') ?? '' }}"
-                                    data-urutan="{{ $milestone->urutan }}"
-                                    data-periode-id="{{ $milestone->periode_id }}"
-                                    data-update-url="{{ route('koordinator.milestone-global.update', $milestone->id) }}">Edit</button>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" class="sim-edit-btn"
+                                        data-id="{{ $milestone->id }}"
+                                        data-judul="{{ e($milestone->judul) }}"
+                                        data-deskripsi="{{ e($milestone->deskripsi ?? '') }}"
+                                        data-tanggal-mulai="{{ $milestone->tanggal_mulai?->format('Y-m-d') ?? '' }}"
+                                        data-deadline="{{ $milestone->deadline?->format('Y-m-d') ?? '' }}"
+                                        data-urutan="{{ $milestone->urutan }}"
+                                        data-periode-id="{{ $milestone->periode_id }}"
+                                        data-update-url="{{ route('koordinator.milestone-global.update', $milestone->id) }}">Edit</button>
+                                    <form method="POST" action="{{ route('koordinator.milestone-global.destroy', $milestone) }}"
+                                        onsubmit="return confirm({{ Js::from('Hapus milestone '.$milestone->judul.' dari semua mata kuliah?') }})">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                             <p class="sim-item-desc">{{ $milestone->deskripsi ?: 'Tidak ada deskripsi untuk milestone ini.' }}</p>
                             <div class="sim-item-meta">
-                                <span>{{ $deadline }}</span>
+                                <span>Mulai: {{ $tanggalMulai }}</span>
+                                <span>Tenggat: {{ $deadline }}</span>
                                 <span class="sim-badge {{ $statusClass }}">{{ $statusText }}</span>
                             </div>
                             <div class="sim-progress-outer"><span class="sim-progress-inner" style="width: {{ $persen }}%"></span></div>
@@ -455,7 +519,7 @@
             @endif
         </section>
 
-        <aside class="sim-form-panel">
+        <aside class="sim-form-panel" id="milestoneFormPanel">
             <h2 class="sim-form-title" id="formTitle">{{ $selectedMilestone ? 'Edit milestone' : 'Tambah milestone' }}</h2>
 
             @if (session('success'))
@@ -487,10 +551,17 @@
 
                     <div class="sim-form-row">
                         <div class="sim-form-group">
+                            <label class="sim-form-label" for="tanggal_mulai">Mulai milestone</label>
+                            <input id="tanggal_mulai" class="sim-form-input" type="date" name="tanggal_mulai" value="{{ old('tanggal_mulai', $selectedMilestone?->tanggal_mulai?->format('Y-m-d') ?? '') }}">
+                        </div>
+
+                        <div class="sim-form-group">
                             <label class="sim-form-label" for="deadline">Tanggal tenggat</label>
                             <input id="deadline" class="sim-form-input" type="date" name="deadline" value="{{ old('deadline', $selectedMilestone?->deadline?->format('Y-m-d') ?? '') }}">
                         </div>
+                    </div>
 
+                    <div class="sim-form-row">
                         <div class="sim-form-group">
                             <label class="sim-form-label" for="urutan">Urutan</label>
                             <input id="urutan" class="sim-form-input" type="number" name="urutan" min="1" value="{{ old('urutan', $selectedMilestone?->urutan ?? ($milestones->count() + 1)) }}" required>
@@ -527,12 +598,22 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('milestoneForm');
+        const formPanel = document.getElementById('milestoneFormPanel');
         const formTitle = document.getElementById('formTitle');
         const methodField = document.getElementById('methodField');
         const addBtn = document.getElementById('btnAddMilestone');
         const cancelBtn = document.getElementById('btnCancelForm');
         const submitBtn = form.querySelector('button[type="submit"]');
         const createUrl = '{{ route('koordinator.milestone-global.store') }}';
+
+        function scrollToForm() {
+            window.requestAnimationFrame(function () {
+                formPanel.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                });
+            });
+        }
 
    function resetToCreateMode() {
     form.action = createUrl;
@@ -542,6 +623,7 @@
 
     document.getElementById('judul').value = '';
     document.getElementById('deskripsi').value = '';
+    document.getElementById('tanggal_mulai').value = '';
     document.getElementById('deadline').value = '';
     document.getElementById('urutan').value = '{{ $milestones->count() + 1 }}';
     document.getElementById('periode_id').value = '{{ optional($periodeAktif)->id ?? optional($periodeOptions->first())->id ?? '' }}';
@@ -561,21 +643,34 @@
             submitBtn.textContent = 'Menyimpan...';
         });
 
-        addBtn.addEventListener('click', resetToCreateMode);
+        addBtn.addEventListener('click', function () {
+            resetToCreateMode();
+            scrollToForm();
+        });
         cancelBtn.addEventListener('click', resetToCreateMode);
 
         document.querySelectorAll('.sim-edit-btn').forEach(function (button) {
             button.addEventListener('click', function () {
-                const { id, judul, deskripsi, deadline, urutan, periodeId, updateUrl } = button.dataset;
+                const { id, judul, deskripsi, tanggalMulai, deadline, urutan, periodeId, updateUrl } = button.dataset;
                 form.action = updateUrl;
                 methodField.value = 'PUT';
                 formTitle.textContent = 'Edit milestone';
 
                 document.getElementById('judul').value = judul || '';
                 document.getElementById('deskripsi').value = deskripsi || '';
+                document.getElementById('tanggal_mulai').value = tanggalMulai || '';
                 document.getElementById('deadline').value = deadline || '';
                 document.getElementById('urutan').value = urutan || 1;
                 document.getElementById('periode_id').value = periodeId || '{{ optional($periodeAktif)->id ?? optional($periodeOptions->first())->id ?? '' }}';
+
+                document.querySelectorAll('.sim-list-item').forEach(function (item) {
+                    item.classList.toggle('sim-list-item--active', item.dataset.id === id);
+                });
+
+                const successAlert = document.getElementById('milestoneSuccessAlert');
+                if (successAlert) successAlert.remove();
+
+                scrollToForm();
             });
         });
     });

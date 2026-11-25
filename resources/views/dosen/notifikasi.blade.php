@@ -112,7 +112,7 @@
                 };
                 $linkText = $item['link_text'] ?? match($jenis) {
                     'proposal'  => 'Buka halaman proposal',
-                    'bimbingan' => 'Lihat detail jadwal bimbingan',
+                    'bimbingan' => 'Lihat detail kelompok bimbingan',
                     'logbook'   => 'Buka halaman logbook',
                     'milestone' => 'Buka halaman milestone',
                     default     => 'Lihat detail',

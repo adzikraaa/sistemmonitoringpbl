@@ -6,6 +6,7 @@ use App\Models\AnggotaKelompok;
 use App\Models\Dosen;
 use App\Models\Kelas;
 use App\Models\Kelompok;
+use App\Models\Koordinator;
 use App\Models\LogbookMilestone;
 use App\Models\Mahasiswa;
 use App\Models\Periode;
@@ -107,6 +108,12 @@ class DosenLogbookReviewTest extends TestCase
     public function test_dosen_can_approve_logbook(): void
     {
         $setup = $this->createSetup();
+        $koordinator = Koordinator::create([
+            'nama' => 'Koordinator Pengawas',
+            'email' => 'koordinator.pengawas@example.com',
+            'password' => 'secret123',
+            'nidn' => '0099887711',
+        ]);
 
         $response = $this->actingAs($setup['dosen'], 'dosen')
             ->post(route('dosen.laporan-aktivitas.logbook.review', $setup['logbook']->id), [
@@ -120,6 +127,18 @@ class DosenLogbookReviewTest extends TestCase
         $setup['logbook']->refresh();
         $this->assertSame('disetujui', $setup['logbook']->status);
         $this->assertSame('Sangat bagus, lanjutkan implementasi token refresh.', $setup['logbook']->feedback);
+        $this->assertDatabaseHas('notifikasi', [
+            'penerima_type' => $setup['mhs']->getMorphClass(),
+            'penerima_id' => $setup['mhs']->id,
+            'judul' => 'Logbook Disetujui',
+            'dibaca_pada' => null,
+        ]);
+        $this->assertDatabaseHas('notifikasi', [
+            'penerima_type' => $koordinator->getMorphClass(),
+            'penerima_id' => $koordinator->id,
+            'judul' => 'Dosen Menyetujui Logbook',
+            'dibaca_pada' => null,
+        ]);
     }
 
     public function test_dosen_can_request_revision_with_feedback(): void
@@ -138,6 +157,12 @@ class DosenLogbookReviewTest extends TestCase
         $setup['logbook']->refresh();
         $this->assertSame('revisi', $setup['logbook']->status);
         $this->assertSame('Tolong perbaiki penanganan kendala race condition pada session.', $setup['logbook']->feedback);
+        $this->assertDatabaseHas('notifikasi', [
+            'penerima_type' => $setup['mhs']->getMorphClass(),
+            'penerima_id' => $setup['mhs']->id,
+            'judul' => 'Logbook Perlu Revisi',
+            'dibaca_pada' => null,
+        ]);
     }
 
     public function test_dosen_cannot_request_revision_without_feedback(): void

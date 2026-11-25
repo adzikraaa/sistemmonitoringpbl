@@ -75,6 +75,12 @@ class MahasiswaLogbookTest extends TestCase
             'status' => 'diajukan',
             'progress' => 40,
         ]);
+        $this->assertDatabaseHas('notifikasi', [
+            'penerima_type' => $this->kelompok->dosen->getMorphClass(),
+            'penerima_id' => $this->kelompok->dosen_id,
+            'judul' => 'Entri Logbook Baru',
+            'dibaca_pada' => null,
+        ]);
     }
 
     public function test_kegiatan_memakai_judul_jika_deskripsi_kosong(): void

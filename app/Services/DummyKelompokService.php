@@ -105,7 +105,6 @@ class DummyKelompokService
                 'dosen_id' => $dosenId,
                 'kelas_id' => $kelasId,
                 'periode_id' => $periode->id,
-                'jadwal_bimbingan' => null,
                 'status' => 'Aktif',
                 'tanggal_dibuat' => now()->toDateString(),
             ]);

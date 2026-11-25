@@ -65,7 +65,6 @@ class KoordinatorKelompokAnggotaTest extends TestCase
             'kelas_id' => $kelas->id,
             'periode_id' => $periode->id,
             'dosen_id' => $dosen->id,
-            'jadwal_bimbingan' => 'Jumat, 13.00',
             'tanggal_dibuat' => now()->toDateString(),
         ]);
 
@@ -88,6 +87,33 @@ class KoordinatorKelompokAnggotaTest extends TestCase
             'mahasiswa_id' => $mahasiswa->id,
             'role_label' => 'Anggota',
         ]);
+    }
+
+    public function test_pencarian_anggota_memuat_mahasiswa_dan_menggunakan_event_klik_luar_yang_stabil(): void
+    {
+        $koordinator = Koordinator::create([
+            'nama' => 'Koordinator Pencarian',
+            'email' => 'koordinator.search@test.com',
+            'password' => 'password123',
+            'nidn' => '000111229',
+        ]);
+        $kelas = Kelas::create(['nama_kelas' => 'SIB 3F', 'is_aktif' => true]);
+        Mahasiswa::create([
+            'nama' => 'Mahasiswa Dapat Dicari',
+            'email' => 'mahasiswa.search@test.com',
+            'password' => 'password123',
+            'nim' => '2025099',
+            'kelas_id' => $kelas->id,
+            'is_aktif' => true,
+        ]);
+
+        $response = $this->actingAs($koordinator, 'koordinator')
+            ->get(route('koordinator.kelompok.index'));
+
+        $response->assertOk();
+        $response->assertSee('Mahasiswa Dapat Dicari');
+        $response->assertSee("document.addEventListener('pointerdown'", false);
+        $response->assertSee('aria-controls="kelompokMahasiswaResults"', false);
     }
 
     public function test_coordinator_can_update_kelompok_status_and_persist_it(): void
@@ -117,7 +143,6 @@ class KoordinatorKelompokAnggotaTest extends TestCase
             'judul_proyek' => 'Proyek Status',
             'kelas_id' => $kelas->id,
             'periode_id' => $periode->id,
-            'jadwal_bimbingan' => 'Selasa, 10.00',
             'tanggal_dibuat' => now()->toDateString(),
             'status' => 'Aktif',
         ]);
@@ -160,7 +185,6 @@ class KoordinatorKelompokAnggotaTest extends TestCase
             'judul_proyek' => 'Proyek Delete',
             'kelas_id' => $kelas->id,
             'periode_id' => $periode->id,
-            'jadwal_bimbingan' => 'Kamis, 09.00',
             'status' => 'Aktif',
             'tanggal_dibuat' => now()->toDateString(),
         ]);

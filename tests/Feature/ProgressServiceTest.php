@@ -69,7 +69,7 @@ class ProgressServiceTest extends TestCase
         ]);
 
         $this->kelompok = $this->buatKelompok($this->periode);
-        $this->milestones = $this->buatMilestones(9);
+        $this->milestones = $this->buatMilestones(3);
     }
 
     public function test_tanpa_mapping_menghasilkan_nol_dan_tanpa_data(): void
@@ -90,7 +90,7 @@ class ProgressServiceTest extends TestCase
 
         $this->assertSame(0.0, $hasil['persen']);
         $this->assertSame(0, $hasil['selesai']);
-        $this->assertSame(18, $hasil['total']);
+        $this->assertSame(6, $hasil['total']);
         $this->assertTrue($hasil['punya_data']);
     }
 
@@ -104,17 +104,17 @@ class ProgressServiceTest extends TestCase
         $matkulA = $this->service->untukMataKuliah($this->kelompok, $this->mataKuliahA);
         $matkulB = $this->service->untukMataKuliah($this->kelompok, $this->mataKuliahB);
 
-        $this->assertSame(16.67, $keseluruhan['persen']);
+        $this->assertSame(50.0, $keseluruhan['persen']);
         $this->assertSame(3, $keseluruhan['selesai']);
-        $this->assertSame(18, $keseluruhan['total']);
+        $this->assertSame(6, $keseluruhan['total']);
 
-        $this->assertSame(33.33, $matkulA['persen']);
+        $this->assertSame(100.0, $matkulA['persen']);
         $this->assertSame(3, $matkulA['selesai']);
-        $this->assertSame(9, $matkulA['total']);
+        $this->assertSame(3, $matkulA['total']);
 
         $this->assertSame(0.0, $matkulB['persen']);
         $this->assertSame(0, $matkulB['selesai']);
-        $this->assertSame(9, $matkulB['total']);
+        $this->assertSame(3, $matkulB['total']);
     }
 
     public function test_semua_mapping_selesai_menghasilkan_100(): void
@@ -127,8 +127,8 @@ class ProgressServiceTest extends TestCase
         $hasil = $this->service->untukKelompok($this->kelompok);
 
         $this->assertSame(100.0, $hasil['persen']);
-        $this->assertSame(18, $hasil['selesai']);
-        $this->assertSame(18, $hasil['total']);
+        $this->assertSame(6, $hasil['selesai']);
+        $this->assertSame(6, $hasil['total']);
     }
 
     public function test_status_selain_selesai_tidak_dihitung(): void
@@ -159,8 +159,26 @@ class ProgressServiceTest extends TestCase
 
         $this->assertSame(0.0, $hasil['persen']);
         $this->assertSame(0, $hasil['selesai']);
-        $this->assertSame(18, $hasil['total']);
+        $this->assertSame(6, $hasil['total']);
         $this->assertTrue($hasil['punya_data']);
+    }
+
+    public function test_penyelesaian_tanpa_pengumpulan_mata_kuliah_tidak_menambah_progres(): void
+    {
+        PenyelesaianMilestone::create([
+            'kelompok_id' => $this->kelompok->id,
+            'milestone_id' => $this->milestones[0]->id,
+            'mata_kuliah_id' => $this->mataKuliahB->id,
+            'status' => 'selesai',
+        ]);
+
+        $keseluruhan = $this->service->untukKelompok($this->kelompok);
+        $mataKuliahB = $this->service->untukMataKuliah($this->kelompok, $this->mataKuliahB);
+
+        $this->assertSame(0.0, $keseluruhan['persen']);
+        $this->assertSame(0, $keseluruhan['selesai']);
+        $this->assertSame(0.0, $mataKuliahB['persen']);
+        $this->assertSame(0, $mataKuliahB['selesai']);
     }
 
     public function test_mapping_periode_lain_tidak_masuk_denominator(): void
@@ -177,7 +195,7 @@ class ProgressServiceTest extends TestCase
 
         $hasil = $this->service->untukKelompok($this->kelompok);
 
-        $this->assertSame(18, $hasil['total']);
+        $this->assertSame(6, $hasil['total']);
     }
 
     public function test_batch_tidak_menghasilkan_n_plus_1(): void
@@ -220,7 +238,7 @@ class ProgressServiceTest extends TestCase
             ->get(route('mahasiswa.pilih-semester'))
             ->assertOk()
             ->assertSee('Progres PBL')
-            ->assertSee('5.56%')
+            ->assertSee('16.67%')
             ->assertDontSee('65%');
     }
 
@@ -244,16 +262,29 @@ class ProgressServiceTest extends TestCase
         $this->actingAs($mahasiswa, 'mahasiswa')
             ->get(route('mahasiswa.dashboard'))
             ->assertOk()
-            ->assertSee('5.56%');
+            ->assertSee('16.67%');
 
         $this->actingAs($mahasiswa, 'mahasiswa')
             ->get(route('mahasiswa.kelompok'))
             ->assertOk()
-            ->assertSee('5.56%');
+            ->assertSee('16.67%');
     }
 
     private function selesaikan(Milestone $milestone, MataKuliah $mataKuliah, string $status = 'selesai'): void
     {
+        PengumpulanMilestone::firstOrCreate(
+            [
+                'kelompok_id' => $this->kelompok->id,
+                'milestone_id' => $milestone->id,
+                'mata_kuliah' => $mataKuliah->slug,
+            ],
+            [
+                'file_name' => 'laporan-'.$mataKuliah->slug.'.pdf',
+                'file_path' => 'milestone-submissions/laporan-'.$mataKuliah->slug.'.pdf',
+                'status' => 'diajukan',
+            ]
+        );
+
         PenyelesaianMilestone::create([
             'kelompok_id' => $this->kelompok->id,
             'milestone_id' => $milestone->id,
@@ -359,7 +390,7 @@ class ProgressServiceTest extends TestCase
         $setelahLogbook = $this->service->untukKelompok($this->kelompok);
         $this->assertSame(22.5, $setelahLogbook['persen']);
 
-        // 5. Selesaikan separuh milestone (9 dari 18 -> 50% * 70% = 35%)
+        // 5. Selesaikan tiga dari enam mapping milestone (50% * 70% = 35%)
         foreach (array_slice($this->milestones, 0, 9) as $m) {
             $this->selesaikan($m, $this->mataKuliahA);
         }

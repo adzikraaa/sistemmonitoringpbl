@@ -247,7 +247,9 @@
                 <a href="{{ route('mahasiswa.notifikasi', $semesterQuery) }}" class="sim-header__notif" style="position: relative;" title="Notifikasi">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                     @if(!empty($unreadMhsNotifCount) && $unreadMhsNotifCount > 0)
-                        <span class="notif-badge-dot" style="position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: #E02424; border-radius: 50%; border: 1.5px solid #fff;"></span>
+                        <span aria-label="{{ $unreadMhsNotifCount }} notifikasi belum dibaca" style="position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:#DC2626;color:#fff;border:2px solid #fff;border-radius:999px;font-size:9px;font-weight:700;line-height:1;box-sizing:border-box;">
+                            {{ $unreadMhsNotifCount > 99 ? '99+' : $unreadMhsNotifCount }}
+                        </span>
                     @endif
                 </a>
                 <div class="sim-header__user-avatar">{{ strtoupper(substr($userName ?? 'MT', 0, 2)) }}</div>
@@ -284,6 +286,7 @@
     </div>
 
     @stack('scripts')
+    @include('partials.session-flash-behavior')
 
     {{-- Sidebar Script --}}
     <script>

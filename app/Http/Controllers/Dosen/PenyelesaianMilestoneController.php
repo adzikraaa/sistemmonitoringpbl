@@ -12,6 +12,7 @@ use App\Models\Milestone;
 use App\Models\Notifikasi;
 use App\Models\PengumpulanMilestone;
 use App\Models\PenyelesaianMilestone;
+use App\Services\CoordinatorActivityNotificationService;
 use App\Services\PenyelesaianMilestoneService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -66,8 +67,15 @@ class PenyelesaianMilestoneController extends Controller
         $statusMap = $kelompokIds === []
             ? collect()
             : PenyelesaianMilestone::query()
-                ->whereIn('kelompok_id', $kelompokIds)
-                ->whereIn('mata_kuliah_id', $mataKuliahIds)
+                ->select('penyelesaian_milestone.*')
+                ->join('mata_kuliah', 'mata_kuliah.id', '=', 'penyelesaian_milestone.mata_kuliah_id')
+                ->join('pengumpulan_milestone', function ($join) {
+                    $join->on('pengumpulan_milestone.kelompok_id', '=', 'penyelesaian_milestone.kelompok_id')
+                        ->on('pengumpulan_milestone.milestone_id', '=', 'penyelesaian_milestone.milestone_id')
+                        ->on('pengumpulan_milestone.mata_kuliah', '=', 'mata_kuliah.slug');
+                })
+                ->whereIn('penyelesaian_milestone.kelompok_id', $kelompokIds)
+                ->whereIn('penyelesaian_milestone.mata_kuliah_id', $mataKuliahIds)
                 ->get()
                 ->keyBy(fn ($row) => $row->kelompok_id.':'.$row->milestone_id.':'.$row->mata_kuliah_id);
 
@@ -93,7 +101,8 @@ class PenyelesaianMilestoneController extends Controller
         Kelompok $kelompok,
         Milestone $milestone,
         MataKuliah $mataKuliah,
-        PenyelesaianMilestoneService $service
+        PenyelesaianMilestoneService $service,
+        CoordinatorActivityNotificationService $coordinatorNotifications
     ) {
         /** @var Dosen|null $dosen */
         $dosen = Auth::guard('dosen')->user();
@@ -145,14 +154,21 @@ class PenyelesaianMilestoneController extends Controller
 
             foreach ($recipients->unique('id') as $mhs) {
                 Notifikasi::create([
-                    'penerima_type' => Mahasiswa::class,
+                    'penerima_type' => $mhs->getMorphClass(),
                     'penerima_id' => $mhs->id,
-                    'judul' => 'Milestone '.$statusLabel.': '.$milestone->nama,
-                    'isi' => 'Status milestone "'.$milestone->nama.'" untuk mata kuliah "'.$mataKuliah->nama_matkul.'" telah diubah menjadi "'.$statusLabel.'" oleh dosen.'.(! empty($validated['catatan']) ? ' Catatan: '.Str::limit((string) $validated['catatan'], 100) : ''),
+                    'judul' => 'Milestone '.$statusLabel.': '.$milestone->judul,
+                    'isi' => 'Status milestone "'.$milestone->judul.'" untuk mata kuliah "'.$mataKuliah->nama_matkul.'" telah diubah menjadi "'.$statusLabel.'" oleh dosen.'.(! empty($validated['catatan']) ? ' Catatan: '.Str::limit((string) $validated['catatan'], 100) : ''),
                     'tautan' => route('mahasiswa.milestone'),
                     'dibaca_pada' => null,
                 ]);
             }
+
+            $coordinatorNotifications->kirim(
+                $dosen,
+                'Dosen Memperbarui Status Milestone',
+                'Status "'.$milestone->judul.'" untuk '.$mataKuliah->nama_matkul.' pada '.$kelompok->nama_kelompok.' diubah menjadi '.$statusLabel.'.',
+                route('koordinator.kelompok.show', $kelompok)
+            );
         } catch (\Throwable $e) {
             // Failsafe notifikasi
         }
