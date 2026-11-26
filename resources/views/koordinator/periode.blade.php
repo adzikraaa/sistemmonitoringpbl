@@ -232,6 +232,11 @@
         color: var(--sim-green-badge-text);
         border: 1px solid #D1E5CF;
     }
+    .figma-alert--error {
+        background: #FDF2F2;
+        color: #9B1C1C;
+        border: 1px solid #F8B4B4;
+    }
 
     /* Modal Styling */
     .figma-modal-overlay {
@@ -271,6 +276,19 @@
 @if(session('success'))
 <div class="figma-alert figma-alert--success">
     <span>{{ session('success') }}</span>
+</div>
+@endif
+
+@if($errors->any() && old('_form_mode') !== 'create')
+<div class="figma-alert figma-alert--error">
+    <div>
+        <strong>Gagal menyimpan periode:</strong>
+        <ul style="margin: 4px 0 0 18px; padding: 0;">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
 </div>
 @endif
 
@@ -499,10 +517,15 @@
         <p style="font-size: 13px; color: var(--sim-text-muted); margin: 0 0 20px 0;">
             Buat semester baru untuk kalender akademik PBL.
         </p>
-
+        @if($errors->any() && old('_form_mode') === 'create')
+            <div class="figma-alert figma-alert--error" style="margin-bottom: 16px;">
+                <span>{{ $errors->first() }}</span>
+            </div>
+        @endif
         <!-- Tambahkan id="form-tambah-semester" pada tag form -->
         <form id="form-tambah-semester" action="{{ route('koordinator.periode.store') }}" method="POST">
             @csrf
+            <input type="hidden" name="_form_mode" value="create">
 
             <div class="figma-form-group">
                 <label class="figma-form-label">Nama Semester <span style="color:#DC2626">*</span></label>
@@ -569,9 +592,17 @@
     document.getElementById('modal-tambah-semester').addEventListener('click', function(e) {
         if (e.target === this) closeModalTambah();
     });
-    
+
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeModalTambah();
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        @if($errors->any() && old('_form_mode') === 'create')
+            openModalTambah();
+        @elseif($errors->any())
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        @endif
     });
 </script>
 @endpush
