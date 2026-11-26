@@ -7,6 +7,7 @@ use App\Models\Periode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class PeriodeController extends Controller
@@ -36,7 +37,15 @@ class PeriodeController extends Controller
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
             'is_aktif' => 'nullable',
+        ], [
+            'tanggal_selesai.after' => 'Tanggal selesai harus lebih akhir daripada tanggal mulai.',
         ]);
+
+        // Validasi anti-tumpang tindih (KOR-05)
+        $this->pastikanTanggalTidakTumpangTindih(
+            $validated['tanggal_mulai'],
+            $validated['tanggal_selesai']
+        );
 
         $isAktif = $request->boolean('is_aktif');
 
@@ -69,7 +78,16 @@ class PeriodeController extends Controller
             'tahun_akademik' => 'required|string|max:20',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
+        ], [
+            'tanggal_selesai.after' => 'Tanggal selesai harus lebih akhir daripada tanggal mulai.',
         ]);
+
+        // Validasi anti-tumpang tindih, kecualikan periode yang sedang diedit
+        $this->pastikanTanggalTidakTumpangTindih(
+            $validated['tanggal_mulai'],
+            $validated['tanggal_selesai'],
+            $periode->id
+        );
 
         // is_aktif TIDAK diubah via form update — perubahan status aktif hanya
         // dilakukan melalui tombol "Aktifkan" di tabel riwayat (toggleAktif).
@@ -104,5 +122,34 @@ class PeriodeController extends Controller
 
         return redirect()->route('koordinator.periode.index')
             ->with('success', 'Semester berhasil dinonaktifkan.');
+    }
+
+    /**
+     * Memastikan rentang tanggal periode baru/perubahan tidak beririsan
+     * dengan periode akademik lain yang sudah terdaftar.
+     */
+    private function pastikanTanggalTidakTumpangTindih(
+        string $tanggalMulai,
+        string $tanggalSelesai,
+        ?int $ignorePeriodeId = null
+    ): void {
+        $periodeBentrok = Periode::query()
+            ->when($ignorePeriodeId !== null, fn ($query) => $query->whereKeyNot($ignorePeriodeId))
+            ->whereDate('tanggal_mulai', '<=', $tanggalSelesai)
+            ->whereDate('tanggal_selesai', '>=', $tanggalMulai)
+            ->first();
+
+        if ($periodeBentrok !== null) {
+            $pesan = sprintf(
+                'Rentang tanggal tumpang tindih dengan periode %s (%s – %s).',
+                $periodeBentrok->labelPeriode(),
+                $periodeBentrok->tanggal_mulai->format('d M Y'),
+                $periodeBentrok->tanggal_selesai->format('d M Y')
+            );
+
+            throw ValidationException::withMessages([
+                'tanggal_mulai' => $pesan,
+            ]);
+        }
     }
 }

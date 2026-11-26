@@ -114,6 +114,44 @@ class KoordinatorPeriodeTest extends TestCase
             '<span>Master Data</span>',
         ], false);
     }
+    public function test_menolak_tambah_periode_dengan_tanggal_tumpang_tindih(): void
+    {
+        $koordinator = $this->buatKoordinator();
+        $this->buatPeriode('Ganjil', '2026/2027', true); // 2026-09-01 s.d. 2027-01-31
+
+        $response = $this->actingAs($koordinator, 'koordinator')
+            ->from(route('koordinator.periode.index'))
+            ->post(route('koordinator.periode.store'), [
+                'nama_periode' => 'Genap',
+                'tahun_akademik' => '2026/2027',
+                'tanggal_mulai' => '2027-01-15',
+                'tanggal_selesai' => '2027-06-30',
+            ]);
+
+        $response->assertRedirect(route('koordinator.periode.index'));
+        $response->assertSessionHasErrors(['tanggal_mulai']);
+        $this->assertSame(1, Periode::query()->count());
+    }
+
+    public function test_menolak_ubah_periode_jika_tanggal_tumpang_tindih_dengan_periode_lain(): void
+    {
+        $koordinator = $this->buatKoordinator();
+        $this->buatPeriode('Ganjil', '2025/2026', false); // 2025-09-01 s.d. 2026-01-31
+        $periodeAktif = $this->buatPeriode('Ganjil', '2026/2027', true); // 2026-09-01 s.d. 2027-01-31
+
+        $response = $this->actingAs($koordinator, 'koordinator')
+            ->from(route('koordinator.periode.index'))
+            ->put(route('koordinator.periode.update', $periodeAktif), [
+                'nama_periode' => 'Ganjil',
+                'tahun_akademik' => '2026/2027',
+                'tanggal_mulai' => '2026-01-10',
+                'tanggal_selesai' => '2027-01-31',
+            ]);
+
+        $response->assertRedirect(route('koordinator.periode.index'));
+        $response->assertSessionHasErrors(['tanggal_mulai']);
+        $this->assertSame('2026-09-01', $periodeAktif->fresh()->tanggal_mulai->format('Y-m-d'));
+    }
 
     private function buatKoordinator(): Koordinator
     {
