@@ -41,7 +41,7 @@ class MahasiswaController extends Controller
         return Kelompok::query()
             ->periodeAktif()
             ->with(['proposal', 'logbookMilestone'])
-            ->whereHas('mahasiswa', fn ($query) => $query->where('mahasiswa.id', $mahasiswa->id))
+            ->whereHas('mahasiswa', fn($query) => $query->where('mahasiswa.id', $mahasiswa->id))
             ->orderBy('id')
             ->first();
     }
@@ -92,12 +92,12 @@ class MahasiswaController extends Controller
 
         $aktivitasTerbaru = ($mahasiswa && $kelompok)
             ? LogbookMilestone::query()
-                ->where('mahasiswa_id', $mahasiswa->id)
-                ->where('kelompok_id', $kelompok->id)
-                ->orderByDesc('tanggal')
-                ->orderByDesc('id')
-                ->limit(5)
-                ->get()
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->where('kelompok_id', $kelompok->id)
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get()
             : collect();
 
         return view('mahasiswa.dashboard', array_merge($this->sharedViewData(), [
@@ -158,7 +158,7 @@ class MahasiswaController extends Controller
             $parts = preg_split('/\s+/', trim($nama)) ?: [];
             $awal = $parts[0] ?? 'M';
             $inisial = strtoupper(
-                substr($awal, 0, 1).(isset($parts[1]) ? substr($parts[1], 0, 1) : substr($awal, 1, 1))
+                substr($awal, 0, 1) . (isset($parts[1]) ? substr($parts[1], 0, 1) : substr($awal, 1, 1))
             );
 
             return [
@@ -192,15 +192,15 @@ class MahasiswaController extends Controller
     {
         $records = LogbookMilestone::where('kelompok_id', $kelompok->id)->get();
 
-        $status = fn ($record) => strtolower(trim((string) $record->status));
+        $status = fn($record) => strtolower(trim((string) $record->status));
 
         return [
             'total' => $records->count(),
             'menunggu' => $records->filter(
-                fn ($record) => in_array($status($record), ['diajukan', 'menunggu review', 'menunggu'], true)
+                fn($record) => in_array($status($record), ['diajukan', 'menunggu review', 'menunggu'], true)
             )->count(),
-            'disetujui' => $records->filter(fn ($record) => $status($record) === 'disetujui')->count(),
-            'revisi' => $records->filter(fn ($record) => $status($record) === 'revisi')->count(),
+            'disetujui' => $records->filter(fn($record) => $status($record) === 'disetujui')->count(),
+            'revisi' => $records->filter(fn($record) => $status($record) === 'revisi')->count(),
             'terbaru' => $records->sortByDesc('tanggal')->first(),
         ];
     }
@@ -239,7 +239,7 @@ class MahasiswaController extends Controller
 
         if ($dbProposal) {
             $latestVersion = $dbProposal->riwayatProposal()->max('versi') ?? 1;
-            $versiLabel = 'VERSI '.str_pad((string) $latestVersion, 2, '0', STR_PAD_LEFT);
+            $versiLabel = 'VERSI ' . str_pad((string) $latestVersion, 2, '0', STR_PAD_LEFT);
 
             $statusRaw = strtolower($dbProposal->status);
             $statusFormatted = match ($statusRaw) {
@@ -323,22 +323,22 @@ class MahasiswaController extends Controller
 
         $records = ($mahasiswa && $kelompok)
             ? LogbookMilestone::query()
-                ->where('mahasiswa_id', $mahasiswa->id)
-                ->where('kelompok_id', $kelompok->id)
-                ->orderBy('tanggal')
-                ->orderBy('id')
-                ->get()
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->where('kelompok_id', $kelompok->id)
+            ->orderBy('tanggal')
+            ->orderBy('id')
+            ->get()
             : collect();
 
-        $normalize = fn ($value) => strtolower(trim((string) $value));
+        $normalize = fn($value) => strtolower(trim((string) $value));
 
         $logbookStats = [
             'total' => $records->count(),
             'menunggu' => $records->filter(
-                fn ($record) => in_array($normalize($record->status), ['diajukan', 'menunggu review', 'menunggu'], true)
+                fn($record) => in_array($normalize($record->status), ['diajukan', 'menunggu review', 'menunggu'], true)
             )->count(),
-            'disetujui' => $records->filter(fn ($record) => $normalize($record->status) === 'disetujui')->count(),
-            'revisi' => $records->filter(fn ($record) => $normalize($record->status) === 'revisi')->count(),
+            'disetujui' => $records->filter(fn($record) => $normalize($record->status) === 'disetujui')->count(),
+            'revisi' => $records->filter(fn($record) => $normalize($record->status) === 'revisi')->count(),
             'terbaru' => $records->sortByDesc('tanggal')->first(),
         ];
 
@@ -444,7 +444,7 @@ class MahasiswaController extends Controller
             ->where('is_aktif', true)
             ->whereIn('nama_matkul', self::MATA_KULIAH_SIM_PBL)
             ->get()
-            ->sortBy(fn (MataKuliah $mataKuliah) => array_search(
+            ->sortBy(fn(MataKuliah $mataKuliah) => array_search(
                 $mataKuliah->nama_matkul,
                 self::MATA_KULIAH_SIM_PBL,
                 true
@@ -458,11 +458,11 @@ class MahasiswaController extends Controller
 
         $dosenMap = $kelompok
             ? DosenPengampu::query()
-                ->with('dosen')
-                ->where('kelas_id', $kelompok->kelas_id)
-                ->whereIn('mata_kuliah_id', $mataKuliahIds)
-                ->get()
-                ->keyBy('mata_kuliah_id')
+            ->with('dosen')
+            ->where('kelas_id', $kelompok->kelas_id)
+            ->whereIn('mata_kuliah_id', $mataKuliahIds)
+            ->get()
+            ->keyBy('mata_kuliah_id')
             : collect();
 
         $mataKuliahList = $mataKuliahModels->map(function (MataKuliah $mataKuliah) use ($progresMap, $dosenMap) {
@@ -471,7 +471,7 @@ class MahasiswaController extends Controller
 
             return [
                 'id' => $mataKuliah->id,
-                'kode' => $mataKuliah->kode ?? 'MK-'.$mataKuliah->id,
+                'kode' => $mataKuliah->kode ?? 'MK-' . $mataKuliah->id,
                 'slug' => $mataKuliah->slug ?: Str::slug((string) $mataKuliah->nama_matkul),
                 'nama' => $mataKuliah->nama_matkul,
                 'judul' => $mataKuliah->nama_matkul,
@@ -509,10 +509,10 @@ class MahasiswaController extends Controller
 
         $submissions = $kelompok
             ? PengumpulanMilestone::with(['milestone', 'pengunggah'])
-                ->where('kelompok_id', $kelompok->id)
-                ->where('mata_kuliah', $mataKuliah->slug)
-                ->latest()
-                ->get()
+            ->where('kelompok_id', $kelompok->id)
+            ->where('mata_kuliah', $mataKuliah->slug)
+            ->latest()
+            ->get()
             : collect();
 
         $anggotaKelompok = $this->anggotaView($kelompok);
@@ -522,25 +522,28 @@ class MahasiswaController extends Controller
         $statusMilestone = $this->statusProgres($progresMatkul);
         $milestoneOptions = $kelompok
             ? Milestone::query()
-                ->where('periode_id', $kelompok->periode_id)
-                ->whereHas('mataKuliah', fn ($query) => $query->where('mata_kuliah.id', $mataKuliah->id))
-                ->orderBy('urutan')
-                ->get()
+            ->where('periode_id', $kelompok->periode_id)
+            ->whereHas('mataKuliah', fn($query) => $query->where('mata_kuliah.id', $mataKuliah->id))
+            ->orderBy('urutan')
+            ->get()
             : collect();
 
-        $milestones = $submissions->map(function (PengumpulanMilestone $submission) {
-            $milestone = $submission->milestone;
-            $extension = strtolower(pathinfo($submission->file_name, PATHINFO_EXTENSION));
+        $submissionsByMilestone = $submissions->keyBy('milestone_id');
 
-            $dokumen = [
-                [
+        $formatSubmission = function (PengumpulanMilestone $submission, ?Milestone $milestone = null): array {
+            $milestone ??= $submission->milestone;
+            $extension = strtolower(pathinfo((string) $submission->file_name, PATHINFO_EXTENSION));
+
+            $dokumen = [];
+            if ($submission->file_name) {
+                $dokumen[] = [
                     'tipe' => $extension === 'pdf' ? 'pdf' : ($extension === 'zip' ? 'zip' : 'file'),
                     'nama' => $submission->file_name,
-                    'sub' => 'Dokumen '.strtoupper($extension ?: 'FILE'),
+                    'sub' => 'Dokumen ' . strtoupper($extension ?: 'FILE'),
                     'action' => 'download',
                     'url' => route('mahasiswa.milestone.berkas.download', $submission->id),
-                ],
-            ];
+                ];
+            }
 
             if ($submission->link_bukti) {
                 $dokumen[] = [
@@ -557,28 +560,55 @@ class MahasiswaController extends Controller
             return [
                 'id' => $submission->milestone_id,
                 'judul' => $milestone
-                    ? 'Milestone '.$milestone->urutan.' – '.$milestone->judul
+                    ? 'Milestone ' . $milestone->urutan . ' – ' . $milestone->judul
                     : 'Milestone',
                 'status' => strtolower((string) $submission->status) === 'diajukan'
                     ? 'Menunggu Review'
                     : ucfirst((string) $submission->status),
                 'ringkasan' => $submission->catatan ?? '',
                 'waktu' => $waktuUpload
-                    ? $waktuUpload->timezone('Asia/Jakarta')->translatedFormat('d F Y, H:i').' WIB'
+                    ? $waktuUpload->timezone('Asia/Jakarta')->translatedFormat('d F Y, H:i') . ' WIB'
                     : '',
                 'pengunggah' => $submission->pengunggah?->nama ?? 'Mahasiswa',
                 'dokumen' => $dokumen,
+                'sudah_dikumpulkan' => true,
             ];
-        })->all();
+        };
+
+        if ($milestoneOptions->isNotEmpty()) {
+            $milestones = $milestoneOptions->map(function (Milestone $milestone) use ($submissionsByMilestone, $formatSubmission) {
+                /** @var PengumpulanMilestone|null $submission */
+                $submission = $submissionsByMilestone->get($milestone->id);
+
+                if ($submission) {
+                    return $formatSubmission($submission, $milestone);
+                }
+
+                return [
+                    'id' => $milestone->id,
+                    'judul' => 'Milestone ' . $milestone->urutan . ' – ' . $milestone->judul,
+                    'status' => 'Belum Dikumpulkan',
+                    'ringkasan' => '',
+                    'waktu' => '',
+                    'pengunggah' => '',
+                    'dokumen' => [],
+                    'sudah_dikumpulkan' => false,
+                ];
+            })->all();
+        } else {
+            $milestones = $submissions->map(
+                fn(PengumpulanMilestone $submission) => $formatSubmission($submission)
+            )->all();
+        }
 
         return view('mahasiswa.milestone-detail', array_merge($this->sharedViewData(), [
-            'slug' => $slug,
+            'slug' => $mataKuliah->slug,
             'namaMatkul' => $namaMatkul,
             'kelompok' => $kelompok,
-            'anggotaKelompok' => $anggotaKelompok,
-            'berkasTerkumpul' => ! empty($milestones),
+            'berkasTerkumpul' => $submissions->isNotEmpty(),
             'milestones' => $milestones,
             'milestoneOptions' => $milestoneOptions,
+            'anggotaKelompok' => $anggotaKelompok,
             'progresMatkul' => $progresMatkul,
             'statusMilestone' => $statusMilestone,
         ]));
@@ -664,7 +694,7 @@ class MahasiswaController extends Controller
                 'required',
                 'integer',
                 Rule::exists('milestone', 'id')->where(
-                    fn ($query) => $query->where('periode_id', $kelompok->periode_id)
+                    fn($query) => $query->where('periode_id', $kelompok->periode_id)
                 ),
                 Rule::exists('milestone_mata_kuliah', 'milestone_id')
                     ->where('mata_kuliah_id', $mataKuliah->id),
@@ -686,7 +716,7 @@ class MahasiswaController extends Controller
         $file = $request->file('berkas');
         $originalName = $file->getClientOriginalName();
         $storedPath = $file->store(
-            'milestone-submissions/'.$kelompok->id.'/'.$validated['milestone_id'].'/'.$mataKuliah->slug,
+            'milestone-submissions/' . $kelompok->id . '/' . $validated['milestone_id'] . '/' . $mataKuliah->slug,
             'local'
         );
 
@@ -759,7 +789,7 @@ class MahasiswaController extends Controller
                 ->route('mahasiswa.milestone.detail', $mataKuliah->slug)
                 ->withErrors([
                     'berkas' => 'Submission untuk milestone dan mata kuliah ini sudah ada. '
-                        .'Muat ulang halaman lalu coba lagi.',
+                        . 'Muat ulang halaman lalu coba lagi.',
                 ]);
         } catch (\Throwable $exception) {
             Storage::disk('local')->delete($storedPath);
@@ -775,7 +805,7 @@ class MahasiswaController extends Controller
         $this->notifyDosenKelompok(
             $kelompok,
             'Laporan Milestone Dikumpulkan',
-            'Kelompok "'.$kelompok->nama_kelompok.'" telah mengumpulkan laporan "'.$namaMilestone.'" untuk mata kuliah '.$mataKuliah->nama_matkul.'.',
+            'Kelompok "' . $kelompok->nama_kelompok . '" telah mengumpulkan laporan "' . $namaMilestone . '" untuk mata kuliah ' . $mataKuliah->nama_matkul . '.',
             route('dosen.laporan-aktivitas.milestone', [$kelompok->id, $validated['milestone_id']]),
             $mataKuliah->id
         );
@@ -843,8 +873,8 @@ class MahasiswaController extends Controller
         if (! str_ends_with(strtolower($safeOriginalName), '.pdf')) {
             $safeOriginalName .= '.pdf';
         }
-        $fileName = 'v'.$nextVersion.'_'.$safeOriginalName;
-        $filePath = $file->storeAs('proposals/'.$kelompok->id, $fileName, 'local');
+        $fileName = 'v' . $nextVersion . '_' . $safeOriginalName;
+        $filePath = $file->storeAs('proposals/' . $kelompok->id, $fileName, 'local');
 
         try {
             DB::transaction(function () use (
@@ -880,7 +910,7 @@ class MahasiswaController extends Controller
                         'judul' => $validated['judul'],
                         'file_proposal' => $filePath,
                         'status' => 'diajukan',
-                        'catatan' => 'Pengajuan revisi proposal (Versi '.$nextVersion.')',
+                        'catatan' => 'Pengajuan revisi proposal (Versi ' . $nextVersion . ')',
                     ]);
 
                     return;
@@ -918,7 +948,7 @@ class MahasiswaController extends Controller
         $this->notifyDosenKelompok(
             $kelompok,
             'Pengajuan Proposal Proyek Baru',
-            'Kelompok "'.$kelompok->nama_kelompok.'" telah mengajukan proposal: "'.$validated['judul'].'". Silakan tinjau proposal tersebut.',
+            'Kelompok "' . $kelompok->nama_kelompok . '" telah mengajukan proposal: "' . $validated['judul'] . '". Silakan tinjau proposal tersebut.',
             $prop ? route('dosen.laporan-aktivitas.proposal', $prop->id) : route('dosen.laporan-aktivitas')
         );
 
@@ -979,8 +1009,8 @@ class MahasiswaController extends Controller
             if (! str_ends_with(strtolower($safeOriginalName), '.pdf')) {
                 $safeOriginalName .= '.pdf';
             }
-            $fileName = 'v'.$nextVersion.'_'.$safeOriginalName;
-            $filePath = $file->storeAs('proposals/'.$kelompok->id, $fileName, 'local');
+            $fileName = 'v' . $nextVersion . '_' . $safeOriginalName;
+            $filePath = $file->storeAs('proposals/' . $kelompok->id, $fileName, 'local');
             $fileUploaded = true;
         }
 
@@ -1012,7 +1042,7 @@ class MahasiswaController extends Controller
                     'judul' => $validated['judul'],
                     'file_proposal' => $filePath,
                     'status' => 'diajukan',
-                    'catatan' => 'Pembaruan proposal (Versi '.str_pad((string) $nextVersion, 2, '0', STR_PAD_LEFT).')',
+                    'catatan' => 'Pembaruan proposal (Versi ' . str_pad((string) $nextVersion, 2, '0', STR_PAD_LEFT) . ')',
                 ]);
             });
         } catch (\Throwable $exception) {
@@ -1026,7 +1056,7 @@ class MahasiswaController extends Controller
         $this->notifyDosenKelompok(
             $kelompok,
             'Pembaruan Proposal Proyek',
-            'Kelompok "'.$kelompok->nama_kelompok.'" telah memperbarui proposal: "'.$validated['judul'].'". Silakan tinjau kembali proposal tersebut.',
+            'Kelompok "' . $kelompok->nama_kelompok . '" telah memperbarui proposal: "' . $validated['judul'] . '". Silakan tinjau kembali proposal tersebut.',
             route('dosen.laporan-aktivitas.proposal', $proposal->id)
         );
 
@@ -1081,7 +1111,7 @@ class MahasiswaController extends Controller
             });
         } catch (\Throwable $e) {
             return redirect()->route('mahasiswa.proposal')->withErrors([
-                'general' => 'Gagal menghapus proposal: '.$e->getMessage(),
+                'general' => 'Gagal menghapus proposal: ' . $e->getMessage(),
             ]);
         }
 
@@ -1153,7 +1183,7 @@ class MahasiswaController extends Controller
         $filePath = null;
         if ($request->hasFile('file_bukti')) {
             $file = $request->file('file_bukti');
-            $filePath = $file->storeAs('logbook-attachments/'.$kelompok->id, Str::random(40).'.'.$file->getClientOriginalExtension(), 'local');
+            $filePath = $file->storeAs('logbook-attachments/' . $kelompok->id, Str::random(40) . '.' . $file->getClientOriginalExtension(), 'local');
         }
 
         $logbook = LogbookMilestone::create([
@@ -1179,7 +1209,7 @@ class MahasiswaController extends Controller
         $this->notifyDosenKelompok(
             $kelompok,
             'Entri Logbook Baru',
-            'Kelompok "'.$kelompok->nama_kelompok.'" menambahkan catatan logbook baru: "'.$logbook->judul.'".',
+            'Kelompok "' . $kelompok->nama_kelompok . '" menambahkan catatan logbook baru: "' . $logbook->judul . '".',
             route('dosen.laporan-aktivitas.logbook', $logbook->id)
         );
 
@@ -1257,7 +1287,7 @@ class MahasiswaController extends Controller
 
         if ($request->hasFile('file_bukti')) {
             $file = $request->file('file_bukti');
-            $updateData['file_bukti'] = $file->storeAs('logbook-attachments/'.$kelompok->id, Str::random(40).'.'.$file->getClientOriginalExtension(), 'local');
+            $updateData['file_bukti'] = $file->storeAs('logbook-attachments/' . $kelompok->id, Str::random(40) . '.' . $file->getClientOriginalExtension(), 'local');
         }
 
         $logbook->update($updateData);
@@ -1265,7 +1295,7 @@ class MahasiswaController extends Controller
         $this->notifyDosenKelompok(
             $kelompok,
             'Pembaruan Catatan Logbook',
-            'Kelompok "'.$kelompok->nama_kelompok.'" memperbarui catatan logbook: "'.$logbook->judul.'".',
+            'Kelompok "' . $kelompok->nama_kelompok . '" memperbarui catatan logbook: "' . $logbook->judul . '".',
             route('dosen.laporan-aktivitas.logbook', $logbook->id)
         );
 
@@ -1300,7 +1330,7 @@ class MahasiswaController extends Controller
         }
 
         $extension = pathinfo($logbook->file_bukti, PATHINFO_EXTENSION) ?: 'pdf';
-        $downloadName = 'Logbook-'.Str::slug($logbook->judul ?: 'PBL').'.'.$extension;
+        $downloadName = 'Logbook-' . Str::slug($logbook->judul ?: 'PBL') . '.' . $extension;
 
         if (Storage::disk('local')->exists($logbook->file_bukti)) {
             return Storage::disk('local')->download($logbook->file_bukti, $downloadName);
