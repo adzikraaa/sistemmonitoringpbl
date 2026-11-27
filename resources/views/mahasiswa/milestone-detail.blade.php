@@ -264,15 +264,56 @@
 </div>
 
 <!-- MODAL FORMULIR PENGUMPULAN -->
+@php
+    $bisaMengumpulkan = (bool) ($kelompok && $milestoneOptions->isNotEmpty());
+@endphp
 <div id="modalPengumpulan" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/45 backdrop-blur-xs p-4">
-    <div class="bg-white w-full max-w-xl rounded-2xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <div id="modalPengumpulanBox" class="bg-white w-full max-w-xl rounded-2xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <button type="button" onclick="closeModalForm()" class="absolute top-4 right-4 text-[#7D746D] hover:text-[#1F1F1F] text-xl font-bold p-1">&times;</button>
 
-        <span class="text-[10px] font-bold text-[#7D746D] uppercase tracking-wider block">RUANG KERJA • MAHASISWA</span>
-        <h2 class="text-xl font-serif font-bold text-[#1F1F1F] mt-0.5">Formulir Pengumpulan Milestone</h2>
-        <p class="text-xs text-[#7D746D] mb-5">Lengkapi ringkasan capaian dan unggah dokumen pendukung untuk ditinjau oleh dosen pembimbing.</p>
+        <h2 class="text-xl font-serif font-bold text-[#1F1F1F] pr-8">Formulir Pengumpulan Milestone</h2>
+        <p class="text-xs text-[#7D746D] mt-1 mb-4">Lengkapi ringkasan capaian dan unggah dokumen pendukung untuk ditinjau oleh dosen pembimbing.</p>
 
-        <form id="formPengumpulanMilestone" action="{{ route('mahasiswa.milestone.upload', $slug) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateMilestoneForm(event)">
+        {{-- Info Ketersediaan Kelompok / Tahapan Milestone --}}
+        @if(! $kelompok)
+            <div class="mb-4 bg-[#FFF7ED] border border-[#FED7AA] text-[#9A3412] px-3.5 py-3 rounded-xl text-xs leading-relaxed">
+                <strong class="font-bold block text-[#7C2D12] mb-0.5">Belum Tergabung dalam Kelompok</strong>
+                Akun Anda belum tergabung dalam kelompok pada periode aktif, sehingga pengumpulan laporan belum dapat dilakukan.
+            </div>
+        @elseif(!empty($semuaMilestoneDisetujui))
+            <div class="mb-4 bg-[#EAF3EC] border border-[#C6DFC8] text-[#2F5C4A] px-3.5 py-3 rounded-xl text-xs leading-relaxed">
+                <strong class="font-bold block mb-0.5">Seluruh Tahapan Selesai</strong>
+                Seluruh tahapan milestone pada mata kuliah ini sudah disetujui, sehingga tidak ada lagi berkas yang perlu dikumpulkan.
+            </div>
+        @elseif($milestoneOptions->isEmpty())
+            <div class="mb-4 bg-[#FFF7ED] border border-[#FED7AA] text-[#9A3412] px-3.5 py-3 rounded-xl text-xs leading-relaxed">
+                <strong class="font-bold block text-[#7C2D12] mb-0.5">Tahapan Milestone Belum Tersedia</strong>
+                Tahapan milestone untuk mata kuliah ini belum tersedia pada periode berjalan. Silakan hubungi koordinator atau dosen pengampu.
+            </div>
+        @endif
+
+        {{-- Alert Error Validasi Server di Dalam Modal --}}
+        @if($errors->any())
+            <div id="modalServerErrors" class="mb-4 bg-[#FDF2F2] border border-[#F8B4B4] text-[#9B1C1C] px-3.5 py-3 rounded-xl text-xs space-y-1">
+                <p class="font-bold m-0">Pengumpulan belum dapat disimpan, periksa isian berikut:</p>
+                <ul class="list-disc list-inside m-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        {{-- Alert Validasi Instan di Dalam Modal --}}
+        <div id="modalValidationAlert" class="hidden mb-4 bg-[#FDF2F2] border border-[#F8B4B4] text-[#9B1C1C] px-3.5 py-3 rounded-xl text-xs space-y-1" role="alert">
+            <div class="flex items-start justify-between gap-2">
+                <p class="font-bold m-0">Mohon lengkapi data pengumpulan berikut:</p>
+                <button type="button" onclick="hideModalValidationAlert()" class="text-[#9B1C1C] hover:text-[#7F1D1D] font-bold text-sm leading-none shrink-0">&times;</button>
+            </div>
+            <ul id="modalValidationList" class="list-disc list-inside m-0"></ul>
+        </div>
+
+        <form id="formPengumpulanMilestone" action="{{ route('mahasiswa.milestone.upload', $slug) }}" method="POST" enctype="multipart/form-data" novalidate onsubmit="return validateMilestoneForm(event)">
             @csrf
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 text-xs">
                 <div>
@@ -283,7 +324,7 @@
                 </div>
                 <div>
                     <label class="block font-bold text-[#1F1F1F] mb-1.5">Tahapan Milestone <span class="text-rose-500">*</span></label>
-                    <select id="selectMilestoneId" name="milestone_id" required onchange="updateMilestoneInfoBox()" class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">
+                    <select id="selectMilestoneId" name="milestone_id" required onchange="updateMilestoneInfoBox(); hideModalValidationAlert();" class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">
                         <option value="">Pilih tahapan milestone...</option>
                         @forelse($milestoneOptions as $option)
                             <option value="{{ $option->id }}"
@@ -310,12 +351,12 @@
 
             <div class="mb-4 text-xs">
                 <label class="block font-bold text-[#1F1F1F] mb-1.5">Ringkasan Capaian Milestone <span class="text-rose-500">*</span></label>
-                <textarea name="catatan" rows="3" required placeholder="Jelaskan ringkasan pekerjaan, hasil progres, dan kendala yang telah diselesaikan..." class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">{{ old('catatan') }}</textarea>
+                <textarea id="inputCatatanMilestone" name="catatan" rows="3" required oninput="hideModalValidationAlert()" placeholder="Jelaskan ringkasan pekerjaan, hasil progres, dan kendala yang telah diselesaikan..." class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">{{ old('catatan') }}</textarea>
             </div>
 
             <!-- Dropzone Upload -->
             <div class="mb-4 text-xs">
-                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-rose-500">*</span> <span class="text-[#7D746D] font-normal">(PDF/ZIP maks 2 MB)</span></label>
+                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-rose-500">*</span></label>
 
                 {{-- Alert Peringatan Ukuran File di dalam Modal --}}
                 <div id="modalAlertFileSize" class="hidden mb-2.5 bg-[#FFF7ED] border border-[#FED7AA] text-[#C2410C] px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between">
@@ -344,18 +385,48 @@
 
             <div class="mb-6 text-xs">
                 <label class="block font-bold text-[#1F1F1F] mb-1.5">Tautan Repositori / Demo <span class="text-[#7D746D] font-normal">(Opsional)</span></label>
-                <input type="url" name="link_bukti" value="{{ old('link_bukti') }}" placeholder="https://github.com/organisasi/proyek-pbl" class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">
+                <input id="inputLinkBuktiMilestone" type="url" name="link_bukti" value="{{ old('link_bukti') }}" oninput="hideModalValidationAlert()" placeholder="https://github.com/organisasi/proyek-pbl" class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">
             </div>
 
             <div class="flex justify-end gap-3 text-xs">
                 <button type="button" onclick="closeModalForm()" class="sim-btn-secondary">Batal</button>
-                <button type="submit" class="sim-btn-primary">Kumpulkan</button>
+                <button id="btnSubmitMilestone" type="submit" @disabled(! $bisaMengumpulkan) class="sim-btn-primary {{ ! $bisaMengumpulkan ? 'opacity-50 cursor-not-allowed' : '' }}">Kumpulkan</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
+function showModalValidationAlert(messages) {
+    const alertBox = document.getElementById('modalValidationAlert');
+    const listEl = document.getElementById('modalValidationList');
+    const modalBox = document.getElementById('modalPengumpulanBox');
+
+    if (!alertBox || !listEl) {
+        return;
+    }
+
+    listEl.innerHTML = '';
+    messages.forEach(function (msg) {
+        const li = document.createElement('li');
+        li.textContent = msg;
+        listEl.appendChild(li);
+    });
+
+    alertBox.classList.remove('hidden');
+
+    if (modalBox) {
+        modalBox.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function hideModalValidationAlert() {
+    const alertBox = document.getElementById('modalValidationAlert');
+    if (alertBox) {
+        alertBox.classList.add('hidden');
+    }
+}
+
 function updateMilestoneInfoBox() {
     const selectMilestone = document.getElementById('selectMilestoneId');
     const infoBox = document.getElementById('modalMilestoneInfo');
@@ -395,6 +466,8 @@ function openModalForm(milestoneId = null) {
     const modal = document.getElementById('modalPengumpulan');
     const selectMilestone = document.getElementById('selectMilestoneId');
 
+    hideModalValidationAlert();
+
     if (selectMilestone && milestoneId) {
         selectMilestone.value = String(milestoneId);
     }
@@ -409,6 +482,7 @@ function closeModalForm() {
     const modal = document.getElementById('modalPengumpulan');
     const form = document.getElementById('formPengumpulanMilestone');
     const modalAlert = document.getElementById('modalAlertFileSize');
+    const serverErrors = document.getElementById('modalServerErrors');
 
     if (form) {
         form.reset();
@@ -416,6 +490,10 @@ function closeModalForm() {
     if (modalAlert) {
         modalAlert.classList.add('hidden');
     }
+    if (serverErrors) {
+        serverErrors.classList.add('hidden');
+    }
+    hideModalValidationAlert();
     updateMilestoneInfoBox();
     document.getElementById('dropzoneEmpty').classList.remove('hidden');
     document.getElementById('dropzoneFilled').classList.add('hidden');
@@ -426,6 +504,10 @@ function closeModalForm() {
 
 document.addEventListener('DOMContentLoaded', function () {
     updateMilestoneInfoBox();
+
+    @if($errors->any())
+        openModalForm();
+    @endif
 });
 
 function previewFileSelected(input) {
@@ -433,6 +515,8 @@ function previewFileSelected(input) {
         const file = input.files[0];
         const modalAlert = document.getElementById('modalAlertFileSize');
         const alertEl = document.getElementById('alertFileTerlalubesar');
+
+        hideModalValidationAlert();
 
         if (file.size > 2 * 1024 * 1024) {
             // Tampilkan notifikasi peringatan file melebihi batas 2MB
@@ -465,17 +549,46 @@ function previewFileSelected(input) {
 }
 
 function validateMilestoneForm(event) {
+    const selectMilestone = document.getElementById('selectMilestoneId');
+    const catatanInput = document.getElementById('inputCatatanMilestone');
     const fileInput = document.getElementById('fileInputReal');
+    const linkInput = document.getElementById('inputLinkBuktiMilestone');
     const modalAlert = document.getElementById('modalAlertFileSize');
+    const messages = [];
 
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
-        if (file.size > 2 * 1024 * 1024) {
-            event.preventDefault();
-            if (modalAlert) modalAlert.classList.remove('hidden');
-            return false;
-        }
+    if (!selectMilestone || !selectMilestone.value) {
+        const hasSelectableOption = selectMilestone
+            && Array.from(selectMilestone.options).some(function (opt) { return opt.value !== '' && !opt.disabled; });
+        messages.push(
+            hasSelectableOption
+                ? 'Tahapan milestone wajib dipilih.'
+                : 'Tahapan milestone belum tersedia untuk dikumpulkan.'
+        );
     }
+
+    if (!catatanInput || !catatanInput.value.trim()) {
+        messages.push('Ringkasan capaian milestone wajib diisi.');
+    }
+
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        messages.push('Berkas laporan (PDF atau ZIP) wajib dipilih.');
+    } else if (fileInput.files[0].size > 2 * 1024 * 1024) {
+        if (modalAlert) {
+            modalAlert.classList.remove('hidden');
+        }
+        messages.push('Ukuran file melebihi batas maksimal 2 MB.');
+    }
+
+    if (linkInput && linkInput.value.trim() !== '' && !/^https?:\/\/.+/i.test(linkInput.value.trim())) {
+        messages.push('Format tautan repositori/demo tidak valid (harus diawali http:// atau https://).');
+    }
+
+    if (messages.length > 0) {
+        event.preventDefault();
+        showModalValidationAlert(messages);
+        return false;
+    }
+
     return true;
 }
 </script>

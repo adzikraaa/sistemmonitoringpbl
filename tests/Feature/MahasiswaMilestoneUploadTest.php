@@ -735,6 +735,56 @@ class MahasiswaMilestoneUploadTest extends TestCase
         $this->assertCount(0, Storage::disk('local')->allFiles());
     }
 
+    public function test_modal_menampilkan_keterangan_saat_tahapan_milestone_belum_tersedia(): void
+    {
+        MilestoneMataKuliah::where('mata_kuliah_id', $this->mataKuliah->id)->delete();
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', $this->mataKuliah->slug))
+            ->assertOk()
+            ->assertSee('Tahapan Milestone Belum Tersedia')
+            ->assertSee('Tahapan milestone untuk mata kuliah ini belum tersedia pada periode berjalan.');
+    }
+
+    public function test_modal_menampilkan_keterangan_saat_mahasiswa_belum_tergabung_kelompok(): void
+    {
+        $mahasiswaTanpaKelompok = Mahasiswa::create([
+            'nama' => 'Mahasiswa Belum Kelompok',
+            'email' => 'belum.kelompok@test.com',
+            'password' => 'password123',
+            'nim' => '2026888',
+            'kelas_id' => $this->kelas->id,
+            'is_aktif' => true,
+        ]);
+
+        $this->actingAs($mahasiswaTanpaKelompok, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', $this->mataKuliah->slug))
+            ->assertOk()
+            ->assertSee('Belum Tergabung dalam Kelompok')
+            ->assertSee('Akun Anda belum tergabung dalam kelompok pada periode aktif');
+    }
+
+    public function test_validasi_gagal_menampilkan_pesan_error_dan_membuka_kembali_modal_dengan_isian_lama(): void
+    {
+        Storage::fake('local');
+
+        $response = $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->from(route('mahasiswa.milestone.detail', $this->mataKuliah->slug))
+            ->followingRedirects()
+            ->post(route('mahasiswa.milestone.upload', $this->mataKuliah->slug), [
+                'milestone_id' => '',
+                'catatan' => 'Ringkasan draf mahasiswa yang tetap tersimpan.',
+                'link_bukti' => 'tautan-tidak-valid',
+            ]);
+
+        $response->assertOk()
+            ->assertSee('Tahapan milestone wajib dipilih.')
+            ->assertSee('Berkas laporan (PDF/ZIP) wajib diunggah.')
+            ->assertSee('Format tautan repositori/demo tidak valid')
+            ->assertSee('Ringkasan draf mahasiswa yang tetap tersimpan.')
+            ->assertSee('openModalForm();', false);
+    }
+
     private function buatMataKuliah(string $slug, string $nama, string $kode): MataKuliah
     {
         return MataKuliah::create([
