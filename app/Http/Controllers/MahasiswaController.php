@@ -11,6 +11,8 @@ use App\Models\MataKuliah;
 use App\Models\Milestone;
 use App\Models\Notifikasi;
 use App\Models\PengumpulanMilestone;
+use App\Models\PenyelesaianMilestone;
+use App\Models\Periode;
 use App\Models\Proposal;
 use App\Models\RiwayatProposal;
 use App\Services\ProgressService;
@@ -507,12 +509,26 @@ class MahasiswaController extends Controller
         $namaMatkul = $mataKuliah->nama_matkul;
         $kelompok = $this->kelompokAktif();
 
+        $periodeId = $kelompok?->periode_id ?? Periode::query()
+            ->where('is_aktif', true)
+            ->orderByDesc('tanggal_mulai')
+            ->orderByDesc('id')
+            ->value('id');
+
         $submissions = $kelompok
             ? PengumpulanMilestone::with(['milestone', 'pengunggah'])
-            ->where('kelompok_id', $kelompok->id)
-            ->where('mata_kuliah', $mataKuliah->slug)
-            ->latest()
-            ->get()
+                ->where('kelompok_id', $kelompok->id)
+                ->where('mata_kuliah', $mataKuliah->slug)
+                ->latest()
+                ->get()
+            : collect();
+
+        $penyelesaianByMilestone = $kelompok
+            ? PenyelesaianMilestone::with('verifikator')
+                ->where('kelompok_id', $kelompok->id)
+                ->where('mata_kuliah_id', $mataKuliah->id)
+                ->get()
+                ->keyBy('milestone_id')
             : collect();
 
         $anggotaKelompok = $this->anggotaView($kelompok);
@@ -520,26 +536,75 @@ class MahasiswaController extends Controller
             ? app(ProgressService::class)->untukMataKuliah($kelompok, $mataKuliah)
             : $this->kosongProgres();
         $statusMilestone = $this->statusProgres($progresMatkul);
-        $milestoneOptions = $kelompok
+        $milestoneOptions = $periodeId
             ? Milestone::query()
-            ->where('periode_id', $kelompok->periode_id)
-            ->whereHas('mataKuliah', fn($query) => $query->where('mata_kuliah.id', $mataKuliah->id))
-            ->orderBy('urutan')
-            ->get()
+                ->where('periode_id', $periodeId)
+                ->whereHas('mataKuliah', fn ($query) => $query->where('mata_kuliah.id', $mataKuliah->id))
+                ->orderBy('urutan')
+                ->get()
             : collect();
 
         $submissionsByMilestone = $submissions->keyBy('milestone_id');
 
-        $formatSubmission = function (PengumpulanMilestone $submission, ?Milestone $milestone = null): array {
-            $milestone ??= $submission->milestone;
-            $extension = strtolower(pathinfo((string) $submission->file_name, PATHINFO_EXTENSION));
+        $formatMilestoneCard = function (
+            ?Milestone $milestone,
+            ?PengumpulanMilestone $submission = null,
+            ?PenyelesaianMilestone $penyelesaian = null
+        ): array {
+            $milestone ??= $submission?->milestone;
+            $kode = trim((string) ($milestone?->kode ?? ''));
+            $deskripsi = trim((string) ($milestone?->deskripsi ?? ''));
+            $tanggalMulai = $milestone?->tanggal_mulai
+                ? $milestone->tanggal_mulai->locale('id')->translatedFormat('d F Y')
+                : null;
+            $deadline = $milestone?->deadline
+                ? $milestone->deadline->locale('id')->translatedFormat('d F Y')
+                : null;
 
+            $verifStatusRaw = $penyelesaian
+                ? PenyelesaianMilestone::normalizeStatus($penyelesaian->status)
+                : '';
+            $statusVerifikasi = match ($verifStatusRaw) {
+                PenyelesaianMilestone::STATUS_SELESAI => 'Selesai',
+                PenyelesaianMilestone::STATUS_BERJALAN => 'Sedang Berjalan',
+                PenyelesaianMilestone::STATUS_BELUM_DIMULAI => 'Belum Dimulai',
+                default => null,
+            };
+            $catatanDosen = trim((string) ($penyelesaian?->catatan ?? ''));
+            $verifikator = $penyelesaian?->verifikator?->nama;
+            $waktuVerifikasi = $penyelesaian?->diverifikasi_pada
+                ? $penyelesaian->diverifikasi_pada->timezone('Asia/Jakarta')->locale('id')->translatedFormat('d F Y, H:i').' WIB'
+                : null;
+
+            if (! $submission) {
+                return [
+                    'id' => $milestone?->id,
+                    'kode' => $kode,
+                    'judul' => $this->formatJudulMilestone($milestone),
+                    'deskripsi' => $deskripsi,
+                    'tanggal_mulai' => $tanggalMulai,
+                    'deadline' => $deadline,
+                    'status' => 'Belum Dikumpulkan',
+                    'ringkasan' => '',
+                    'waktu' => '',
+                    'pengunggah' => '',
+                    'dokumen' => [],
+                    'sudah_dikumpulkan' => false,
+                    'status_verifikasi' => $statusVerifikasi,
+                    'catatan_dosen' => $catatanDosen,
+                    'verifikator' => $verifikator,
+                    'waktu_verifikasi' => $waktuVerifikasi,
+                ];
+            }
+
+            $extension = strtolower(pathinfo((string) $submission->file_name, PATHINFO_EXTENSION));
             $dokumen = [];
+
             if ($submission->file_name) {
                 $dokumen[] = [
                     'tipe' => $extension === 'pdf' ? 'pdf' : ($extension === 'zip' ? 'zip' : 'file'),
                     'nama' => $submission->file_name,
-                    'sub' => 'Dokumen ' . strtoupper($extension ?: 'FILE'),
+                    'sub' => 'Dokumen '.strtoupper($extension ?: 'FILE'),
                     'action' => 'download',
                     'url' => route('mahasiswa.milestone.berkas.download', $submission->id),
                 ];
@@ -555,51 +620,86 @@ class MahasiswaController extends Controller
                 ];
             }
 
+            $rawSubStatus = strtolower(trim((string) $submission->status));
+            if ($rawSubStatus === 'disetujui' || $verifStatusRaw === PenyelesaianMilestone::STATUS_SELESAI) {
+                $statusLabel = 'Disetujui';
+            } elseif (in_array($rawSubStatus, ['revisi', 'perlu revisi', 'perlu-revisi'], true)) {
+                $statusLabel = 'Perlu Revisi';
+            } elseif (in_array($rawSubStatus, ['diajukan', 'menunggu review', 'menunggu'], true)) {
+                $statusLabel = 'Menunggu Review';
+            } else {
+                $statusLabel = ucfirst($rawSubStatus ?: 'Menunggu Review');
+            }
+
             $waktuUpload = $submission->updated_at ?? $submission->created_at;
 
             return [
                 'id' => $submission->milestone_id,
-                'judul' => $milestone
-                    ? 'Milestone ' . $milestone->urutan . ' – ' . $milestone->judul
-                    : 'Milestone',
-                'status' => strtolower((string) $submission->status) === 'diajukan'
-                    ? 'Menunggu Review'
-                    : ucfirst((string) $submission->status),
+                'kode' => $kode,
+                'judul' => $this->formatJudulMilestone($milestone),
+                'deskripsi' => $deskripsi,
+                'tanggal_mulai' => $tanggalMulai,
+                'deadline' => $deadline,
+                'status' => $statusLabel,
                 'ringkasan' => $submission->catatan ?? '',
                 'waktu' => $waktuUpload
-                    ? $waktuUpload->timezone('Asia/Jakarta')->translatedFormat('d F Y, H:i') . ' WIB'
+                    ? $waktuUpload->timezone('Asia/Jakarta')->locale('id')->translatedFormat('d F Y, H:i').' WIB'
                     : '',
                 'pengunggah' => $submission->pengunggah?->nama ?? 'Mahasiswa',
                 'dokumen' => $dokumen,
                 'sudah_dikumpulkan' => true,
+                'status_verifikasi' => $statusVerifikasi,
+                'catatan_dosen' => $catatanDosen,
+                'verifikator' => $verifikator,
+                'waktu_verifikasi' => $waktuVerifikasi,
             ];
         };
 
         if ($milestoneOptions->isNotEmpty()) {
-            $milestones = $milestoneOptions->map(function (Milestone $milestone) use ($submissionsByMilestone, $formatSubmission) {
+            $milestones = $milestoneOptions->map(function (Milestone $milestone) use (
+                $submissionsByMilestone,
+                $penyelesaianByMilestone,
+                $formatMilestoneCard
+            ) {
                 /** @var PengumpulanMilestone|null $submission */
                 $submission = $submissionsByMilestone->get($milestone->id);
+                /** @var PenyelesaianMilestone|null $penyelesaian */
+                $penyelesaian = $penyelesaianByMilestone->get($milestone->id);
 
-                if ($submission) {
-                    return $formatSubmission($submission, $milestone);
-                }
-
-                return [
-                    'id' => $milestone->id,
-                    'judul' => 'Milestone ' . $milestone->urutan . ' – ' . $milestone->judul,
-                    'status' => 'Belum Dikumpulkan',
-                    'ringkasan' => '',
-                    'waktu' => '',
-                    'pengunggah' => '',
-                    'dokumen' => [],
-                    'sudah_dikumpulkan' => false,
-                ];
+                return $formatMilestoneCard($milestone, $submission, $penyelesaian);
             })->all();
         } else {
-            $milestones = $submissions->map(
-                fn(PengumpulanMilestone $submission) => $formatSubmission($submission)
-            )->all();
+            $milestones = $submissions->map(function (PengumpulanMilestone $submission) use (
+                $penyelesaianByMilestone,
+                $formatMilestoneCard
+            ) {
+                /** @var PenyelesaianMilestone|null $penyelesaian */
+                $penyelesaian = $penyelesaianByMilestone->get($submission->milestone_id);
+
+                return $formatMilestoneCard($submission->milestone, $submission, $penyelesaian);
+            })->all();
         }
+
+        $approvedMilestoneIds = $milestoneOptions
+            ->filter(function (Milestone $milestone) use ($submissionsByMilestone, $penyelesaianByMilestone): bool {
+                /** @var PengumpulanMilestone|null $submission */
+                $submission = $submissionsByMilestone->get($milestone->id);
+                /** @var PenyelesaianMilestone|null $penyelesaian */
+                $penyelesaian = $penyelesaianByMilestone->get($milestone->id);
+
+                $subDisetujui = $submission
+                    && strtolower(trim((string) $submission->status)) === 'disetujui';
+                $verifSelesai = $penyelesaian
+                    && PenyelesaianMilestone::normalizeStatus($penyelesaian->status) === PenyelesaianMilestone::STATUS_SELESAI;
+
+                return $subDisetujui || $verifSelesai;
+            })
+            ->pluck('id')
+            ->all();
+
+        $uploadableMilestoneOptions = $milestoneOptions
+            ->reject(fn (Milestone $milestone): bool => in_array($milestone->id, $approvedMilestoneIds, true))
+            ->values();
 
         return view('mahasiswa.milestone-detail', array_merge($this->sharedViewData(), [
             'slug' => $mataKuliah->slug,
@@ -607,11 +707,35 @@ class MahasiswaController extends Controller
             'kelompok' => $kelompok,
             'berkasTerkumpul' => $submissions->isNotEmpty(),
             'milestones' => $milestones,
-            'milestoneOptions' => $milestoneOptions,
+            'milestoneOptions' => $uploadableMilestoneOptions,
+            'semuaMilestoneDisetujui' => $milestoneOptions->isNotEmpty() && $uploadableMilestoneOptions->isEmpty(),
             'anggotaKelompok' => $anggotaKelompok,
             'progresMatkul' => $progresMatkul,
             'statusMilestone' => $statusMilestone,
         ]));
+    }
+
+    private function formatJudulMilestone(?Milestone $milestone): string
+    {
+        if (! $milestone) {
+            return 'Milestone';
+        }
+
+        $urutan = (int) $milestone->urutan;
+        $prefix = $urutan > 0 ? 'Milestone '.$urutan : 'Milestone';
+        $judulRaw = trim((string) ($milestone->judul ?? ''));
+
+        if ($judulRaw === '') {
+            return $prefix;
+        }
+
+        if ($urutan > 0 && preg_match('/^milestone\s*0*'.$urutan.'\b[\s:\-–—]*(.*)$/iu', $judulRaw, $matches)) {
+            $sisaJudul = trim($matches[1]);
+
+            return $sisaJudul !== '' ? $prefix.' – '.$sisaJudul : $prefix;
+        }
+
+        return $prefix.' – '.$judulRaw;
     }
 
     /**
@@ -712,6 +836,27 @@ class MahasiswaController extends Controller
             'berkas.max' => 'Ukuran file tidak aman — melebihi batas maksimal 2 MB. Harap gunakan file yang lebih kecil.',
             'link_bukti.url' => 'Format tautan repositori/demo tidak valid (harus diawali http:// atau https://).',
         ]);
+
+        $sudahDisetujui = PengumpulanMilestone::query()
+            ->where('kelompok_id', $kelompok->id)
+            ->where('milestone_id', $validated['milestone_id'])
+            ->where('mata_kuliah', $mataKuliah->slug)
+            ->whereRaw('LOWER(TRIM(status)) = ?', ['disetujui'])
+            ->exists()
+            || PenyelesaianMilestone::query()
+                ->where('kelompok_id', $kelompok->id)
+                ->where('milestone_id', $validated['milestone_id'])
+                ->where('mata_kuliah_id', $mataKuliah->id)
+                ->whereRaw('LOWER(TRIM(status)) = ?', [PenyelesaianMilestone::STATUS_SELESAI])
+                ->exists();
+
+        if ($sudahDisetujui) {
+            return redirect()
+                ->route('mahasiswa.milestone.detail', $mataKuliah->slug)
+                ->withErrors([
+                    'milestone_id' => 'Tahapan milestone ini sudah disetujui dan tidak dapat diunggah ulang.',
+                ]);
+        }
 
         $file = $request->file('berkas');
         $originalName = $file->getClientOriginalName();

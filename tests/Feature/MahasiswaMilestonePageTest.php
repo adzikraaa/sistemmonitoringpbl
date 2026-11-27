@@ -9,6 +9,7 @@ use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
 use App\Models\Milestone;
 use App\Models\MilestoneMataKuliah;
+use App\Models\PengumpulanMilestone;
 use App\Models\PenyelesaianMilestone;
 use App\Models\Periode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -199,15 +200,119 @@ class MahasiswaMilestonePageTest extends TestCase
 
     public function test_halaman_detail_menampilkan_tahapan_milestone_meski_belum_ada_berkas(): void
     {
+        $this->milestones[0]->update([
+            'deskripsi' => 'Penyusunan dokumen analisis kebutuhan sistem.',
+            'tanggal_mulai' => '2026-09-10',
+            'deadline' => '2026-10-25',
+        ]);
+
         MilestoneMataKuliah::firstOrCreate([
             'milestone_id' => $this->milestones[0]->id,
             'mata_kuliah_id' => $this->mataKuliah['Pemrograman Web Lanjut']->id,
+        ]);
+
+        app()->setLocale('id');
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', 'pemrograman-web-lanjut'))
+            ->assertOk()
+            ->assertSee('M01')
+            ->assertSee('Milestone 1 – Milestone Satu')
+            ->assertSee('Penyusunan dokumen analisis kebutuhan sistem.')
+            ->assertSee('10 September 2026')
+            ->assertSee('Tenggat waktu:')
+            ->assertSee('25 Oktober 2026')
+            ->assertSee('Belum Dikumpulkan');
+    }
+
+    public function test_judul_milestone_tidak_ganda_saat_judul_database_sudah_mengandung_kata_milestone(): void
+    {
+        $this->milestones[0]->update(['judul' => 'MILESTONE 1']);
+        $this->milestones[1]->update(['judul' => 'MILESTONE 2 : Desain Basis Data']);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', 'pemrograman-web-lanjut'))
+            ->assertOk()
+            ->assertSee('Milestone 1')
+            ->assertDontSee('Milestone 1 – MILESTONE 1')
+            ->assertSee('Milestone 2 – Desain Basis Data')
+            ->assertDontSee('Milestone 2 – MILESTONE 2');
+    }
+
+    public function test_halaman_detail_menampilkan_catatan_revisi_dan_status_verifikasi_dosen(): void
+    {
+        $dosenVerifikator = Dosen::where('email', 'dosen.milestone@test.com')->firstOrFail();
+        $pwl = $this->mataKuliah['Pemrograman Web Lanjut'];
+
+        PengumpulanMilestone::create([
+            'kelompok_id' => $this->kelompok->id,
+            'milestone_id' => $this->milestones[0]->id,
+            'diunggah_oleh' => $this->mahasiswa->id,
+            'mata_kuliah' => $pwl->slug,
+            'file_name' => 'laporan-m1.pdf',
+            'file_path' => 'milestone-submissions/laporan-m1.pdf',
+            'catatan' => 'Implementasi autentikasi awal.',
+            'status' => 'revisi',
+        ]);
+
+        PenyelesaianMilestone::create([
+            'kelompok_id' => $this->kelompok->id,
+            'milestone_id' => $this->milestones[0]->id,
+            'mata_kuliah_id' => $pwl->id,
+            'status' => PenyelesaianMilestone::STATUS_BERJALAN,
+            'catatan' => 'Lengkapi validasi form dan tambahkan skema ERD terbaru.',
+            'diverifikasi_oleh' => $dosenVerifikator->id,
+            'diverifikasi_pada' => '2026-10-20 14:30:00',
+        ]);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', 'pemrograman-web-lanjut'))
+            ->assertOk()
+            ->assertSee('Perlu Revisi')
+            ->assertSee('Sedang Berjalan')
+            ->assertSee('Dosen Milestone')
+            ->assertSee('Lengkapi validasi form dan tambahkan skema ERD terbaru.');
+    }
+
+    public function test_halaman_detail_tetap_menampilkan_tahapan_periode_aktif_saat_mahasiswa_belum_punya_kelompok(): void
+    {
+        $mahasiswaTanpaKelompok = Mahasiswa::create([
+            'nama' => 'Mahasiswa Baru',
+            'email' => 'mahasiswa.baru@test.com',
+            'password' => 'password123',
+            'nim' => '2026699',
+            'kelas_id' => $this->kelas->id,
+            'is_aktif' => true,
+        ]);
+
+        $this->actingAs($mahasiswaTanpaKelompok, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', 'pemrograman-web-lanjut'))
+            ->assertOk()
+            ->assertSee('Milestone 1 – Milestone Satu')
+            ->assertSee('Milestone 2 – Milestone Dua')
+            ->assertSee('Belum Dikumpulkan');
+    }
+
+    public function test_milestone_yang_sudah_disetujui_tidak_ditampilkan_lagi_di_dropdown_pengumpulan(): void
+    {
+        $pwl = $this->mataKuliah['Pemrograman Web Lanjut'];
+
+        PengumpulanMilestone::create([
+            'kelompok_id' => $this->kelompok->id,
+            'milestone_id' => $this->milestones[0]->id,
+            'diunggah_oleh' => $this->mahasiswa->id,
+            'mata_kuliah' => $pwl->slug,
+            'file_name' => 'laporan-m1.pdf',
+            'file_path' => 'milestone-submissions/laporan-m1.pdf',
+            'catatan' => 'Sudah selesai.',
+            'status' => 'disetujui',
         ]);
 
         $this->actingAs($this->mahasiswa, 'mahasiswa')
             ->get(route('mahasiswa.milestone.detail', 'pemrograman-web-lanjut'))
             ->assertOk()
             ->assertSee('Milestone 1 – Milestone Satu')
-            ->assertSee('Belum Dikumpulkan');
+            ->assertSee('Disetujui')
+            ->assertDontSee('M01 - Milestone Satu')
+            ->assertSee('M02 - Milestone Dua');
     }
 }

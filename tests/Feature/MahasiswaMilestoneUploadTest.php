@@ -259,6 +259,36 @@ class MahasiswaMilestoneUploadTest extends TestCase
         Storage::disk('local')->assertExists($submission->file_path);
     }
 
+    public function test_milestone_yang_sudah_disetujui_tidak_bisa_diunggah_ulang(): void
+    {
+        Storage::fake('local');
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->post(route('mahasiswa.milestone.upload', 'pemrograman-web-lanjut'), [
+                'milestone_id' => $this->milestone->id,
+                'catatan' => 'Versi disetujui.',
+                'berkas' => UploadedFile::fake()->create('laporan-disetujui.pdf', 100, 'application/pdf'),
+            ]);
+
+        $submission = PengumpulanMilestone::firstOrFail();
+        $approvedPath = $submission->file_path;
+        $submission->update(['status' => 'disetujui']);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->post(route('mahasiswa.milestone.upload', 'pemrograman-web-lanjut'), [
+                'milestone_id' => $this->milestone->id,
+                'catatan' => 'Percobaan timpa setelah disetujui.',
+                'berkas' => UploadedFile::fake()->create('laporan-baru.pdf', 100, 'application/pdf'),
+            ])
+            ->assertSessionHasErrors('milestone_id');
+
+        $submission->refresh();
+        $this->assertSame('laporan-disetujui.pdf', $submission->file_name);
+        $this->assertSame('disetujui', $submission->status);
+        Storage::disk('local')->assertExists($approvedPath);
+        $this->assertCount(1, Storage::disk('local')->allFiles());
+    }
+
     public function test_pemilik_bisa_mengunduh_dan_kelompok_lain_tidak_bisa(): void
     {
         Storage::fake('local');
