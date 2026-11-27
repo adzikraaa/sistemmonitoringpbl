@@ -9,7 +9,9 @@
     $statusTone = function (array $item, bool $isFirst): string {
         return match ($item['status']) {
             'Selesai' => 'green',
-            'Berjalan' => $isFirst ? 'green' : 'gold',
+            'Berjalan' => 'blue',
+            'Menunggu review' => 'gold',
+            'Perlu revisi' => 'red',
             'Belum dimulai', 'Belum ada data' => 'gray',
             default => 'gray',
         };
@@ -18,12 +20,14 @@
     $circleToneClass = fn (string $tone): string => match ($tone) {
         'green' => 'bg-[#2F5C4A]',
         'gold' => 'bg-[#C28A3A]',
+        'red' => 'bg-[#9B1C1C]',
         default => 'bg-[#9C9188]',
     };
 
     $badgeToneClass = fn (string $tone): string => match ($tone) {
         'green' => 'sim-badge--approved',
         'gold' => 'sim-badge--pending',
+        'red' => 'sim-badge--danger',
         default => 'sim-badge--warning',
     };
 @endphp
@@ -76,7 +80,7 @@
                             <span class="text-[#7D746D] font-medium">Progres Mata Kuliah</span>
                             <span class="text-[#1F1F1F] font-semibold">
                                 {{ $item['progress'] }}%
-                                ({{ $item['selesai'] }}/{{ $item['total'] }})
+                                ({{ $item['selesai'] }}/{{ $item['total'] }} selesai{{ ($item['terkumpul'] ?? 0) > 0 && $item['selesai'] < $item['total'] ? ', '.$item['terkumpul'].' terkumpul' : '' }})
                             </span>
                         </div>
                         <div class="w-full bg-[#E9E1D5] rounded-full h-2 overflow-hidden">

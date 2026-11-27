@@ -11,7 +11,9 @@ use App\Models\MataKuliah;
 use App\Models\Milestone;
 use App\Models\MilestoneMataKuliah;
 use App\Models\PengumpulanMilestone;
+use App\Models\PenyelesaianMilestone;
 use App\Models\Periode;
+use App\Models\Proposal;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -339,7 +341,112 @@ class MahasiswaMilestoneUploadTest extends TestCase
             ->assertOk()
             ->assertSee('laporan-final.pdf')
             ->assertSee('Ringkasan tersimpan di database.')
+            ->assertSee('Menunggu review')
+            ->assertSee('0/1 selesai, 1 terkumpul')
+            ->assertDontSee('Belum dimulai')
             ->assertSee('Menunggu Review');
+    }
+
+    public function test_judul_proyek_di_header_milestone_mengambil_judul_proposal_kelompok(): void
+    {
+        Proposal::create([
+            'kelompok_id' => $this->kelompok->id,
+            'judul' => 'Sistem Informasi Monitoring PBL Polinema',
+            'deskripsi' => 'Deskripsi proposal.',
+            'latar_belakang' => 'Latar belakang.',
+            'tujuan' => 'Tujuan proyek.',
+            'metode' => 'Scrum.',
+            'status' => 'diajukan',
+            'tanggal_pengajuan' => now()->toDateString(),
+        ]);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', 'pemrograman-web-lanjut'))
+            ->assertOk()
+            ->assertSee('Sistem Informasi Monitoring PBL Polinema')
+            ->assertDontSee('Belum ada proyek');
+    }
+
+    public function test_status_perlu_revisi_dan_berjalan_serta_selesai_pada_detail_dan_daftar(): void
+    {
+        Storage::fake('local');
+
+        $milestone2 = $this->buatMilestone($this->periode, 2, 'M02');
+
+        // 1. Upload milestone 1 lalu set ke status revisi
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->post(route('mahasiswa.milestone.upload', $this->mataKuliah->slug), [
+                'milestone_id' => $this->milestone->id,
+                'catatan' => 'Draf awal milestone 1.',
+                'berkas' => UploadedFile::fake()->create('m1-v1.pdf', 100, 'application/pdf'),
+            ]);
+
+        $sub1 = PengumpulanMilestone::where('milestone_id', $this->milestone->id)->firstOrFail();
+        $sub1->update(['status' => 'revisi']);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', $this->mataKuliah->slug))
+            ->assertOk()
+            ->assertSee('Perlu revisi')
+            ->assertSee('0/2 selesai, 1 terkumpul');
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone'))
+            ->assertOk()
+            ->assertSee('Perlu revisi')
+            ->assertSee('0/2 selesai, 1 terkumpul');
+
+        // 2. Milestone 1 diverifikasi selesai oleh dosen, lalu upload milestone 2 -> Berjalan (1/2 selesai, 2 terkumpul)
+        $sub1->update(['status' => 'disetujui']);
+        PenyelesaianMilestone::create([
+            'kelompok_id' => $this->kelompok->id,
+            'milestone_id' => $this->milestone->id,
+            'mata_kuliah_id' => $this->mataKuliah->id,
+            'status' => PenyelesaianMilestone::STATUS_SELESAI,
+        ]);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->post(route('mahasiswa.milestone.upload', $this->mataKuliah->slug), [
+                'milestone_id' => $milestone2->id,
+                'catatan' => 'Submission milestone 2.',
+                'berkas' => UploadedFile::fake()->create('m2.pdf', 100, 'application/pdf'),
+            ]);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', $this->mataKuliah->slug))
+            ->assertOk()
+            ->assertSee('Berjalan')
+            ->assertSee('1/2 selesai, 2 terkumpul');
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone'))
+            ->assertOk()
+            ->assertSee('Berjalan')
+            ->assertSee('50%')
+            ->assertSee('1/2 selesai, 2 terkumpul');
+
+        // 3. Milestone 2 juga diverifikasi selesai -> Selesai (2/2 selesai)
+        PengumpulanMilestone::where('milestone_id', $milestone2->id)->firstOrFail()->update(['status' => 'disetujui']);
+        PenyelesaianMilestone::create([
+            'kelompok_id' => $this->kelompok->id,
+            'milestone_id' => $milestone2->id,
+            'mata_kuliah_id' => $this->mataKuliah->id,
+            'status' => PenyelesaianMilestone::STATUS_SELESAI,
+        ]);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', $this->mataKuliah->slug))
+            ->assertOk()
+            ->assertSee('Selesai')
+            ->assertSee('2/2 selesai')
+            ->assertDontSee('2 terkumpul');
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone'))
+            ->assertOk()
+            ->assertSee('Selesai')
+            ->assertSee('100%')
+            ->assertSee('2/2 selesai');
     }
 
     public function test_satu_milestone_pada_dua_matkul_menghasilkan_dua_submission(): void
@@ -388,14 +495,16 @@ class MahasiswaMilestoneUploadTest extends TestCase
             'SIB302'
         );
 
-        foreach ([
-            ['pemrograman-web-lanjut', 'pwl-v1.pdf'],
-            ['manajemen-proyek-sistem-informasi', 'mpsi.pdf'],
-        ] as [$slug, $fileName]) {
+        foreach (
+            [
+                ['pemrograman-web-lanjut', 'pwl-v1.pdf'],
+                ['manajemen-proyek-sistem-informasi', 'mpsi.pdf'],
+            ] as [$slug, $fileName]
+        ) {
             $this->actingAs($this->mahasiswa, 'mahasiswa')
                 ->post(route('mahasiswa.milestone.upload', $slug), [
                     'milestone_id' => $this->milestone->id,
-                    'catatan' => 'Catatan '.$slug,
+                    'catatan' => 'Catatan ' . $slug,
                     'berkas' => UploadedFile::fake()->create($fileName, 100, 'application/pdf'),
                 ]);
         }
@@ -554,7 +663,7 @@ class MahasiswaMilestoneUploadTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $eventName = 'eloquent.updating: '.PengumpulanMilestone::class;
+        $eventName = 'eloquent.updating: ' . PengumpulanMilestone::class;
 
         Event::listen($eventName, function () {
             throw new UniqueConstraintViolationException(
@@ -596,7 +705,7 @@ class MahasiswaMilestoneUploadTest extends TestCase
         Storage::fake('local');
         $this->withoutExceptionHandling();
 
-        $eventName = 'eloquent.creating: '.PengumpulanMilestone::class;
+        $eventName = 'eloquent.creating: ' . PengumpulanMilestone::class;
         $thrown = null;
 
         Event::listen($eventName, function () {
@@ -639,10 +748,10 @@ class MahasiswaMilestoneUploadTest extends TestCase
     private function buatKelompok(string $nama, Kelas $kelas): Kelompok
     {
         $dosen = Dosen::create([
-            'nama' => 'Dosen '.$nama,
-            'email' => strtolower(str_replace(' ', '.', $nama)).'.'.uniqid().'@test.com',
+            'nama' => 'Dosen ' . $nama,
+            'email' => strtolower(str_replace(' ', '.', $nama)) . '.' . uniqid() . '@test.com',
             'password' => 'password123',
-            'nidn' => '7'.substr(uniqid(), -8),
+            'nidn' => '7' . substr(uniqid(), -8),
             'is_aktif' => true,
         ]);
 
@@ -668,7 +777,7 @@ class MahasiswaMilestoneUploadTest extends TestCase
         return Milestone::create([
             'periode_id' => $periode->id,
             'kode' => $kode,
-            'judul' => 'Milestone '.$urutan,
+            'judul' => 'Milestone ' . $urutan,
             'urutan' => $urutan,
         ]);
     }
