@@ -42,8 +42,8 @@ class MahasiswaController extends Controller
 
         return Kelompok::query()
             ->periodeAktif()
-            ->with(['proposal', 'logbookMilestone'])
-            ->whereHas('mahasiswa', fn($query) => $query->where('mahasiswa.id', $mahasiswa->id))
+            ->with(['proposal', 'logbookMilestone', 'kelas'])
+            ->whereHas('mahasiswa', fn ($query) => $query->where('mahasiswa.id', $mahasiswa->id))
             ->orderBy('id')
             ->first();
     }
@@ -174,12 +174,16 @@ class MahasiswaController extends Controller
         })->values()->all();
     }
 
-    private function statusProgres(array $progres): string
+    private function statusProgres(array $progres, int $terkumpul = 0, bool $adaRevisi = false): string
     {
         $total = (int) ($progres['total'] ?? 0);
         $selesai = (int) ($progres['selesai'] ?? 0);
 
         if ($total === 0) {
+            if ($terkumpul > 0) {
+                return $adaRevisi ? 'Perlu revisi' : 'Menunggu review';
+            }
+
             return 'Belum ada data';
         }
 
@@ -187,7 +191,15 @@ class MahasiswaController extends Controller
             return 'Selesai';
         }
 
-        return $selesai > 0 ? 'Berjalan' : 'Belum dimulai';
+        if ($selesai > 0) {
+            return 'Berjalan';
+        }
+
+        if ($terkumpul > 0) {
+            return $adaRevisi ? 'Perlu revisi' : 'Menunggu review';
+        }
+
+        return 'Belum dimulai';
     }
 
     private function logbookStats(Kelompok $kelompok): array
@@ -460,27 +472,49 @@ class MahasiswaController extends Controller
 
         $dosenMap = $kelompok
             ? DosenPengampu::query()
-            ->with('dosen')
-            ->where('kelas_id', $kelompok->kelas_id)
-            ->whereIn('mata_kuliah_id', $mataKuliahIds)
-            ->get()
-            ->keyBy('mata_kuliah_id')
+                ->with('dosen')
+                ->where('kelas_id', $kelompok->kelas_id)
+                ->whereIn('mata_kuliah_id', $mataKuliahIds)
+                ->get()
+                ->keyBy('mata_kuliah_id')
             : collect();
 
-        $mataKuliahList = $mataKuliahModels->map(function (MataKuliah $mataKuliah) use ($progresMap, $dosenMap) {
+        $mataKuliahSlugs = $mataKuliahModels
+            ->map(fn (MataKuliah $mataKuliah) => $mataKuliah->slug ?: Str::slug((string) $mataKuliah->nama_matkul))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $submissionsBySlug = ($kelompok && $mataKuliahSlugs !== [])
+            ? PengumpulanMilestone::query()
+                ->where('kelompok_id', $kelompok->id)
+                ->whereIn('mata_kuliah', $mataKuliahSlugs)
+                ->get()
+                ->groupBy('mata_kuliah')
+            : collect();
+
+        $mataKuliahList = $mataKuliahModels->map(function (MataKuliah $mataKuliah) use ($progresMap, $dosenMap, $submissionsBySlug) {
+            $slug = $mataKuliah->slug ?: Str::slug((string) $mataKuliah->nama_matkul);
             $progres = $progresMap[$mataKuliah->id] ?? $this->kosongProgres();
-            $status = $this->statusProgres($progres);
+            $matkulSubmissions = $submissionsBySlug->get($slug, collect());
+            $terkumpul = $matkulSubmissions->count();
+            $adaRevisi = $matkulSubmissions->contains(
+                fn (PengumpulanMilestone $s) => in_array(strtolower(trim((string) $s->status)), ['revisi', 'perlu revisi', 'perlu-revisi'], true)
+            );
+            $status = $this->statusProgres($progres, $terkumpul, $adaRevisi);
 
             return [
                 'id' => $mataKuliah->id,
-                'kode' => $mataKuliah->kode ?? 'MK-' . $mataKuliah->id,
-                'slug' => $mataKuliah->slug ?: Str::slug((string) $mataKuliah->nama_matkul),
+                'kode' => $mataKuliah->kode ?? 'MK-'.$mataKuliah->id,
+                'slug' => $slug,
                 'nama' => $mataKuliah->nama_matkul,
                 'judul' => $mataKuliah->nama_matkul,
                 'dosen' => $dosenMap->get($mataKuliah->id)?->dosen?->nama ?? 'Belum ditugaskan',
                 'progress' => $progres['persen'],
                 'selesai' => $progres['selesai'],
                 'total' => $progres['total'],
+                'terkumpul' => $terkumpul,
                 'punya_data' => $progres['punya_data'],
                 'status' => $status,
             ];
@@ -535,7 +569,20 @@ class MahasiswaController extends Controller
         $progresMatkul = $kelompok
             ? app(ProgressService::class)->untukMataKuliah($kelompok, $mataKuliah)
             : $this->kosongProgres();
-        $statusMilestone = $this->statusProgres($progresMatkul);
+        $jumlahTerkumpul = $submissions->count();
+        $adaRevisi = $submissions->contains(
+            fn (PengumpulanMilestone $s) => in_array(strtolower(trim((string) $s->status)), ['revisi', 'perlu revisi', 'perlu-revisi'], true)
+        );
+        $statusMilestone = $this->statusProgres($progresMatkul, $jumlahTerkumpul, $adaRevisi);
+
+        $judulProyek = trim((string) ($kelompok?->judul_proyek ?? ''));
+        if ($judulProyek === '' && $kelompok) {
+            $proposalTerbaru = $kelompok->relationLoaded('proposal')
+                ? $kelompok->proposal->last()
+                : $kelompok->proposal()->latest()->first();
+            $judulProyek = trim((string) ($proposalTerbaru?->judul ?? ''));
+        }
+        $judulProyek = $judulProyek !== '' ? $judulProyek : 'Belum ada proyek';
         $milestoneOptions = $periodeId
             ? Milestone::query()
                 ->where('periode_id', $periodeId)
@@ -705,7 +752,9 @@ class MahasiswaController extends Controller
             'slug' => $mataKuliah->slug,
             'namaMatkul' => $namaMatkul,
             'kelompok' => $kelompok,
+            'judulProyek' => $judulProyek,
             'berkasTerkumpul' => $submissions->isNotEmpty(),
+            'jumlahTerkumpul' => $jumlahTerkumpul,
             'milestones' => $milestones,
             'milestoneOptions' => $uploadableMilestoneOptions,
             'semuaMilestoneDisetujui' => $milestoneOptions->isNotEmpty() && $uploadableMilestoneOptions->isEmpty(),

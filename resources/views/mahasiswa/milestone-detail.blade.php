@@ -15,15 +15,17 @@
         </a>
         <h1 class="sim-page-header__title">Milestone : {{ $namaMatkul }}</h1>
         <p class="sim-page-header__desc">
-            {{ $kelompok?->judul_proyek ?? 'Belum ada proyek' }}
-            &bull; {{ $kelompok?->kelas?->nama_kelas ?? 'Kelas belum tersedia' }}
+            {{ $judulProyek ?? ($kelompok?->judul_proyek ?? 'Belum ada proyek') }} - {{ $kelompok?->kelas?->nama_kelas ?? 'Kelas belum tersedia' }}
         </p>
         <p class="text-xs text-[#7D746D] mt-1">
             Status penyelesaian milestone:
             <strong class="text-[#1F1F1F]">{{ $statusMilestone }}</strong>
-            ({{ $progresMatkul['selesai'] }}/{{ $progresMatkul['total'] }})
-            @if(! $progresMatkul['punya_data'])
-                &mdash; Belum ada data
+            @if($progresMatkul['punya_data'])
+                ({{ $progresMatkul['selesai'] }}/{{ $progresMatkul['total'] }} selesai{{ ($jumlahTerkumpul ?? 0) > 0 && $progresMatkul['selesai'] < $progresMatkul['total'] ? ', '.$jumlahTerkumpul.' terkumpul' : '' }})
+            @elseif(($jumlahTerkumpul ?? 0) > 0)
+                ({{ $jumlahTerkumpul }} terkumpul)
+            @else
+                ({{ $progresMatkul['selesai'] }}/{{ $progresMatkul['total'] }} selesai)
             @endif
         </p>
     </div>
