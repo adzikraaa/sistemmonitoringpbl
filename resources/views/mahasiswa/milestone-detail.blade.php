@@ -93,59 +93,81 @@
                 @endif
 
                 @foreach($milestones as $ms)
-                    <div class="bg-white border border-[#CFC7BC] rounded-2xl p-6 shadow-sm space-y-5">
-                        <div class="pb-3 border-b border-[#E4DED5]">
-                            <h3 class="font-serif font-bold text-[#1F1F1F] text-xl mb-2">{{ $ms['judul'] }}</h3>
-                            <span class="text-[10px] font-bold text-[#7D746D] uppercase tracking-wider block mb-1.5">Status pengumpulan dokumen</span>
+                    @php
+                        $statusBadgeClass = match ($ms['status'] ?? '') {
+                            'Disetujui' => 'sim-badge--approved',
+                            'Perlu Revisi' => 'sim-badge--danger',
+                            'Menunggu Review' => 'sim-badge--pending',
+                            default => 'sim-badge--warning',
+                        };
+                    @endphp
+                    <div class="bg-white border border-[#CFC7BC] rounded-2xl p-6 shadow-sm space-y-4">
+                        {{-- Card Header: Judul & Tenggat di Kiri, Badge Status di Kanan Atas --}}
+                        <div class="pb-4 border-b border-[#E4DED5] flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                            <div class="min-w-0 space-y-1.5">
+                                <h3 class="font-serif font-normal text-[#1F1F1F] text-xl leading-snug m-0">
+                                    {{ $ms['judul'] }}
+                                </h3>
 
-                            @if(($ms['status'] ?? '') == 'Disetujui')
-                                <span class="bg-[#EAF3EC] text-[#2F5C4A] border border-[#D8E6D8] text-[11px] font-medium px-3 py-1 rounded-md inline-block">
-                                    Disetujui
-                                </span>
-                            @elseif(($ms['status'] ?? '') == 'Menunggu Review')
-                                <span class="bg-[#FFF7ED] text-[#C2410C] border border-[#FED7AA] text-[11px] font-medium px-3 py-1 rounded-md inline-block">
-                                    Menunggu Review
-                                </span>
-                            @else
-                                <span class="bg-gray-100 text-gray-600 text-[11px] font-medium px-3 py-1 rounded-md inline-block">
-                                    {{ $ms['status'] }}
-                                </span>
-                            @endif
+                                @if(!empty($ms['tanggal_mulai']) || !empty($ms['deadline']) || !empty($ms['status_verifikasi']))
+                                    <div class="pt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#7D746D]">
+                                        @if(!empty($ms['tanggal_mulai']) || !empty($ms['deadline']))
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                                @if(!empty($ms['tanggal_mulai']) && !empty($ms['deadline']))
+                                                    <span>Tanggal mulai: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['tanggal_mulai'] }}</strong> &bull; Tenggat waktu: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['deadline'] }}</strong></span>
+                                                @elseif(!empty($ms['deadline']))
+                                                    <span>Tenggat waktu: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['deadline'] }}</strong></span>
+                                                @else
+                                                    <span>Tanggal mulai: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['tanggal_mulai'] }}</strong></span>
+                                                @endif
+                                            </span>
+                                        @endif
+
+                                        @if(!empty($ms['status_verifikasi']))
+                                            <span>
+                                                &bull; Verifikasi Dosen Pengampu: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['status_verifikasi'] }}</strong>
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+
+                            <span class="sim-badge {{ $statusBadgeClass }} shrink-0 self-start">
+                                &#9679; {{ $ms['status'] }}
+                            </span>
                         </div>
 
+                        {{-- Isi Utama (Jika Sudah Dikumpulkan) --}}
                         @if(!empty($ms['sudah_dikumpulkan']))
                             <div>
                                 <span class="text-[10px] font-bold text-[#7D746D] uppercase tracking-wider block mb-2">RINGKASAN CAPAIAN MILESTONE</span>
-                                <div class="bg-[#FBF9F5] rounded-xl p-4 text-xs text-[#62564C] leading-relaxed border border-[#E4DED5]">
+                                <div class="bg-[#FBF9F5] rounded-xl p-3.5 text-xs text-[#62564C] leading-relaxed border border-[#E4DED5]">
                                     {{ $ms['ringkasan'] }}
                                 </div>
                             </div>
 
-                            <div class="text-xs text-[#7D746D]">
-                                Waktu pengunggahan: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['waktu'] }}</strong> oleh {{ $ms['pengunggah'] }}
-                            </div>
-
                             @if(!empty($ms['dokumen']))
                                 <div>
-                                    <span class="text-[10px] font-bold text-[#7D746D] uppercase tracking-wider block mb-2.5">DOKUMEN & TAUTAN PENDUKUNG</span>
+                                    <span class="text-[10px] font-bold text-[#7D746D] uppercase tracking-wider block mb-2">DOKUMEN & TAUTAN PENDUKUNG</span>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         @foreach($ms['dokumen'] as $doc)
                                             <div class="flex items-center justify-between p-3 bg-white border border-[#E4DED5] rounded-xl text-xs {{ isset($doc['full_width']) && $doc['full_width'] ? 'sm:col-span-2' : '' }}">
                                                 <div class="flex items-center gap-3 min-w-0 pr-2">
                                                     @if(($doc['tipe'] ?? '') == 'pdf')
-                                                        <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center font-bold flex-shrink-0">
+                                                        <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center font-bold shrink-0">
                                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                                         </div>
                                                     @elseif(($doc['tipe'] ?? '') == 'image')
-                                                        <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center font-bold flex-shrink-0">
+                                                        <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center font-bold shrink-0">
                                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                                                         </div>
                                                     @elseif(($doc['tipe'] ?? '') == 'github')
-                                                        <div class="w-9 h-9 rounded-lg bg-neutral-900 text-white flex items-center justify-center font-bold flex-shrink-0">
+                                                        <div class="w-9 h-9 rounded-lg bg-neutral-900 text-white flex items-center justify-center font-bold shrink-0">
                                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
                                                         </div>
                                                     @else
-                                                        <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center font-bold flex-shrink-0">
+                                                        <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center font-bold shrink-0">
                                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                                         </div>
                                                     @endif
@@ -157,20 +179,51 @@
                                                 </div>
 
                                                 @if(($doc['action'] ?? '') == 'download')
-                                                    <a href="{{ $doc['url'] ?? '#' }}" download class="text-[#7D746D] hover:text-[#1F1F1F] p-1 flex-shrink-0" title="Unduh">
+                                                    <a href="{{ $doc['url'] ?? '#' }}" download class="text-[#7D746D] hover:text-[#1F1F1F] p-1 shrink-0" title="Unduh">
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                                     </a>
                                                 @else
-                                                    <a href="{{ $doc['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="px-3 py-1 bg-sky-50 text-sky-600 hover:bg-sky-100 font-semibold rounded-md text-[11px] flex-shrink-0">Buka</a>
+                                                    <a href="{{ $doc['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="px-3 py-1 bg-sky-50 text-sky-600 hover:bg-sky-100 font-semibold rounded-md text-[11px] shrink-0">Buka</a>
                                                 @endif
                                             </div>
                                         @endforeach
                                     </div>
                                 </div>
                             @endif
+                        @endif
+
+                        {{-- Catatan Dosen (Jika Ada) --}}
+                        @if(!empty($ms['catatan_dosen']))
+                            <div class="rounded-xl p-3.5 text-xs leading-relaxed border {{ ($ms['status'] ?? '') === 'Perlu Revisi' ? 'bg-[#FDF2F2] border-[#F8B4B4] text-[#9B1C1C]' : 'bg-[#F6F4F1] border-[#E4DED5] text-[#62564C]' }}">
+                                <span class="text-[10px] font-bold uppercase tracking-wider block mb-1 {{ ($ms['status'] ?? '') === 'Perlu Revisi' ? 'text-[#9B1C1C]' : 'text-[#7D746D]' }}">
+                                    CATATAN DOSEN{{ !empty($ms['verifikator']) ? ' • '.$ms['verifikator'] : '' }}
+                                </span>
+                                <p class="m-0">{{ $ms['catatan_dosen'] }}</p>
+                                @if(!empty($ms['waktu_verifikasi']))
+                                    <span class="text-[10px] opacity-80 block mt-1">Diverifikasi pada {{ $ms['waktu_verifikasi'] }}</span>
+                                @endif
+                            </div>
+                        @endif
+
+                        {{-- Card Footer --}}
+                        @if(!empty($ms['sudah_dikumpulkan']))
+                            <div class="pt-3 border-t border-[#E4DED5] flex flex-wrap items-center justify-between gap-3 text-xs">
+                                <span class="text-[#7D746D]">
+                                    Diunggah <strong class="text-[#1F1F1F] font-semibold">{{ $ms['waktu'] }}</strong> oleh {{ $ms['pengunggah'] }}
+                                </span>
+
+                                @if($kelompok && !empty($ms['id']) && ($ms['status'] ?? '') !== 'Disetujui')
+                                    <button type="button"
+                                            onclick="openModalForm('{{ $ms['id'] }}')"
+                                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[#CFC7BC] bg-white hover:bg-[#F5EFE6] hover:border-[#7A5C4A] text-[#2B221D] text-xs font-semibold transition-colors cursor-pointer shrink-0">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                        Perbarui Berkas
+                                    </button>
+                                @endif
+                            </div>
                         @else
-                            <p class="text-xs text-[#7D746D] m-0">
-                                Belum ada berkas yang dikumpulkan untuk tahapan ini. Klik <strong>Upload Laporan</strong> untuk mengumpulkan berkas.
+                            <p class="{{ !empty($ms['catatan_dosen']) ? 'pt-3 border-t border-[#E4DED5]' : '' }} text-xs text-[#7D746D] m-0">
+                                Belum ada berkas laporan yang dikumpulkan pada tahapan ini.
                             </p>
                         @endif
                     </div>
@@ -228,15 +281,29 @@
                 </div>
                 <div>
                     <label class="block font-bold text-[#1F1F1F] mb-1.5">Tahapan Milestone <span class="text-rose-500">*</span></label>
-                    <select name="milestone_id" required class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">
+                    <select id="selectMilestoneId" name="milestone_id" required onchange="updateMilestoneInfoBox()" class="w-full bg-white border border-[#CFC7BC] rounded-xl p-2.5 focus:border-[#7A5C4A] outline-none">
                         <option value="">Pilih tahapan milestone...</option>
                         @forelse($milestoneOptions as $option)
-                            <option value="{{ $option->id }}">{{ $option->kode }} - {{ $option->judul }}</option>
+                            <option value="{{ $option->id }}"
+                                    data-deskripsi="{{ trim((string) ($option->deskripsi ?? '')) }}"
+                                    data-deadline="{{ $option->deadline ? $option->deadline->locale('id')->translatedFormat('d F Y') : '' }}"
+                                    @selected((string) old('milestone_id') === (string) $option->id)>{{ $option->kode }} - {{ $option->judul }}</option>
                         @empty
-                            <option value="" disabled>Belum ada milestone untuk mata kuliah ini</option>
+                            <option value="" disabled>
+                                {{ !empty($semuaMilestoneDisetujui) ? 'Semua tahapan milestone sudah disetujui' : 'Belum ada milestone untuk mata kuliah ini' }}
+                            </option>
                         @endforelse
                     </select>
                 </div>
+            </div>
+
+            {{-- Kotak Informasi Deskripsi & Tenggat Tahapan yang Dipilih --}}
+            <div id="modalMilestoneInfo" class="hidden mb-4 rounded-xl bg-[#FBF9F5] border border-[#E4DED5] px-3.5 py-3 text-xs">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                    <span class="text-[10px] font-bold text-[#7A5C4A] uppercase tracking-wider">Keterangan Tahapan</span>
+                    <span id="modalMilestoneDeadline" class="hidden text-[11px] text-[#7D746D]"></span>
+                </div>
+                <p id="modalMilestoneDeskripsi" class="text-[#62564C] leading-relaxed m-0"></p>
             </div>
 
             <div class="mb-4 text-xs">
@@ -246,7 +313,7 @@
 
             <!-- Dropzone Upload -->
             <div class="mb-4 text-xs">
-                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-rose-500">*</span></label>
+                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-rose-500">*</span> <span class="text-[#7D746D] font-normal">(PDF/ZIP maks 2 MB)</span></label>
 
                 {{-- Alert Peringatan Ukuran File di dalam Modal --}}
                 <div id="modalAlertFileSize" class="hidden mb-2.5 bg-[#FFF7ED] border border-[#FED7AA] text-[#C2410C] px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between">
@@ -263,7 +330,7 @@
                     <div id="dropzoneEmpty">
                         <svg class="w-8 h-8 text-[#7D746D] mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                         <span class="font-bold text-[#1F1F1F] block">Tarik berkas atau <span class="text-[#7A5C4A] underline">klik untuk memilih</span></span>
-                        <span class="text-[#7D746D] text-[11px]">Format file didukung: PDF, ZIP (Maks. 1 MB)</span>
+                        <span class="text-[#7D746D] text-[11px]">Format file didukung: PDF, ZIP (Maks. 2 MB)</span>
                     </div>
 
                     <div id="dropzoneFilled" class="hidden text-[#2F5C4A]">
@@ -287,8 +354,51 @@
 </div>
 
 <script>
-function openModalForm() {
+function updateMilestoneInfoBox() {
+    const selectMilestone = document.getElementById('selectMilestoneId');
+    const infoBox = document.getElementById('modalMilestoneInfo');
+    const descEl = document.getElementById('modalMilestoneDeskripsi');
+    const deadlineEl = document.getElementById('modalMilestoneDeadline');
+
+    if (!selectMilestone || !infoBox || !descEl || !deadlineEl) {
+        return;
+    }
+
+    const selectedOption = selectMilestone.options[selectMilestone.selectedIndex];
+    const deskripsi = selectedOption ? (selectedOption.getAttribute('data-deskripsi') || '').trim() : '';
+    const deadline = selectedOption ? (selectedOption.getAttribute('data-deadline') || '').trim() : '';
+
+    if (!selectMilestone.value || (!deskripsi && !deadline)) {
+        infoBox.classList.add('hidden');
+        descEl.textContent = '';
+        deadlineEl.textContent = '';
+        deadlineEl.classList.add('hidden');
+        return;
+    }
+
+    descEl.textContent = deskripsi || 'Tidak ada keterangan tambahan untuk tahapan ini.';
+
+    if (deadline) {
+        deadlineEl.innerHTML = 'Tenggat waktu: <strong class="text-[#1F1F1F] font-semibold">' + deadline + '</strong>';
+        deadlineEl.classList.remove('hidden');
+    } else {
+        deadlineEl.textContent = '';
+        deadlineEl.classList.add('hidden');
+    }
+
+    infoBox.classList.remove('hidden');
+}
+
+function openModalForm(milestoneId = null) {
     const modal = document.getElementById('modalPengumpulan');
+    const selectMilestone = document.getElementById('selectMilestoneId');
+
+    if (selectMilestone && milestoneId) {
+        selectMilestone.value = String(milestoneId);
+    }
+
+    updateMilestoneInfoBox();
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 }
@@ -304,12 +414,17 @@ function closeModalForm() {
     if (modalAlert) {
         modalAlert.classList.add('hidden');
     }
+    updateMilestoneInfoBox();
     document.getElementById('dropzoneEmpty').classList.remove('hidden');
     document.getElementById('dropzoneFilled').classList.add('hidden');
 
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    updateMilestoneInfoBox();
+});
 
 function previewFileSelected(input) {
     if (input.files && input.files[0]) {
