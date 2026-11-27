@@ -78,11 +78,13 @@ class MahasiswaMilestonePageTest extends TestCase
             'is_ketua' => true,
         ]);
 
-        foreach ([
-            'Pemrograman Web Lanjut' => 'SIB301',
-            'Manajemen Proyek Sistem Informasi' => 'SIB302',
-            'Penjaminan Mutu Perangkat Lunak' => 'SIB303',
-        ] as $nama => $kode) {
+        foreach (
+            [
+                'Pemrograman Web Lanjut' => 'SIB301',
+                'Manajemen Proyek Sistem Informasi' => 'SIB302',
+                'Penjaminan Mutu Perangkat Lunak' => 'SIB303',
+            ] as $nama => $kode
+        ) {
             $this->mataKuliah[$nama] = MataKuliah::create([
                 'kode' => $kode,
                 'nama_matkul' => $nama,
@@ -192,5 +194,20 @@ class MahasiswaMilestonePageTest extends TestCase
             ->get(route('mahasiswa.milestone'))
             ->assertOk()
             ->assertDontSee('Mata Kuliah Lain');
+    }
+
+
+    public function test_halaman_detail_menampilkan_tahapan_milestone_meski_belum_ada_berkas(): void
+    {
+        MilestoneMataKuliah::firstOrCreate([
+            'milestone_id' => $this->milestones[0]->id,
+            'mata_kuliah_id' => $this->mataKuliah['Pemrograman Web Lanjut']->id,
+        ]);
+
+        $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->get(route('mahasiswa.milestone.detail', 'pemrograman-web-lanjut'))
+            ->assertOk()
+            ->assertSee('Milestone 1 – Milestone Satu')
+            ->assertSee('Belum Dikumpulkan');
     }
 }
