@@ -785,6 +785,48 @@ class MahasiswaMilestoneUploadTest extends TestCase
             ->assertSee('openModalForm();', false);
     }
 
+    public function test_ukuran_berkas_melebihi_dua_mb_ditolak_dengan_pesan_spesifik(): void
+    {
+        Storage::fake('local');
+
+        $response = $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->from(route('mahasiswa.milestone.detail', $this->mataKuliah->slug))
+            ->followingRedirects()
+            ->post(route('mahasiswa.milestone.upload', $this->mataKuliah->slug), [
+                'milestone_id' => $this->milestone->id,
+                'catatan' => 'Laporan ukuran besar.',
+                'berkas' => UploadedFile::fake()->create('laporan-besar.pdf', 2500, 'application/pdf'),
+            ]);
+
+        $response->assertOk()
+            ->assertSee('melebihi batas maksimal 2 MB')
+            ->assertSee('openModalForm();', false);
+
+        $this->assertDatabaseCount('pengumpulan_milestone', 0);
+        $this->assertCount(0, Storage::disk('local')->allFiles());
+    }
+
+    public function test_format_berkas_tidak_sesuai_menampilkan_pesan_spesifik_di_modal(): void
+    {
+        Storage::fake('local');
+
+        $response = $this->actingAs($this->mahasiswa, 'mahasiswa')
+            ->from(route('mahasiswa.milestone.detail', $this->mataKuliah->slug))
+            ->followingRedirects()
+            ->post(route('mahasiswa.milestone.upload', $this->mataKuliah->slug), [
+                'milestone_id' => $this->milestone->id,
+                'catatan' => 'Laporan format salah.',
+                'berkas' => UploadedFile::fake()->create('laporan.docx', 150, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+            ]);
+
+        $response->assertOk()
+            ->assertSee('Format berkas harus berupa PDF atau ZIP.')
+            ->assertSee('openModalForm();', false);
+
+        $this->assertDatabaseCount('pengumpulan_milestone', 0);
+        $this->assertCount(0, Storage::disk('local')->allFiles());
+    }
+
     private function buatMataKuliah(string $slug, string $nama, string $kode): MataKuliah
     {
         return MataKuliah::create([

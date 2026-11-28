@@ -3,6 +3,22 @@
 @section('title', 'Milestone - Pilih Mata Kuliah')
 @section('meta_description', 'Pilih mata kuliah untuk melihat peta perjalanan dan detail pengumpulan milestone.')
 
+@push('styles')
+<style>
+    .sim-badge--inprogress {
+        background: #EFF6FF;
+        color: #1D4ED8;
+        border: 1px solid #BFDBFE;
+    }
+    .sim-mk-circle--blue {
+        background: #1D4ED8;
+    }
+    .sim-mk-bar--blue {
+        background: #1D4ED8;
+    }
+</style>
+@endpush
+
 @section('content')
 
 @php
@@ -19,6 +35,7 @@
 
     $circleToneClass = fn (string $tone): string => match ($tone) {
         'green' => 'bg-[#2F5C4A]',
+        'blue' => 'sim-mk-circle--blue',
         'gold' => 'bg-[#C28A3A]',
         'red' => 'bg-[#9B1C1C]',
         default => 'bg-[#9C9188]',
@@ -26,9 +43,18 @@
 
     $badgeToneClass = fn (string $tone): string => match ($tone) {
         'green' => 'sim-badge--approved',
+        'blue' => 'sim-badge--inprogress',
         'gold' => 'sim-badge--pending',
         'red' => 'sim-badge--danger',
         default => 'sim-badge--warning',
+    };
+
+    $barToneClass = fn (string $tone): string => match ($tone) {
+        'green' => 'bg-[#2F5C4A]',
+        'blue' => 'sim-mk-bar--blue',
+        'gold' => 'bg-[#C28A3A]',
+        'red' => 'bg-[#9B1C1C]',
+        default => 'bg-[#7A5C4A]',
     };
 @endphp
 
@@ -70,7 +96,7 @@
                             {{ $item['nama'] }}
                         </h2>
                         <span class="sim-badge {{ $badgeToneClass($tone) }}">
-                            &#9679; {{ $item['status'] }}
+                            {{ $item['status'] }}
                         </span>
                     </div>
 
@@ -84,7 +110,7 @@
                             </span>
                         </div>
                         <div class="w-full bg-[#E9E1D5] rounded-full h-2 overflow-hidden">
-                            <div class="h-2 rounded-full {{ $loop->first ? 'bg-[#2F5C4A]' : 'bg-[#7A5C4A]' }}" style="width: {{ $item['progress'] }}%"></div>
+                            <div class="h-2 rounded-full {{ $barToneClass($tone) }}" style="width: {{ $item['progress'] }}%"></div>
                         </div>
                         @if(! $item['punya_data'])
                             <p class="text-[11px] text-[#7D746D]">Belum ada data mapping milestone.</p>
