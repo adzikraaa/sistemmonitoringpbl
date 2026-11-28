@@ -6,15 +6,9 @@
 @push('styles')
 <style>
     .sim-badge--inprogress {
-        background: #EFF6FF;
-        color: #1D4ED8;
-        border: 1px solid #BFDBFE;
-    }
-    .sim-mk-circle--blue {
-        background: #1D4ED8;
-    }
-    .sim-mk-bar--blue {
-        background: #1D4ED8;
+        background: #F4EAE1;
+        color: #6E472B;
+        border: 1px solid #DBC4AE;
     }
 </style>
 @endpush
@@ -22,39 +16,29 @@
 @section('content')
 
 @php
-    $statusTone = function (array $item, bool $isFirst): string {
+    $circleTone = function (array $item, bool $isFirst): string {
         return match ($item['status']) {
             'Selesai' => 'green',
-            'Berjalan' => 'blue',
+            'Berjalan' => $isFirst ? 'green' : 'gold',
             'Menunggu review' => 'gold',
             'Perlu revisi' => 'red',
-            'Belum dimulai', 'Belum ada data' => 'gray',
             default => 'gray',
         };
     };
 
     $circleToneClass = fn (string $tone): string => match ($tone) {
         'green' => 'bg-[#2F5C4A]',
-        'blue' => 'sim-mk-circle--blue',
         'gold' => 'bg-[#C28A3A]',
         'red' => 'bg-[#9B1C1C]',
         default => 'bg-[#9C9188]',
     };
 
-    $badgeToneClass = fn (string $tone): string => match ($tone) {
-        'green' => 'sim-badge--approved',
-        'blue' => 'sim-badge--inprogress',
-        'gold' => 'sim-badge--pending',
-        'red' => 'sim-badge--danger',
+    $badgeClass = fn (string $status): string => match ($status) {
+        'Selesai' => 'sim-badge--approved',
+        'Berjalan' => 'sim-badge--inprogress',
+        'Menunggu review' => 'sim-badge--pending',
+        'Perlu revisi' => 'sim-badge--danger',
         default => 'sim-badge--warning',
-    };
-
-    $barToneClass = fn (string $tone): string => match ($tone) {
-        'green' => 'bg-[#2F5C4A]',
-        'blue' => 'sim-mk-bar--blue',
-        'gold' => 'bg-[#C28A3A]',
-        'red' => 'bg-[#9B1C1C]',
-        default => 'bg-[#7A5C4A]',
     };
 @endphp
 
@@ -81,8 +65,8 @@
                 @endif
 
                 <!-- Badge Bulat MK1, MK2, MK3 (Tepat di tengah vertikal card) -->
-                @php($tone = $statusTone($item, $loop->first))
-                <span class="pointer-events-none absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm ring-4 ring-[#F6F4F1] z-10 {{ $circleToneClass($tone) }}">
+                @php($cTone = $circleTone($item, $loop->first))
+                <span class="pointer-events-none absolute -left-8 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm ring-4 ring-[#F6F4F1] z-10 {{ $circleToneClass($cTone) }}">
                     MK{{ $loop->iteration }}
                 </span>
 
@@ -95,7 +79,7 @@
                         <h2 class="text-xl font-serif font-normal text-[#1F1F1F] group-hover:text-[#7A5C4A] transition-colors">
                             {{ $item['nama'] }}
                         </h2>
-                        <span class="sim-badge {{ $badgeToneClass($tone) }}">
+                        <span class="sim-badge {{ $badgeClass($item['status']) }}">
                             {{ $item['status'] }}
                         </span>
                     </div>
@@ -110,7 +94,7 @@
                             </span>
                         </div>
                         <div class="w-full bg-[#E9E1D5] rounded-full h-2 overflow-hidden">
-                            <div class="h-2 rounded-full {{ $barToneClass($tone) }}" style="width: {{ $item['progress'] }}%"></div>
+                            <div class="h-2 rounded-full {{ $loop->first ? 'bg-[#2F5C4A]' : 'bg-[#7A5C4A]' }}" style="width: {{ $item['progress'] }}%"></div>
                         </div>
                         @if(! $item['punya_data'])
                             <p class="text-[11px] text-[#7D746D]">Belum ada data mapping milestone.</p>
