@@ -49,25 +49,6 @@
         </div>
     @endif
 
-    {{-- Alert Peringatan Ukuran File (muncul via JS, disembunyikan awal) --}}
-    <div id="alertFileTerlalubesar" class="hidden mb-5 bg-[#FFF7ED] border border-[#FED7AA] text-[#C2410C] px-4 py-3 rounded-xl text-xs font-medium flex items-start gap-2.5">
-        <span class="text-base mt-0.5">⚠</span>
-        <span>Ukuran file melebihi batas maksimal <strong>2 MB</strong>. Harap pilih file yang lebih kecil (PDF atau ZIP).</span>
-        <button type="button" onclick="document.getElementById('alertFileTerlalubesar').classList.add('hidden')" class="ml-auto text-[#C2410C] hover:text-[#9A3412] font-bold text-sm leading-none flex-shrink-0">&times;</button>
-    </div>
-
-    {{-- Alert Error Validasi Input --}}
-    @if($errors->any())
-        <div class="mb-5 bg-[#FDF2F2] border border-[#F8B4B4] text-[#9B1C1C] px-4 py-3 rounded-xl text-xs space-y-1">
-            <p class="font-bold">Gagal mengumpulkan milestone, periksa kembali isian berikut:</p>
-            <ul class="list-disc list-inside">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <!-- Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
@@ -117,7 +98,7 @@
                                             <span class="inline-flex items-center gap-1.5">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                                 @if(!empty($ms['tanggal_mulai']) && !empty($ms['deadline']))
-                                                    <span>Tanggal mulai: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['tanggal_mulai'] }}</strong> &bull; Tenggat waktu: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['deadline'] }}</strong></span>
+                                                    <span>Tanggal mulai: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['tanggal_mulai'] }}</strong>, Tenggat waktu: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['deadline'] }}</strong></span>
                                                 @elseif(!empty($ms['deadline']))
                                                     <span>Tenggat waktu: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['deadline'] }}</strong></span>
                                                 @else
@@ -128,7 +109,7 @@
 
                                         @if(!empty($ms['status_verifikasi']))
                                             <span>
-                                                &bull; Verifikasi Dosen Pengampu: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['status_verifikasi'] }}</strong>
+                                                Verifikasi Dosen Pengampu: <strong class="text-[#1F1F1F] font-semibold">{{ $ms['status_verifikasi'] }}</strong>
                                             </span>
                                         @endif
                                     </div>
@@ -136,7 +117,7 @@
                             </div>
 
                             <span class="sim-badge {{ $statusBadgeClass }} shrink-0 self-start">
-                                &#9679; {{ $ms['status'] }}
+                                {{ $ms['status'] }}
                             </span>
                         </div>
 
@@ -198,7 +179,7 @@
                         @if(!empty($ms['catatan_dosen']))
                             <div class="rounded-xl p-3.5 text-xs leading-relaxed border {{ ($ms['status'] ?? '') === 'Perlu Revisi' ? 'bg-[#FDF2F2] border-[#F8B4B4] text-[#9B1C1C]' : 'bg-[#F6F4F1] border-[#E4DED5] text-[#62564C]' }}">
                                 <span class="text-[10px] font-bold uppercase tracking-wider block mb-1 {{ ($ms['status'] ?? '') === 'Perlu Revisi' ? 'text-[#9B1C1C]' : 'text-[#7D746D]' }}">
-                                    CATATAN DOSEN{{ !empty($ms['verifikator']) ? ' • '.$ms['verifikator'] : '' }}
+                                    CATATAN DOSEN{{ !empty($ms['verifikator']) ? ' - '.$ms['verifikator'] : '' }}
                                 </span>
                                 <p class="m-0">{{ $ms['catatan_dosen'] }}</p>
                                 @if(!empty($ms['waktu_verifikasi']))
@@ -356,19 +337,24 @@
 
             <!-- Dropzone Upload -->
             <div class="mb-4 text-xs">
-                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-rose-500">*</span></label>
+                <label class="block font-bold text-[#1F1F1F] mb-1.5">Pengumpulan Berkas atau Laporan <span class="text-rose-500">*</span> <span class="text-[#7D746D] font-normal">(PDF/ZIP maks 2 MB)</span></label>
 
-                {{-- Alert Peringatan Ukuran File di dalam Modal --}}
-                <div id="modalAlertFileSize" class="hidden mb-2.5 bg-[#FFF7ED] border border-[#FED7AA] text-[#C2410C] px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="text-base font-bold leading-none">⚠</span>
-                        <span>Ukuran file melebihi kapasitas yang ditentukan (maksimal <strong>2 MB</strong>). Silakan pilih file yang lebih kecil.</span>
+                {{-- Alert Peringatan Format / Ukuran File (Hanya di Dalam Modal) --}}
+                <div id="modalAlertFileSize" class="hidden mb-2.5 bg-[#FFF7ED] border border-[#FED7AA] text-[#C2410C] px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between gap-2">
+                    <div class="flex items-start gap-2">
+                        <span class="text-base font-bold leading-none mt-0.5">⚠</span>
+                        <span id="modalAlertFileText">Ukuran file melebihi kapasitas yang ditentukan (maksimal 2 MB). Silakan pilih file yang lebih kecil.</span>
                     </div>
-                    <button type="button" onclick="document.getElementById('modalAlertFileSize').classList.add('hidden')" class="text-[#C2410C] hover:text-[#9A3412] font-bold text-sm leading-none ml-2">&times;</button>
+                    <button type="button" onclick="hideModalFileAlert()" class="text-[#C2410C] hover:text-[#9A3412] font-bold text-sm leading-none shrink-0">&times;</button>
                 </div>
 
-                <div onclick="document.getElementById('fileInputReal').click()" class="border-2 border-dashed border-[#CFC7BC] rounded-xl p-6 text-center bg-[#F7F6F0]/60 hover:bg-[#F7F6F0] transition-colors cursor-pointer">
-                    <input type="file" name="berkas" id="fileInputReal" class="hidden" accept=".pdf,.zip" required onchange="previewFileSelected(this)">
+                <div id="dropzoneArea"
+                     onclick="document.getElementById('fileInputReal').click()"
+                     ondragover="handleDropzoneDragOver(event)"
+                     ondragleave="handleDropzoneDragLeave(event)"
+                     ondrop="handleDropzoneDrop(event)"
+                     class="border-2 border-dashed border-[#CFC7BC] rounded-xl p-6 text-center bg-[#F7F6F0]/60 hover:bg-[#F7F6F0] transition-colors cursor-pointer">
+                    <input type="file" name="berkas" id="fileInputReal" class="hidden" accept=".pdf,.zip,application/pdf,application/zip,application/x-zip-compressed" required onchange="previewFileSelected(this)">
                     
                     <div id="dropzoneEmpty">
                         <svg class="w-8 h-8 text-[#7D746D] mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
@@ -389,7 +375,7 @@
             </div>
 
             <div class="flex justify-end gap-3 text-xs">
-                <button type="button" onclick="closeModalForm()" class="sim-btn-secondary">Batal</button>
+                <button id="btnBatalMilestone" type="button" onclick="closeModalForm()" class="sim-btn-secondary">Batal</button>
                 <button id="btnSubmitMilestone" type="submit" @disabled(! $bisaMengumpulkan) class="sim-btn-primary {{ ! $bisaMengumpulkan ? 'opacity-50 cursor-not-allowed' : '' }}">Kumpulkan</button>
             </div>
         </form>
@@ -397,6 +383,54 @@
 </div>
 
 <script>
+const ALLOWED_MILESTONE_EXT = ['pdf', 'zip'];
+const MAX_MILESTONE_FILE_BYTES = 2 * 1024 * 1024;
+
+function showModalFileAlert(message) {
+    const modalAlert = document.getElementById('modalAlertFileSize');
+    const modalAlertText = document.getElementById('modalAlertFileText');
+
+    if (modalAlertText) {
+        modalAlertText.textContent = message;
+    }
+    if (modalAlert) {
+        modalAlert.classList.remove('hidden');
+    }
+}
+
+function hideModalFileAlert() {
+    const modalAlert = document.getElementById('modalAlertFileSize');
+    if (modalAlert) {
+        modalAlert.classList.add('hidden');
+    }
+}
+
+function resetDropzonePreview() {
+    document.getElementById('dropzoneEmpty').classList.remove('hidden');
+    document.getElementById('dropzoneFilled').classList.add('hidden');
+}
+
+function getFileExtension(fileName) {
+    const parts = String(fileName || '').split('.');
+    return parts.length > 1 ? parts.pop().toLowerCase() : '';
+}
+
+function validateSelectedMilestoneFile(file) {
+    const ext = getFileExtension(file.name);
+
+    if (!ALLOWED_MILESTONE_EXT.includes(ext)) {
+        const extLabel = ext ? '.' + ext : 'tersebut';
+        return 'Format berkas (' + extLabel + ') tidak sesuai. Harap unggah berkas berformat PDF atau ZIP.';
+    }
+
+    if (file.size > MAX_MILESTONE_FILE_BYTES) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+        return 'Ukuran berkas (' + sizeMb + ' MB) melebihi batas maksimal 2 MB. Silakan pilih berkas yang lebih kecil.';
+    }
+
+    return null;
+}
+
 function showModalValidationAlert(messages) {
     const alertBox = document.getElementById('modalValidationAlert');
     const listEl = document.getElementById('modalValidationList');
@@ -467,6 +501,7 @@ function openModalForm(milestoneId = null) {
     const selectMilestone = document.getElementById('selectMilestoneId');
 
     hideModalValidationAlert();
+    hideModalFileAlert();
 
     if (selectMilestone && milestoneId) {
         selectMilestone.value = String(milestoneId);
@@ -481,22 +516,18 @@ function openModalForm(milestoneId = null) {
 function closeModalForm() {
     const modal = document.getElementById('modalPengumpulan');
     const form = document.getElementById('formPengumpulanMilestone');
-    const modalAlert = document.getElementById('modalAlertFileSize');
     const serverErrors = document.getElementById('modalServerErrors');
 
     if (form) {
         form.reset();
     }
-    if (modalAlert) {
-        modalAlert.classList.add('hidden');
-    }
     if (serverErrors) {
         serverErrors.classList.add('hidden');
     }
+    hideModalFileAlert();
     hideModalValidationAlert();
     updateMilestoneInfoBox();
-    document.getElementById('dropzoneEmpty').classList.remove('hidden');
-    document.getElementById('dropzoneFilled').classList.add('hidden');
+    resetDropzonePreview();
 
     modal.classList.add('hidden');
     modal.classList.remove('flex');
@@ -513,38 +544,91 @@ document.addEventListener('DOMContentLoaded', function () {
 function previewFileSelected(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        const modalAlert = document.getElementById('modalAlertFileSize');
-        const alertEl = document.getElementById('alertFileTerlalubesar');
 
         hideModalValidationAlert();
 
-        if (file.size > 2 * 1024 * 1024) {
-            // Tampilkan notifikasi peringatan file melebihi batas 2MB
-            if (modalAlert) {
-                modalAlert.classList.remove('hidden');
-            }
-            if (alertEl) {
-                alertEl.classList.remove('hidden');
-            }
+        const fileError = validateSelectedMilestoneFile(file);
+        if (fileError) {
+            showModalFileAlert(fileError);
             input.value = '';
-            // Reset dropzone ke kondisi kosong
-            document.getElementById('dropzoneEmpty').classList.remove('hidden');
-            document.getElementById('dropzoneFilled').classList.add('hidden');
+            resetDropzonePreview();
             return;
         }
 
-        // Sembunyikan alert jika sebelumnya tampil
-        if (modalAlert) {
-            modalAlert.classList.add('hidden');
-        }
-        if (alertEl) {
-            alertEl.classList.add('hidden');
-        }
-
+        hideModalFileAlert();
         document.getElementById('dropzoneEmpty').classList.add('hidden');
         document.getElementById('dropzoneFilled').classList.remove('hidden');
         document.getElementById('fileNameText').textContent = '📄 ' + file.name;
         document.getElementById('fileSizeText').textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+}
+
+function handleDropzoneDragOver(event) {
+    event.preventDefault();
+    const dropzone = document.getElementById('dropzoneArea');
+    if (dropzone) {
+        dropzone.classList.add('border-[#7A5C4A]', 'bg-[#F5EFE6]');
+    }
+}
+
+function handleDropzoneDragLeave(event) {
+    event.preventDefault();
+    const dropzone = document.getElementById('dropzoneArea');
+    if (dropzone) {
+        dropzone.classList.remove('border-[#7A5C4A]', 'bg-[#F5EFE6]');
+    }
+}
+
+function handleDropzoneDrop(event) {
+    event.preventDefault();
+    const dropzone = document.getElementById('dropzoneArea');
+    const fileInput = document.getElementById('fileInputReal');
+
+    if (dropzone) {
+        dropzone.classList.remove('border-[#7A5C4A]', 'bg-[#F5EFE6]');
+    }
+
+    if (!event.dataTransfer || !event.dataTransfer.files || !event.dataTransfer.files[0] || !fileInput) {
+        return;
+    }
+
+    const droppedFile = event.dataTransfer.files[0];
+    hideModalValidationAlert();
+
+    const fileError = validateSelectedMilestoneFile(droppedFile);
+    if (fileError) {
+        showModalFileAlert(fileError);
+        fileInput.value = '';
+        resetDropzonePreview();
+        return;
+    }
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(droppedFile);
+    fileInput.files = dataTransfer.files;
+    previewFileSelected(fileInput);
+}
+
+function setMilestoneLoadingState() {
+    const submitBtn = document.getElementById('btnSubmitMilestone');
+    const cancelBtn = document.getElementById('btnBatalMilestone');
+
+    if (cancelBtn) {
+        cancelBtn.disabled = true;
+        cancelBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-85', 'cursor-wait');
+        submitBtn.innerHTML =
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="shrink-0">' +
+            '<circle cx="12" cy="12" r="9" stroke-opacity="0.3"></circle>' +
+            '<path d="M21 12a9 9 0 0 0-9-9">' +
+            '<animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.75s" repeatCount="indefinite"/>' +
+            '</path>' +
+            '</svg>' +
+            '<span>Mengunggah...</span>';
     }
 }
 
@@ -553,7 +637,6 @@ function validateMilestoneForm(event) {
     const catatanInput = document.getElementById('inputCatatanMilestone');
     const fileInput = document.getElementById('fileInputReal');
     const linkInput = document.getElementById('inputLinkBuktiMilestone');
-    const modalAlert = document.getElementById('modalAlertFileSize');
     const messages = [];
 
     if (!selectMilestone || !selectMilestone.value) {
@@ -572,11 +655,12 @@ function validateMilestoneForm(event) {
 
     if (!fileInput || !fileInput.files || !fileInput.files[0]) {
         messages.push('Berkas laporan (PDF atau ZIP) wajib dipilih.');
-    } else if (fileInput.files[0].size > 2 * 1024 * 1024) {
-        if (modalAlert) {
-            modalAlert.classList.remove('hidden');
+    } else {
+        const fileError = validateSelectedMilestoneFile(fileInput.files[0]);
+        if (fileError) {
+            showModalFileAlert(fileError);
+            messages.push(fileError);
         }
-        messages.push('Ukuran file melebihi batas maksimal 2 MB.');
     }
 
     if (linkInput && linkInput.value.trim() !== '' && !/^https?:\/\/.+/i.test(linkInput.value.trim())) {
@@ -589,6 +673,7 @@ function validateMilestoneForm(event) {
         return false;
     }
 
+    setMilestoneLoadingState();
     return true;
 }
 </script>
